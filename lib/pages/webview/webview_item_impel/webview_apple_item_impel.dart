@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 
 class WebviewAppleItemImpel extends StatefulWidget {
-  const WebviewAppleItemImpel({super.key});
+  const WebviewAppleItemImpel({
+    super.key,
+    required this.webviewController,
+  });
+
+  final WebviewItemController webviewController;
 
   @override
   State<WebviewAppleItemImpel> createState() => _WebviewAppleItemImpelState();
 }
 
 class _WebviewAppleItemImpelState extends State<WebviewAppleItemImpel> {
-  final webviewAppleItemController = Modular.get<WebviewItemController>();
-
   @override
   void initState() {
     super.initState();
-    webviewAppleItemController.init();
+    widget.webviewController.init();
   }
 
   @override
   void dispose() {
-    webviewAppleItemController.dispose();
+    widget.webviewController.dispose();
     super.dispose();
   }
 

@@ -3,14 +3,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:media_kit/media_kit.dart';
+import 'package:media_kit/media_kit.dart' hide PlayerState;
 import 'package:media_kit_video/media_kit_video.dart';
 import 'package:kazumi/modules/danmaku/danmaku_module.dart';
-import 'package:mobx/mobx.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:kazumi/request/damaku.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:logger/logger.dart';
@@ -21,68 +19,27 @@ import 'package:kazumi/shaders/shaders_controller.dart';
 import 'package:kazumi/utils/syncplay.dart';
 import 'package:kazumi/utils/external_player.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kazumi/pages/player/player_state.dart';
+import 'package:kazumi/pages/video/providers.dart';
+import 'package:kazumi/shaders/providers.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
-part 'player_controller.g.dart';
+class PlayerController extends SafeStateNotifier<PlayerState> {
+  PlayerController(this.ref) : super(const PlayerState()) {
+    _initializeDependencies();
+  }
 
-class PlayerController = _PlayerController with _$PlayerController;
+  final Ref ref;
 
-abstract class _PlayerController with Store {
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
-  final ShadersController shadersController = Modular.get<ShadersController>();
+  late final VideoPageController videoPageController;
+  late final ShadersController shadersController;
 
   // 弹幕控制
   late DanmakuController danmakuController;
-  @observable
-  Map<int, List<Danmaku>> danDanmakus = {};
-  @observable
-  bool danmakuOn = false;
 
   // 一起看控制器
   SyncplayClient? syncplayController;
-  @observable
-  String syncplayRoom = '';
-  @observable
-  int syncplayClientRtt = 0;
-
-  /// 视频比例类型
-  /// 1. AUTO
-  /// 2. COVER
-  /// 3. FILL
-  @observable
-  int aspectRatioType = 1;
-
-  /// 视频超分
-  /// 1. OFF
-  /// 2. Anime4K
-  @observable
-  int superResolutionType = 1;
-
-  // 视频音量/亮度
-  @observable
-  double volume = -1;
-  @observable
-  double brightness = 0;
-
-  // 播放器界面控制
-  @observable
-  bool lockPanel = false;
-  @observable
-  bool showVideoController = true;
-  @observable
-  bool showSeekTime = false;
-  @observable
-  bool showBrightness = false;
-  @observable
-  bool showVolume = false;
-  @observable
-  bool showPlaySpeed = false;
-  @observable
-  bool brightnessSeeking = false;
-  @observable
-  bool volumeSeeking = false;
-  @observable
-  bool canHidePlayerPanel = true;
 
   // 视频地址
   String videoUrl = '';
@@ -93,24 +50,6 @@ abstract class _PlayerController with Store {
   // 播放器实体
   Player? mediaPlayer;
   VideoController? videoController;
-
-  // 播放器面板状态
-  @observable
-  bool loading = true;
-  @observable
-  bool playing = false;
-  @observable
-  bool isBuffering = true;
-  @observable
-  bool completed = false;
-  @observable
-  Duration currentPosition = Duration.zero;
-  @observable
-  Duration buffer = Duration.zero;
-  @observable
-  Duration duration = Duration.zero;
-  @observable
-  double playerSpeed = 1.0;
 
   Box setting = GStorage.setting;
   bool hAenable = true;
@@ -130,27 +69,7 @@ abstract class _PlayerController with Store {
   Duration get playerBuffer => mediaPlayer!.state.buffer;
   Duration get playerDuration => mediaPlayer!.state.duration;
 
-  // 播放器调试信息
-  @observable
-  ObservableList<String> playerLog = ObservableList.of([]);
-  @observable
-  int playerWidth = 0;
-  @observable
-  int playerHeight = 0;
-  @observable
-  String playerVideoParams = '';
-  @observable
-  String playerAudioParams = '';
-  @observable
-  String playerPlaylist = '';
-  @observable
-  String playerAudioTracks = '';
-  @observable
-  String playerVideoTracks = '';
-  @observable
-  String playerAudioBitrate = '';
-
-  /// 播放器调试信息订阅
+  // 播放器调试信息订阅
   StreamSubscription<PlayerLog>? playerLogSubscription;
   StreamSubscription<int?>? playerWidthSubscription;
   StreamSubscription<int?>? playerHeightSubscription;
@@ -160,52 +79,66 @@ abstract class _PlayerController with Store {
   StreamSubscription<Track>? playerTracksSubscription;
   StreamSubscription<double?>? playerAudioBitrateSubscription;
 
+  void _initializeDependencies() {
+    videoPageController = ref.read(videoControllerProvider.notifier);
+    shadersController = ref.read(shadersControllerProvider);
+  }
+
   Future<void> init(String url, {int offset = 0}) async {
     videoUrl = url;
-    playing = false;
-    loading = true;
-    isBuffering = true;
-    currentPosition = Duration.zero;
-    buffer = Duration.zero;
-    duration = Duration.zero;
-    completed = false;
+    state = state.copyWith(
+      playing: false,
+      loading: true,
+      isBuffering: true,
+      currentPosition: Duration.zero,
+      buffer: Duration.zero,
+      duration: Duration.zero,
+      completed: false,
+    );
     try {
-      await dispose(disposeSyncPlayController: false);
+      await disposeResources(disposeSyncPlayController: false);
     } catch (_) {}
     int episodeFromTitle = 0;
     try {
       episodeFromTitle = Utils.extractEpisodeNumber(videoPageController
-          .roadList[videoPageController.currentRoad]
-          .identifier[videoPageController.currentEpisode - 1]);
+          .state
+          .roadList[videoPageController.state.currentRoad]
+          .identifier[videoPageController.state.currentEpisode - 1]);
     } catch (e) {
       KazumiLogger().log(Level.error, '从标题解析集数错误 ${e.toString()}');
     }
     if (episodeFromTitle == 0) {
-      episodeFromTitle = videoPageController.currentEpisode;
+      episodeFromTitle = videoPageController.state.currentEpisode;
     }
     getDanDanmakuByBgmBangumiID(
-        videoPageController.bangumiItem.id, episodeFromTitle);
+        videoPageController.state.bangumiItem!.id, episodeFromTitle);
     mediaPlayer ??= await createVideoController(offset: offset);
-    playerSpeed =
+    final playerSpeed =
         setting.get(SettingBoxKey.defaultPlaySpeed, defaultValue: 1.0);
-    aspectRatioType =
+    final aspectRatioType =
         setting.get(SettingBoxKey.defaultAspectRatioType, defaultValue: 1);
+    state = state.copyWith(
+      playerSpeed: playerSpeed,
+      aspectRatioType: aspectRatioType,
+    );
     if (Utils.isDesktop()) {
-      volume = volume != -1 ? volume : 100;
+      final volume = state.volume != -1 ? state.volume : 100.0;
+      state = state.copyWith(volume: volume);
       await setVolume(volume);
     } else {
       // mobile is using system volume, don't setVolume here,
       // or iOS will mute if system volume is too low (#732)
       await FlutterVolumeController.getVolume().then((value) {
-        volume = (value ?? 0.0) * 100;
+        final volume = (value ?? 0.0) * 100;
+        state = state.copyWith(volume: volume);
       });
     }
-    setPlaybackSpeed(playerSpeed);
+    setPlaybackSpeed(state.playerSpeed);
     KazumiLogger().log(Level.info, 'VideoURL初始化完成');
-    loading = false;
+    state = state.copyWith(loading: false);
     if (syncplayController?.isConnected ?? false) {
       if (syncplayController!.currentFileName !=
-          "${videoPageController.bangumiItem.id}[${videoPageController.currentEpisode}]") {
+          "${videoPageController.state.bangumiItem!.id}[${videoPageController.state.currentEpisode}]") {
         setSyncPlayPlayingBangumi(
             forceSyncPlaying: true, forceSyncPosition: 0.0);
       }
@@ -215,42 +148,45 @@ abstract class _PlayerController with Store {
   Future<void> setupPlayerDebugInfoSubscription() async {
     await playerLogSubscription?.cancel();
     playerLogSubscription = mediaPlayer!.stream.log.listen((event) {
-      playerLog.add(event.toString());
+      final newLog = [...state.playerLog, event.toString()];
+      state = state.copyWith(playerLog: newLog);
       if (playerDebugMode) {
         KazumiLogger().simpleLog(event.toString());
       }
     });
     await playerWidthSubscription?.cancel();
     playerWidthSubscription = mediaPlayer!.stream.width.listen((event) {
-      playerWidth = event ?? 0;
+      state = state.copyWith(playerWidth: event ?? 0);
     });
     await playerHeightSubscription?.cancel();
     playerHeightSubscription = mediaPlayer!.stream.height.listen((event) {
-      playerHeight = event ?? 0;
+      state = state.copyWith(playerHeight: event ?? 0);
     });
     await playerVideoParamsSubscription?.cancel();
     playerVideoParamsSubscription =
         mediaPlayer!.stream.videoParams.listen((event) {
-      playerVideoParams = event.toString();
+      state = state.copyWith(playerVideoParams: event.toString());
     });
     await playerAudioParamsSubscription?.cancel();
     playerAudioParamsSubscription =
         mediaPlayer!.stream.audioParams.listen((event) {
-      playerAudioParams = event.toString();
+      state = state.copyWith(playerAudioParams: event.toString());
     });
     await playerPlaylistSubscription?.cancel();
     playerPlaylistSubscription = mediaPlayer!.stream.playlist.listen((event) {
-      playerPlaylist = event.toString();
+      state = state.copyWith(playerPlaylist: event.toString());
     });
     await playerTracksSubscription?.cancel();
     playerTracksSubscription = mediaPlayer!.stream.track.listen((event) {
-      playerAudioTracks = event.audio.toString();
-      playerVideoTracks = event.video.toString();
+      state = state.copyWith(
+        playerAudioTracks: event.audio.toString(),
+        playerVideoTracks: event.video.toString(),
+      );
     });
     await playerAudioBitrateSubscription?.cancel();
     playerAudioBitrateSubscription =
         mediaPlayer!.stream.audioBitrate.listen((event) {
-      playerAudioBitrate = event.toString();
+      state = state.copyWith(playerAudioBitrate: event.toString());
     });
   }
 
@@ -267,8 +203,9 @@ abstract class _PlayerController with Store {
 
   Future<Player> createVideoController({int offset = 0}) async {
     String userAgent = '';
-    superResolutionType =
+    final superResolutionType =
         setting.get(SettingBoxKey.defaultSuperResolutionType, defaultValue: 1);
+    state = state.copyWith(superResolutionType: superResolutionType);
     hAenable = setting.get(SettingBoxKey.hAenable, defaultValue: true);
     androidEnableOpenSLES =
         setting.get(SettingBoxKey.androidEnableOpenSLES, defaultValue: true);
@@ -299,7 +236,7 @@ abstract class _PlayerController with Store {
     );
 
     // 记录播放器内部日志
-    playerLog.clear();
+    state = state.copyWith(playerLog: []);
     setupPlayerDebugInfoSubscription();
 
     var pp = mediaPlayer!.platform as NativePlayer;
@@ -345,8 +282,8 @@ abstract class _PlayerController with Store {
           Level.error, 'Player intent error: ${event.toString()} $videoUrl');
     });
 
-    if (superResolutionType != 1) {
-      await setShader(superResolutionType);
+    if (state.superResolutionType != 1) {
+      await setShader(state.superResolutionType);
     }
 
     await mediaPlayer!.open(
@@ -370,7 +307,7 @@ abstract class _PlayerController with Store {
         Utils.buildShadersAbsolutePath(
             shadersController.shadersDirectory.path, mpvAnime4KShadersLite),
       ]);
-      superResolutionType = 2;
+      state = state.copyWith(superResolutionType: 2);
       return;
     }
     if (type == 3) {
@@ -381,15 +318,15 @@ abstract class _PlayerController with Store {
         Utils.buildShadersAbsolutePath(
             shadersController.shadersDirectory.path, mpvAnime4KShaders),
       ]);
-      superResolutionType = 3;
+      state = state.copyWith(superResolutionType: 3);
       return;
     }
     await pp.command(['change-list', 'glsl-shaders', 'clr', '']);
-    superResolutionType = 1;
+    state = state.copyWith(superResolutionType: 1);
   }
 
   Future<void> setPlaybackSpeed(double playerSpeed) async {
-    this.playerSpeed = playerSpeed;
+    state = state.copyWith(playerSpeed: playerSpeed);
     try {
       mediaPlayer!.setRate(playerSpeed);
     } catch (e) {
@@ -399,7 +336,7 @@ abstract class _PlayerController with Store {
 
   Future<void> setVolume(double value) async {
     value = value.clamp(0.0, 100.0);
-    volume = value;
+    state = state.copyWith(volume: value);
     try {
       if (Utils.isDesktop()) {
         await mediaPlayer!.setVolume(value);
@@ -419,7 +356,7 @@ abstract class _PlayerController with Store {
   }
 
   Future<void> seek(Duration duration, {bool enableSync = true}) async {
-    currentPosition = duration;
+    state = state.copyWith(currentPosition: duration);
     danmakuController.clear();
     await mediaPlayer!.seek(duration);
     if (syncplayController != null) {
@@ -433,7 +370,7 @@ abstract class _PlayerController with Store {
   Future<void> pause({bool enableSync = true}) async {
     danmakuController.pause();
     await mediaPlayer!.pause();
-    playing = false;
+    state = state.copyWith(playing: false);
     if (syncplayController != null) {
       setSyncPlayCurrentPosition();
       if (enableSync) {
@@ -445,7 +382,7 @@ abstract class _PlayerController with Store {
   Future<void> play({bool enableSync = true}) async {
     danmakuController.resume();
     await mediaPlayer!.play();
-    playing = true;
+    state = state.copyWith(playing: true);
     if (syncplayController != null) {
       setSyncPlayCurrentPosition();
       if (enableSync) {
@@ -454,11 +391,10 @@ abstract class _PlayerController with Store {
     }
   }
 
-  Future<void> dispose({bool disposeSyncPlayController = true}) async {
+  Future<void> disposeResources({bool disposeSyncPlayController = true}) async {
     if (disposeSyncPlayController) {
       try {
-        syncplayRoom = '';
-        syncplayClientRtt = 0;
+        state = state.copyWith(syncplayRoom: '', syncplayClientRtt: 0);
         await syncplayController?.disconnect();
         syncplayController = null;
       } catch (_) {}
@@ -471,10 +407,16 @@ abstract class _PlayerController with Store {
     videoController = null;
   }
 
+  @override
+  void dispose() {
+    unawaited(disposeResources());
+    super.dispose();
+  }
+
   Future<void> stop() async {
     try {
       await mediaPlayer?.stop();
-      loading = true;
+      state = state.copyWith(loading: true);
     } catch (_) {}
   }
 
@@ -490,7 +432,7 @@ abstract class _PlayerController with Store {
       int bgmBangumiID, int episode) async {
     KazumiLogger().log(Level.info, '尝试获取弹幕 [BgmBangumiID] $bgmBangumiID');
     try {
-      danDanmakus.clear();
+      state = state.copyWith(danDanmakus: {});
       bangumiID =
           await DanmakuRequest.getDanDanBangumiIDByBgmBangumiID(bgmBangumiID);
       var res = await DanmakuRequest.getDanDanmaku(bangumiID, episode);
@@ -503,7 +445,7 @@ abstract class _PlayerController with Store {
   Future<void> getDanDanmakuByEpisodeID(int episodeID) async {
     KazumiLogger().log(Level.info, '尝试获取弹幕 $episodeID');
     try {
-      danDanmakus.clear();
+      state = state.copyWith(danDanmakus: {});
       var res = await DanmakuRequest.getDanDanmakuByEpisodeID(episodeID);
       addDanmakus(res);
     } catch (e) {
@@ -512,12 +454,14 @@ abstract class _PlayerController with Store {
   }
 
   void addDanmakus(List<Danmaku> danmakus) {
+    final newDanDanmakus = Map<int, List<Danmaku>>.from(state.danDanmakus);
     for (var element in danmakus) {
       var danmakuList =
-          danDanmakus[element.time.toInt()] ?? List.empty(growable: true);
+          newDanDanmakus[element.time.toInt()] ?? List.empty(growable: true);
       danmakuList.add(element);
-      danDanmakus[element.time.toInt()] = danmakuList;
+      newDanDanmakus[element.time.toInt()] = danmakuList;
     }
+    state = state.copyWith(danDanmakus: newDanDanmakus);
   }
 
   void lanunchExternalPlayer() async {
@@ -678,10 +622,12 @@ abstract class _PlayerController with Store {
       );
       syncplayController!.onPositionChangedMessage.listen(
         (message) {
-          syncplayClientRtt = (message['clientRtt'].toDouble() * 1000).toInt();
+          final syncplayClientRtt =
+              (message['clientRtt'].toDouble() * 1000).toInt();
+          state = state.copyWith(syncplayClientRtt: syncplayClientRtt);
           print(
               'SyncPlay: position changed by ${message['setBy']}: [${DateTime.now().millisecondsSinceEpoch / 1000.0}] calculatedPosition ${message['calculatedPositon']} position: ${message['position']} doSeek: ${message['doSeek']} paused: ${message['paused']} clientRtt: ${message['clientRtt']} serverRtt: ${message['serverRtt']} fd: ${message['fd']}');
-          if (message['paused'] != !playing) {
+          if (message['paused'] != !state.playing) {
             if (message['paused']) {
               if (message['position'] != 0) {
                 KazumiDialog.showToast(
@@ -715,7 +661,7 @@ abstract class _PlayerController with Store {
         },
       );
       await syncplayController!.joinRoom(room, username);
-      syncplayRoom = room;
+      state = state.copyWith(syncplayRoom: room);
     } catch (e) {
       print('SyncPlay: error: $e');
     }
@@ -726,13 +672,13 @@ abstract class _PlayerController with Store {
     if (syncplayController == null) {
       return;
     }
-    forceSyncPlaying ??= playing;
-    syncplayController!.setPaused(!forceSyncPlaying);
+    final playing = forceSyncPlaying ?? state.playing;
+    syncplayController!.setPaused(!playing);
     syncplayController!.setPosition((forceSyncPosition ??
-        (((currentPosition.inMilliseconds - playerPosition.inMilliseconds)
+        (((state.currentPosition.inMilliseconds - playerPosition.inMilliseconds)
                     .abs() >
                 2000)
-            ? currentPosition.inMilliseconds.toDouble() / 1000
+            ? state.currentPosition.inMilliseconds.toDouble() / 1000
             : playerPosition.inMilliseconds.toDouble() / 1000)));
   }
 
@@ -765,7 +711,169 @@ abstract class _PlayerController with Store {
     }
     await syncplayController!.disconnect();
     syncplayController = null;
-    syncplayRoom = '';
-    syncplayClientRtt = 0;
+    state = state.copyWith(syncplayRoom: '', syncplayClientRtt: 0);
+  }
+
+  // --- UI state helpers ---
+
+  Map<int, List<Danmaku>> get danDanmakus => state.danDanmakus;
+  set danDanmakus(Map<int, List<Danmaku>> value) {
+    state = state.copyWith(danDanmakus: Map<int, List<Danmaku>>.from(value));
+  }
+
+  void clearDanmakus() {
+    state = state.copyWith(danDanmakus: {});
+  }
+
+  bool get danmakuOn => state.danmakuOn;
+  void setDanmakuOn(bool value) {
+    state = state.copyWith(danmakuOn: value);
+  }
+
+  set danmakuOn(bool value) => setDanmakuOn(value);
+
+  void setDanmakuController(DanmakuController controller) {
+    danmakuController = controller;
+  }
+
+  bool get lockPanel => state.lockPanel;
+  void setLockPanel(bool value) {
+    state = state.copyWith(lockPanel: value);
+  }
+
+  set lockPanel(bool value) => setLockPanel(value);
+
+  bool get showVideoController => state.showVideoController;
+  void setShowVideoController(bool value) {
+    state = state.copyWith(showVideoController: value);
+  }
+
+  set showVideoController(bool value) => setShowVideoController(value);
+
+  bool get showSeekTime => state.showSeekTime;
+  void setShowSeekTime(bool value) {
+    state = state.copyWith(showSeekTime: value);
+  }
+
+  set showSeekTime(bool value) => setShowSeekTime(value);
+
+  bool get showBrightness => state.showBrightness;
+  void setShowBrightness(bool value) {
+    state = state.copyWith(showBrightness: value);
+  }
+
+  set showBrightness(bool value) => setShowBrightness(value);
+
+  bool get showVolume => state.showVolume;
+  void setShowVolume(bool value) {
+    state = state.copyWith(showVolume: value);
+  }
+
+  set showVolume(bool value) => setShowVolume(value);
+
+  bool get showPlaySpeed => state.showPlaySpeed;
+  void setShowPlaySpeed(bool value) {
+    state = state.copyWith(showPlaySpeed: value);
+  }
+
+  set showPlaySpeed(bool value) => setShowPlaySpeed(value);
+
+  bool get brightnessSeeking => state.brightnessSeeking;
+  void setBrightnessSeeking(bool value) {
+    state = state.copyWith(brightnessSeeking: value);
+  }
+
+  set brightnessSeeking(bool value) => setBrightnessSeeking(value);
+
+  bool get volumeSeeking => state.volumeSeeking;
+  void setVolumeSeeking(bool value) {
+    state = state.copyWith(volumeSeeking: value);
+  }
+
+  set volumeSeeking(bool value) => setVolumeSeeking(value);
+
+  bool get canHidePlayerPanel => state.canHidePlayerPanel;
+  void setCanHidePlayerPanel(bool value) {
+    state = state.copyWith(canHidePlayerPanel: value);
+  }
+
+  set canHidePlayerPanel(bool value) => setCanHidePlayerPanel(value);
+
+  int get superResolutionType => state.superResolutionType;
+
+  String get syncplayRoom => state.syncplayRoom;
+
+  int get syncplayClientRtt => state.syncplayClientRtt;
+
+  double get brightness => state.brightness;
+  void setBrightness(double value) {
+    state = state.copyWith(brightness: value);
+  }
+
+  set brightness(double value) => setBrightness(value);
+
+  int get aspectRatioType => state.aspectRatioType;
+  void setAspectRatioType(int type) {
+    state = state.copyWith(aspectRatioType: type);
+  }
+
+  set aspectRatioType(int value) => setAspectRatioType(value);
+
+  Duration get currentPosition => state.currentPosition;
+  set currentPosition(Duration value) {
+    state = state.copyWith(currentPosition: value);
+  }
+
+  Duration get buffer => state.buffer;
+  set buffer(Duration value) {
+    state = state.copyWith(buffer: value);
+  }
+
+  Duration get duration => state.duration;
+  set duration(Duration value) {
+    state = state.copyWith(duration: value);
+  }
+
+  bool get playing => state.playing;
+  set playing(bool value) {
+    state = state.copyWith(playing: value);
+  }
+
+  bool get isBuffering => state.isBuffering;
+  set isBuffering(bool value) {
+    state = state.copyWith(isBuffering: value);
+  }
+
+  bool get completed => state.completed;
+  set completed(bool value) {
+    state = state.copyWith(completed: value);
+  }
+
+  double get playerSpeed => state.playerSpeed;
+  set playerSpeed(double value) {
+    unawaited(setPlaybackSpeed(value));
+  }
+
+  double get volume => state.volume;
+  set volume(double value) {
+    unawaited(setVolume(value));
+  }
+
+  void updatePlaybackState({
+    Duration? position,
+    Duration? buffered,
+    Duration? total,
+    bool? isPlaying,
+    bool? buffering,
+    bool? isCompleted,
+  }) {
+    state = state.copyWith(
+      currentPosition: position ?? state.currentPosition,
+      buffer: buffered ?? state.buffer,
+      duration: total ?? state.duration,
+      playing: isPlaying ?? state.playing,
+      isBuffering: buffering ?? state.isBuffering,
+      completed: isCompleted ?? state.completed,
+    );
   }
 }

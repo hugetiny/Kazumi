@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:kazumi/pages/webdav_editor/providers.dart';
+import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 
-class WebDavEditorPage extends StatefulWidget {
+class WebDavEditorPage extends ConsumerStatefulWidget {
   const WebDavEditorPage({
     super.key,
   });
 
   @override
-  State<WebDavEditorPage> createState() => _WebDavEditorPageState();
+  ConsumerState<WebDavEditorPage> createState() => _WebDavEditorPageState();
 }
 
-class _WebDavEditorPageState extends State<WebDavEditorPage> {
+class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
   final TextEditingController webDavURLController = TextEditingController();
   final TextEditingController webDavUsernameController =
       TextEditingController();
@@ -32,6 +34,14 @@ class _WebDavEditorPageState extends State<WebDavEditorPage> {
         setting.get(SettingBoxKey.webDavUsername, defaultValue: '');
     webDavPasswordController.text =
         setting.get(SettingBoxKey.webDavPassword, defaultValue: '');
+  }
+
+  @override
+  void dispose() {
+    webDavURLController.dispose();
+    webDavUsernameController.dispose();
+    webDavPasswordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -89,18 +99,21 @@ class _WebDavEditorPageState extends State<WebDavEditorPage> {
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.save),
-        onPressed: () async {
-          setting.put(SettingBoxKey.webDavURL, webDavURLController.text);
-          setting.put(
-              SettingBoxKey.webDavUsername, webDavUsernameController.text);
-          setting.put(
-              SettingBoxKey.webDavPassword, webDavPasswordController.text);
-          var webDav = WebDav();
+    onPressed: () async {
+      await setting.put(SettingBoxKey.webDavURL, webDavURLController.text);
+      await setting.put(
+        SettingBoxKey.webDavUsername, webDavUsernameController.text);
+      await setting.put(
+        SettingBoxKey.webDavPassword, webDavPasswordController.text);
+          final webDav = WebDav();
           try {
             await webDav.init();
           } catch (e) {
             KazumiDialog.showToast(message: '配置失败 ${e.toString()}');
             await setting.put(SettingBoxKey.webDavEnable, false);
+            await ref
+                .read(webDavSettingsControllerProvider.notifier)
+                .refreshFromStorage();
             return;
           }
           KazumiDialog.showToast(message: '配置成功, 开始测试');
@@ -111,6 +124,9 @@ class _WebDavEditorPageState extends State<WebDavEditorPage> {
             KazumiDialog.showToast(message: '测试失败 ${e.toString()}');
             await setting.put(SettingBoxKey.webDavEnable, false);
           }
+          await ref
+              .read(webDavSettingsControllerProvider.notifier)
+              .refreshFromStorage();
         },
       ),
     );

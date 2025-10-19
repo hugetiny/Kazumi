@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:kazumi/pages/collect/providers.dart';
 
-class CollectButton extends StatefulWidget {
+class CollectButton extends ConsumerStatefulWidget {
   CollectButton({
     super.key,
     required this.bangumiItem,
@@ -31,20 +32,21 @@ class CollectButton extends StatefulWidget {
   final void Function()? onClose;
 
   @override
-  State<CollectButton> createState() => _CollectButtonState();
+  ConsumerState<CollectButton> createState() => _CollectButtonState();
 }
 
-class _CollectButtonState extends State<CollectButton> {
+class _CollectButtonState extends ConsumerState<CollectButton> {
   // 1. 在看
   // 2. 想看
   // 3. 搁置
   // 4. 看过
   // 5. 抛弃
   late int collectType;
-  final CollectController collectController = Modular.get<CollectController>();
+  late final CollectController collectController;
 
   @override
   void initState() {
+    collectController = ref.read(collectControllerProvider.notifier);
     super.initState();
   }
 
@@ -84,6 +86,7 @@ class _CollectButtonState extends State<CollectButton> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(collectControllerProvider);
     collectType = collectController.getCollectType(widget.bangumiItem);
     return MenuAnchor(
       consumeOutsideTap: true,

@@ -5,53 +5,61 @@ import 'package:kazumi/modules/collect/collect_change_module.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 import 'package:hive/hive.dart';
-import 'package:mobx/mobx.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
-part 'collect_controller.g.dart';
+class CollectState {
+  final List<CollectedBangumi> collectibles;
+  final bool syncing;
 
-class CollectController = _CollectController with _$CollectController;
+  const CollectState({
+    this.collectibles = const [],
+    this.syncing = false,
+  });
 
-abstract class _CollectController with Store {
-  Box setting = GStorage.setting;
+  CollectState copyWith({
+    List<CollectedBangumi>? collectibles,
+    bool? syncing,
+  }) => CollectState(
+        collectibles: collectibles ?? this.collectibles,
+        syncing: syncing ?? this.syncing,
+      );
+}
+
+class CollectController extends SafeStateNotifier<CollectState> {
+  CollectController() : super(const CollectState());
+
+  Box get setting => GStorage.setting;
   List<BangumiItem> get favorites => GStorage.favorites.values.toList();
 
-  @observable
-  ObservableList<CollectedBangumi> collectibles =
-      ObservableList<CollectedBangumi>();
-
   void loadCollectibles() {
-    collectibles.clear();
-    collectibles.addAll(GStorage.collectibles.values.toList());
+    state = state.copyWith(
+      collectibles: GStorage.collectibles.values.toList(),
+    );
   }
 
   int getCollectType(BangumiItem bangumiItem) {
-    CollectedBangumi? collectedBangumi =
-        GStorage.collectibles.get(bangumiItem.id);
-    if (collectedBangumi == null) {
-      return 0;
-    } else {
-      return collectedBangumi.type;
-    }
+    final collectedBangumi = GStorage.collectibles.get(bangumiItem.id);
+    return collectedBangumi?.type ?? 0;
   }
 
-  Future<void> addCollect(BangumiItem bangumiItem, {type = 1}) async {
+  Future<void> addCollect(BangumiItem bangumiItem, {int type = 1}) async {
     if (type == 0) {
       await deleteCollect(bangumiItem);
       return;
     }
-    CollectedBangumi collectedBangumi =
-        CollectedBangumi(bangumiItem, DateTime.now(), type);
+    final collectedBangumi = CollectedBangumi(bangumiItem, DateTime.now(), type);
     await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
     await GStorage.collectibles.flush();
-    final int collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
-    final CollectedBangumiChange collectChange = CollectedBangumiChange(
-        collectChangeId,
-        bangumiItem.id,
-        1,
-        type,
-        (DateTime.now().millisecondsSinceEpoch ~/ 1000));
+    final collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final collectChange = CollectedBangumiChange(
+      collectChangeId,
+      bangumiItem.id,
+      1,
+      type,
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+    );
     await GStorage.collectChanges.put(collectChangeId, collectChange);
     await GStorage.collectChanges.flush();
     loadCollectibles();
@@ -60,29 +68,26 @@ abstract class _CollectController with Store {
   Future<void> deleteCollect(BangumiItem bangumiItem) async {
     await GStorage.collectibles.delete(bangumiItem.id);
     await GStorage.collectibles.flush();
-    final int collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
-    final CollectedBangumiChange collectChange = CollectedBangumiChange(
-        collectChangeId,
-        bangumiItem.id,
-        3,
-        5,
-        (DateTime.now().millisecondsSinceEpoch ~/ 1000));
+    final collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final collectChange = CollectedBangumiChange(
+      collectChangeId,
+      bangumiItem.id,
+      3,
+      5,
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+    );
     await GStorage.collectChanges.put(collectChangeId, collectChange);
     await GStorage.collectChanges.flush();
     loadCollectibles();
   }
 
   Future<void> updateLocalCollect(BangumiItem bangumiItem) async {
-    CollectedBangumi? collectedBangumi =
-        GStorage.collectibles.get(bangumiItem.id);
-    if (collectedBangumi == null) {
-      return;
-    } else {
-      collectedBangumi.bangumiItem = bangumiItem;
-      await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
-      await GStorage.collectibles.flush();
-      loadCollectibles();
-    }
+    final collectedBangumi = GStorage.collectibles.get(bangumiItem.id);
+    if (collectedBangumi == null) return;
+    collectedBangumi.bangumiItem = bangumiItem;
+    await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
+    await GStorage.collectibles.flush();
+    loadCollectibles();
   }
 
   Future<void> syncCollectibles() async {
@@ -90,36 +95,36 @@ abstract class _CollectController with Store {
       KazumiDialog.showToast(message: '未开启WebDav同步或配置无效');
       return;
     }
-    bool flag = true;
+    state = state.copyWith(syncing: true);
+    var ok = true;
     try {
       await WebDav().ping();
     } catch (e) {
       KazumiLogger().log(Level.error, 'WebDav连接失败: $e');
       KazumiDialog.showToast(message: 'WebDav连接失败: $e');
-      flag = false;
+      ok = false;
     }
-    if (!flag) {
-      return;
+    if (ok) {
+      try {
+        await WebDav().syncCollectibles();
+      } catch (e) {
+        KazumiDialog.showToast(message: 'WebDav同步失败 $e');
+      }
+      loadCollectibles();
     }
-    try {
-      await WebDav().syncCollectibles();
-    } catch (e){
-      KazumiDialog.showToast(message: 'WebDav同步失败 $e');
-    }
-    loadCollectibles();
+    state = state.copyWith(syncing: false);
   }
 
-  // migrate collect from old version (favorites)
   Future<void> migrateCollect() async {
-    if (favorites.isNotEmpty) {
-      int count = 0;
-      for (BangumiItem bangumiItem in favorites) {
-        await addCollect(bangumiItem, type: 1);
-        count++;
-      }
-      await GStorage.favorites.clear();
-      await GStorage.favorites.flush();
-      KazumiLogger().log(Level.debug, '检测到$count条未分类追番记录, 已迁移');
+    if (favorites.isEmpty) return;
+    int count = 0;
+    for (final item in favorites) {
+      await addCollect(item, type: 1);
+      count++;
     }
+    await GStorage.favorites.clear();
+    await GStorage.favorites.flush();
+    KazumiLogger().log(Level.debug, '检测到$count条未分类追番记录, 已迁移');
   }
 }
+

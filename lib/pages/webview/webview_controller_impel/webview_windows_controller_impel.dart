@@ -19,6 +19,9 @@ class WebviewWindowsItemControllerImpel
   Future<void> loadUrl(String url, bool useNativePlayer, bool useLegacyParser,
       {int offset = 0}) async {
     await unloadPage();
+    if (webviewController == null) {
+      await init();
+    }
     count = 0;
     this.offset = offset;
     isIframeLoaded = false;
@@ -53,22 +56,31 @@ class WebviewWindowsItemControllerImpel
 
   @override
   Future<void> unloadPage() async {
-    subscriptions.forEach((s) {
+    if (webviewController == null) {
+      subscriptions.clear();
+      return;
+    }
+    for (final s in subscriptions) {
       try {
         s.cancel();
       } catch (_) {}
-    });
+    }
+    subscriptions.clear();
     await redirect2Blank();
   }
 
   @override
   void dispose() {
-    subscriptions.forEach((s) {
+    for (final s in subscriptions) {
       try {
         s.cancel();
       } catch (_) {}
-    });
-    webviewController!.dispose();
+    }
+    subscriptions.clear();
+    try {
+      webviewController?.dispose();
+    } catch (_) {}
+    webviewController = null;
   }
 
   // The webview_windows package does not have a method to unload the current page. 
@@ -76,8 +88,13 @@ class WebviewWindowsItemControllerImpel
   // Directly disposing of the webview controller would require reinitialization when switching episodes, which is costly. 
   // Therefore, this method is used to redirect to a blank page instead.
   Future<void> redirect2Blank() async {
-    await webviewController!.executeScript('''
-      window.location.href = 'about:blank';
-    ''');
+    if (webviewController == null) {
+      return;
+    }
+    try {
+      await webviewController!.executeScript('''
+        window.location.href = 'about:blank';
+      ''');
+    } catch (_) {}
   }
 }

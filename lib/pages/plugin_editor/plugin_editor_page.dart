@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/plugins/plugins_providers.dart';
 
-class PluginEditorPage extends StatefulWidget {
+class PluginEditorPage extends ConsumerStatefulWidget {
   const PluginEditorPage({
     super.key,
+    required this.plugin,
   });
 
+  final Plugin plugin;
+
   @override
-  State<PluginEditorPage> createState() => _PluginEditorPageState();
+  ConsumerState<PluginEditorPage> createState() => _PluginEditorPageState();
 }
 
-class _PluginEditorPageState extends State<PluginEditorPage> {
-  final PluginsController pluginsController = Modular.get<PluginsController>();
+class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
+  late final PluginsController pluginsController;
   final TextEditingController apiController = TextEditingController();
   final TextEditingController typeController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
@@ -37,7 +41,8 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
   @override
   void initState() {
     super.initState();
-    final Plugin plugin = Modular.args.data as Plugin;
+    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    final Plugin plugin = widget.plugin;
     apiController.text = plugin.api;
     typeController.text = plugin.type;
     nameController.text = plugin.name;
@@ -60,7 +65,7 @@ class _PluginEditorPageState extends State<PluginEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Plugin plugin = Modular.args.data as Plugin;
+    final Plugin plugin = widget.plugin;
 
     return Scaffold(
       appBar: const SysAppBar(

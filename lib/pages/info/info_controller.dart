@@ -1,103 +1,183 @@
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
-import 'package:kazumi/modules/search/plugin_search_module.dart';
-import 'package:kazumi/request/bangumi.dart';
-import 'package:mobx/mobx.dart';
-import 'package:logger/logger.dart';
-import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
 import 'package:kazumi/modules/characters/character_item.dart';
+import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/modules/staff/staff_item.dart';
+import 'package:kazumi/pages/collect/collect_controller.dart';
+import 'package:kazumi/request/bangumi.dart';
+import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:logger/logger.dart';
 
-part 'info_controller.g.dart';
+class InfoState {
+  final bool isLoading;
+  final List<CommentItem> commentsList;
+  final List<CharacterItem> characterList;
+  final List<StaffFullItem> staffList;
+  final BangumiItem? bangumiItem;
 
-class InfoController = _InfoController with _$InfoController;
+  const InfoState({
+    this.isLoading = false,
+    this.commentsList = const [],
+    this.characterList = const [],
+    this.staffList = const [],
+    this.bangumiItem,
+  });
 
-abstract class _InfoController with Store {
-  final CollectController collectController = Modular.get<CollectController>();
-  late BangumiItem bangumiItem;
+  InfoState copyWith({
+    bool? isLoading,
+    List<CommentItem>? commentsList,
+    List<CharacterItem>? characterList,
+    List<StaffFullItem>? staffList,
+    BangumiItem? bangumiItem,
+  }) {
+    return InfoState(
+      isLoading: isLoading ?? this.isLoading,
+      commentsList: commentsList ?? this.commentsList,
+      characterList: characterList ?? this.characterList,
+      staffList: staffList ?? this.staffList,
+      bangumiItem: bangumiItem ?? this.bangumiItem,
+    );
+  }
+}
 
-  @observable
-  bool isLoading = false;
+class InfoController extends SafeStateNotifier<InfoState> {
+  InfoController({required this.collectController})
+      : super(const InfoState());
 
-  @observable
-  var pluginSearchResponseList = ObservableList<PluginSearchResponse>();
+  final CollectController collectController;
+  final List<PluginSearchResponse> _legacyPluginSearchResponses = [];
+  final Map<String, String> _legacyPluginSearchStatus = {};
 
-  @observable
-  var pluginSearchStatus = ObservableMap<String, String>();
+  BangumiItem get bangumiItem => state.bangumiItem ?? _emptyBangumiItem;
 
-  @observable
-  var commentsList = ObservableList<CommentItem>();
+  set bangumiItem(BangumiItem item) {
+    state = state.copyWith(bangumiItem: item);
+  }
 
-  @observable
-  var characterList = ObservableList<CharacterItem>();
+  List<CommentItem> get commentsList => state.commentsList;
+  List<CharacterItem> get characterList => state.characterList;
+  List<StaffFullItem> get staffList => state.staffList;
+  bool get isLoading => state.isLoading;
 
-  @observable
-  var staffList = ObservableList<StaffFullItem>();
+  void clearComments() {
+    if (state.commentsList.isEmpty) return;
+    state = state.copyWith(commentsList: const []);
+  }
 
-  Future<void> queryBangumiInfoByID(int id, {String type = "init"}) async {
-    isLoading = true;
-    await BangumiHTTP.getBangumiInfoByID(id).then((value) {
-      if (value != null) {
-        if (type == "init") {
-          bangumiItem = value;
-        } else {
-          bangumiItem.summary = value.summary;
-          bangumiItem.tags = value.tags;
-          bangumiItem.rank = value.rank;
-          bangumiItem.airDate = value.airDate;
-          bangumiItem.airWeekday = value.airWeekday;
-          bangumiItem.alias = value.alias;
-          bangumiItem.ratingScore = value.ratingScore;
-          bangumiItem.votes = value.votes;
-          bangumiItem.votesCount = value.votesCount;
-        }
-        collectController.updateLocalCollect(bangumiItem);
-        isLoading = false;
+  void clearCharacters() {
+    if (state.characterList.isEmpty) return;
+    state = state.copyWith(characterList: const []);
+  }
+
+  void clearStaff() {
+    if (state.staffList.isEmpty) return;
+    state = state.copyWith(staffList: const []);
+  }
+
+  void resetListsForNewBangumi() {
+    state = state.copyWith(
+      commentsList: const [],
+      characterList: const [],
+      staffList: const [],
+    );
+    _legacyPluginSearchResponses.clear();
+    _legacyPluginSearchStatus.clear();
+  }
+
+  Future<void> queryBangumiInfoByID(int id, {String type = 'init'}) async {
+    state = state.copyWith(isLoading: true);
+    final value = await BangumiHTTP.getBangumiInfoByID(id);
+    if (value != null) {
+      BangumiItem updatedItem;
+      if (type == 'init' || state.bangumiItem == null) {
+        updatedItem = value;
+      } else {
+        final current = state.bangumiItem!;
+        updatedItem = BangumiItem(
+          id: current.id,
+          type: current.type,
+          name: current.name,
+          nameCn: current.nameCn,
+          summary: value.summary,
+          airDate: value.airDate,
+          airWeekday: value.airWeekday,
+          rank: value.rank,
+          images: current.images,
+          tags: value.tags,
+          alias: value.alias,
+          ratingScore: value.ratingScore,
+          votes: value.votes,
+          votesCount: value.votesCount,
+          info: current.info,
+        );
       }
-    });
+      await collectController.updateLocalCollect(updatedItem);
+      state = state.copyWith(
+        bangumiItem: updatedItem,
+        isLoading: false,
+      );
+    } else {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   Future<void> queryBangumiCommentsByID(int id, {int offset = 0}) async {
-    if (offset == 0) {
-      commentsList.clear();
-    }
-    await BangumiHTTP.getBangumiCommentsByID(id, offset: offset).then((value) {
-      commentsList.addAll(value.commentList);
-    });
-    KazumiLogger().log(Level.info, '已加载评论列表长度 ${commentsList.length}');
+    final existing =
+        offset == 0 ? <CommentItem>[] : List<CommentItem>.from(state.commentsList);
+    final result = await BangumiHTTP.getBangumiCommentsByID(id, offset: offset);
+    final updated = [...existing, ...result.commentList];
+    state = state.copyWith(commentsList: updated);
+    KazumiLogger().log(Level.info, '已加载评论列表长度 ${updated.length}');
   }
 
   Future<void> queryBangumiCharactersByID(int id) async {
-    characterList.clear();
-    await BangumiHTTP.getCharatersByBangumiID(id).then((value) {
-      characterList.addAll(value.charactersList);
-    });
-    Map<String, int> relationValue = {
-      '主角': 1,
-      '配角': 2,
-      '客串': 3,
-    };
+    final result = await BangumiHTTP.getCharatersByBangumiID(id);
+    final characters = result.charactersList;
+    const relationValue = {'主角': 1, '配角': 2, '客串': 3};
 
     try {
-      characterList.sort((a, b) {
-        int valueA = relationValue[a.relation] ?? 4;
-        int valueB = relationValue[b.relation] ?? 4;
+      characters.sort((a, b) {
+        final valueA = relationValue[a.relation] ?? 4;
+        final valueB = relationValue[b.relation] ?? 4;
         return valueA.compareTo(valueB);
       });
     } catch (e) {
       KazumiDialog.showToast(message: '$e');
     }
-    KazumiLogger().log(Level.info, '已加载角色列表长度 ${characterList.length}');
+    state = state.copyWith(characterList: characters);
+    KazumiLogger().log(Level.info, '已加载角色列表长度 ${characters.length}');
   }
 
   Future<void> queryBangumiStaffsByID(int id) async {
-    staffList.clear();
-    await BangumiHTTP.getBangumiStaffByID(id).then((value) {
-      staffList.addAll(value.data);
-    });
-    KazumiLogger().log(Level.info, '已加载制作人员列表长度 ${staffList.length}');
+    final result = await BangumiHTTP.getBangumiStaffByID(id);
+    final staff = result.data;
+    state = state.copyWith(staffList: staff);
+    KazumiLogger().log(Level.info, '已加载制作人员列表长度 ${staff.length}');
   }
+
+  // Legacy accessors retained to avoid breakages; search functionality has moved
+  // to dedicated Riverpod providers.
+  List<PluginSearchResponse> get pluginSearchResponseList =>
+      _legacyPluginSearchResponses;
+  Map<String, String> get pluginSearchStatus => _legacyPluginSearchStatus;
+
+  static final BangumiItem _emptyBangumiItem = BangumiItem(
+    id: 0,
+    type: 0,
+    name: '',
+    nameCn: '',
+    summary: '',
+    airDate: '',
+    airWeekday: 0,
+    rank: 0,
+    images: {},
+    tags: [],
+    alias: [],
+    ratingScore: 0,
+    votes: 0,
+    votesCount: [],
+    info: '',
+  );
 }

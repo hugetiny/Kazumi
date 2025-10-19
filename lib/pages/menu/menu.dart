@@ -1,72 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
-import 'package:kazumi/pages/router.dart';
-import 'package:provider/provider.dart';
+// import 'package:kazumi/pages/router.dart';
+import 'navigation_provider.dart';
 
-class ScaffoldMenu extends StatefulWidget {
-  const ScaffoldMenu({super.key});
+class ScaffoldMenu extends ConsumerStatefulWidget {
+  const ScaffoldMenu({super.key, this.child});
+
+  final Widget? child;
 
   @override
-  State<ScaffoldMenu> createState() => _ScaffoldMenu();
+  ConsumerState<ScaffoldMenu> createState() => _ScaffoldMenu();
 }
-
-class NavigationBarState extends ChangeNotifier {
-  int _selectedIndex = 0;
-  bool _isHide = false;
-  bool _isBottom = false;
-
-  int get selectedIndex => _selectedIndex;
-
-  bool get isHide => _isHide;
-
-  bool get isBottom => _isBottom;
-
-  void updateSelectedIndex(int pageIndex) {
-    _selectedIndex = pageIndex;
-    notifyListeners();
-  }
-
-  void hideNavigate() {
-    _isHide = true;
-    notifyListeners();
-  }
-
-  void showNavigate() {
-    _isHide = false;
-    notifyListeners();
-  }
-}
-
-class _ScaffoldMenu extends State<ScaffoldMenu> {
-  final PageController _page = PageController();
+class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-        create: (context) => NavigationBarState(),
-        child: Consumer<NavigationBarState>(builder: (context, state, _) {
-          return OrientationBuilder(builder: (context, orientation) {
-            state._isBottom = orientation == Orientation.portrait;
-            return orientation != Orientation.portrait
-                ? sideMenuWidget(context, state)
-                : bottomMenuWidget(context, state);
-          });
-        }));
+    final navigationState = ref.watch(navigationBarControllerProvider);
+    final navigationController =
+        ref.read(navigationBarControllerProvider.notifier);
+
+    return OrientationBuilder(builder: (context, orientation) {
+      final bool isPortrait = orientation == Orientation.portrait;
+      navigationController.setIsBottom(isPortrait);
+      return isPortrait
+          ? bottomMenuWidget(context, navigationState, navigationController)
+          : sideMenuWidget(context, navigationState, navigationController);
+    });
   }
 
-  Widget bottomMenuWidget(BuildContext context, NavigationBarState state) {
+  Widget bottomMenuWidget(
+    BuildContext context,
+    NavigationBarStateData state,
+    NavigationBarController controller,
+  ) {
     return Scaffold(
         body: Container(
           color: Theme.of(context).colorScheme.primaryContainer,
-          child: PageView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            controller: _page,
-            itemCount: menu.size,
-            itemBuilder: (_, __) => const RouterOutlet(),
-          ),
+          child: widget.child ?? const SizedBox.shrink(),
         ),
-        bottomNavigationBar: state.isHide
+        bottomNavigationBar: state.isHidden
             ? const SizedBox(height: 0)
             : NavigationBar(
                 destinations: const <Widget>[
@@ -93,20 +67,37 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
                 ],
                 selectedIndex: state.selectedIndex,
                 onDestinationSelected: (int index) {
-                  state.updateSelectedIndex(index);
-                  Modular.to.navigate("/tab${menu.getPath(index)}/");
+                  controller.updateSelectedIndex(index);
+                  switch (index) {
+                    case 0:
+                      context.go('/tab/popular');
+                      break;
+                    case 1:
+                      context.go('/tab/timeline');
+                      break;
+                    case 2:
+                      context.go('/tab/collect');
+                      break;
+                    case 3:
+                      context.go('/tab/my');
+                      break;
+                  }
                 },
               ));
   }
 
-  Widget sideMenuWidget(BuildContext context, NavigationBarState state) {
+  Widget sideMenuWidget(
+    BuildContext context,
+    NavigationBarStateData state,
+    NavigationBarController controller,
+  ) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       body: Row(
         children: [
           EmbeddedNativeControlArea(
             child: Visibility(
-              visible: !state.isHide,
+              visible: !state.isHidden,
               child: NavigationRail(
                 backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
                 groupAlignment: 1.0,
@@ -114,7 +105,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
                   elevation: 0,
                   heroTag: null,
                   onPressed: () {
-                    Modular.to.pushNamed('/search/');
+                    context.push('/search');
                   },
                   child: const Icon(Icons.search),
                 ),
@@ -143,8 +134,21 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
                 ],
                 selectedIndex: state.selectedIndex,
                 onDestinationSelected: (int index) {
-                  state.updateSelectedIndex(index);
-                  Modular.to.navigate("/tab${menu.getPath(index)}/");
+                  controller.updateSelectedIndex(index);
+                  switch (index) {
+                    case 0:
+                      context.go('/tab/popular');
+                      break;
+                    case 1:
+                      context.go('/tab/timeline');
+                      break;
+                    case 2:
+                      context.go('/tab/collect');
+                      break;
+                    case 3:
+                      context.go('/tab/my');
+                      break;
+                  }
                 },
               ),
             ),
@@ -163,11 +167,7 @@ class _ScaffoldMenu extends State<ScaffoldMenu> {
                   topLeft: Radius.circular(16.0),
                   bottomLeft: Radius.circular(16.0),
                 ),
-                child: PageView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: menu.size,
-                  itemBuilder: (_, __) => const RouterOutlet(),
-                ),
+                child: widget.child ?? const SizedBox.shrink(),
               ),
             ),
           ),

@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:flutter_modular/flutter_modular.dart';
-import 'package:kazumi/pages/menu/menu.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/timeline/timeline_controller.dart';
+import 'package:kazumi/pages/timeline/providers.dart';
 import 'package:kazumi/bean/card/bangumi_timeline_card.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/utils/constants.dart';
-import 'package:provider/provider.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
-import 'package:kazumi/utils/anime_season.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
+import 'package:kazumi/pages/menu/navigation_provider.dart';
 
-class TimelinePage extends StatefulWidget {
+class TimelinePage extends ConsumerStatefulWidget {
   const TimelinePage({super.key});
 
   @override
-  State<TimelinePage> createState() => _TimelinePageState();
+  ConsumerState<TimelinePage> createState() => _TimelinePageState();
 }
 
-class _TimelinePageState extends State<TimelinePage>
+class _TimelinePageState extends ConsumerState<TimelinePage>
     with SingleTickerProviderStateMixin {
-  final TimelineController timelineController =
-      Modular.get<TimelineController>();
-  late NavigationBarState navigationBarState;
+  late TimelineController timelineController;
   TabController? tabController;
 
   @override
@@ -33,9 +30,9 @@ class _TimelinePageState extends State<TimelinePage>
     int weekday = DateTime.now().weekday - 1;
     tabController =
         TabController(vsync: this, length: tabs.length, initialIndex: weekday);
-    navigationBarState =
-        Provider.of<NavigationBarState>(context, listen: false);
-    if (timelineController.bangumiCalendar.isEmpty) {
+    timelineController = ref.read(timelineControllerProvider.notifier);
+    final state = ref.read(timelineControllerProvider);
+    if (state.bangumiCalendar.isEmpty) {
       timelineController.init();
     }
   }
@@ -51,8 +48,8 @@ class _TimelinePageState extends State<TimelinePage>
       KazumiDialog.dismiss();
       return;
     }
-    navigationBarState.updateSelectedIndex(0);
-    Modular.to.navigate('/tab/popular/');
+  ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    context.go('/tab/popular');
   }
 
   DateTime generateDateTime(int year, String season) {
@@ -225,8 +222,9 @@ class _TimelinePageState extends State<TimelinePage>
   Widget buildSeasonSegmentedButton(
       BuildContext context, List<DateTime> availableSeasons) {
     DateTime? selectedSeason;
+    final state = ref.read(timelineControllerProvider);
     for (final season in availableSeasons) {
-      if (Utils.isSameSeason(timelineController.selectedDate, season)) {
+      if (Utils.isSameSeason(state.selectedDate, season)) {
         selectedSeason = season;
         break;
       }
@@ -307,16 +305,14 @@ class _TimelinePageState extends State<TimelinePage>
 
   void onSeasonSelected(DateTime date) async {
     final currDate = DateTime.now();
+    final state = ref.read(timelineControllerProvider);
     timelineController.tryEnterSeason(date);
-
-    if (Utils.isSameSeason(timelineController.selectedDate, currDate)) {
+    if (Utils.isSameSeason(state.selectedDate, currDate)) {
       await timelineController.getSchedules();
     } else {
       await timelineController.getSchedulesBySeason();
     }
-
-    timelineController.seasonString =
-        AnimeSeason(timelineController.selectedDate).toString();
+    timelineController.finalizeSeasonString();
   }
 
   void showSortSwitcher() {
@@ -360,7 +356,8 @@ class _TimelinePageState extends State<TimelinePage>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+  final state = ref.watch(timelineControllerProvider);
+  return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) {
@@ -378,14 +375,9 @@ class _TimelinePageState extends State<TimelinePage>
             indicatorColor: Theme.of(context).colorScheme.primary,
           ),
           title: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            child: Observer(builder: (context) {
-              return Text(timelineController.seasonString);
-            }),
-            onTap: () {
-              showSeasonBottomSheet(context);
-            },
-          ),
+              borderRadius: BorderRadius.circular(8),
+              child: Text(state.seasonString),
+              onTap: () => showSeasonBottomSheet(context)),
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
@@ -394,21 +386,20 @@ class _TimelinePageState extends State<TimelinePage>
           icon: const Icon(Icons.sort),
           label: const Text("排序方式"),
         ),
-        body: Observer(builder: (context) {
-          if (timelineController.isLoading &&
-              timelineController.bangumiCalendar.isEmpty) {
+        body: Builder(builder: (context) {
+          if (state.isLoading && state.bangumiCalendar.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
-          if (timelineController.isTimeOut) {
+          if (state.isTimeOut) {
             return Center(
               child: SizedBox(
                 height: 400,
                 child: GeneralErrorWidget(errMsg: '什么都没有找到 (´;ω;`)', actions: [
                   GeneralErrorButton(
                     onPressed: () {
-                      onSeasonSelected(timelineController.selectedDate);
+                      onSeasonSelected(state.selectedDate);
                     },
                     text: '点击重试',
                   ),
@@ -418,7 +409,7 @@ class _TimelinePageState extends State<TimelinePage>
           }
           return TabBarView(
             controller: tabController,
-            children: contentGrid(timelineController.bangumiCalendar),
+            children: contentGrid(state.bangumiCalendar),
           );
         }),
       ),
@@ -426,6 +417,12 @@ class _TimelinePageState extends State<TimelinePage>
   }
 
   List<Widget> contentGrid(List<List<BangumiItem>> bangumiCalendar) {
+    // Ensure tab content count matches TabController length to avoid runtime mismatches.
+    final normalizedCalendar = List<List<BangumiItem>>.generate(
+      tabs.length,
+      (index) => index < bangumiCalendar.length ? bangumiCalendar[index] : const [],
+    );
+
     List<Widget> gridViewList = [];
     int crossCount = 1;
     if (MediaQuery.sizeOf(context).width > LayoutBreakpoint.compact['width']!) {
@@ -436,7 +433,7 @@ class _TimelinePageState extends State<TimelinePage>
     }
     double cardHeight =
         Utils.isDesktop() ? 160 : (Utils.isTablet() ? 140 : 120);
-    for (var bangumiList in bangumiCalendar) {
+  for (var bangumiList in normalizedCalendar) {
       gridViewList.add(
         CustomScrollView(
           slivers: [

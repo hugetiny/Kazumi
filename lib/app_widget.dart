@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:hive/hive.dart';
@@ -12,23 +11,25 @@ import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/bean/settings/theme_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/constants.dart';
+import 'package:kazumi/router.dart';
+import 'package:kazumi/pages/settings/providers.dart';
 
-class AppWidget extends StatefulWidget {
+class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
 
   @override
-  State<AppWidget> createState() => _AppWidgetState();
+  ConsumerState<AppWidget> createState() => _AppWidgetState();
 }
 
-class _AppWidgetState extends State<AppWidget>
+class _AppWidgetState extends ConsumerState<AppWidget>
     with TrayListener, WidgetsBindingObserver, WindowListener {
   Box setting = GStorage.setting;
 
   final TrayManager trayManager = TrayManager.instance;
   bool showingExitDialog = false;
+  bool _themeInitialized = false;
 
   @override
   void initState() {
@@ -36,7 +37,46 @@ class _AppWidgetState extends State<AppWidget>
     windowManager.addListener(this);
     setPreventClose();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeThemeFromStorage();
+    });
     super.initState();
+  }
+
+  void _initializeThemeFromStorage() {
+    if (_themeInitialized) return;
+    final themeNotifier = ref.read(themeNotifierProvider.notifier);
+
+    final String savedThemeMode =
+        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
+    switch (savedThemeMode) {
+      case 'dark':
+        themeNotifier.setThemeMode(ThemeMode.dark);
+        break;
+      case 'light':
+        themeNotifier.setThemeMode(ThemeMode.light);
+        break;
+      default:
+        themeNotifier.setThemeMode(ThemeMode.system);
+        break;
+    }
+
+    final String colorValue =
+        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
+    final Color seedColor = colorValue == 'default'
+        ? Colors.green
+        : Color(int.parse(colorValue, radix: 16));
+    themeNotifier.setSeedColor(seedColor);
+
+    final bool useDynamicColor =
+        setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
+    themeNotifier.setUseDynamicColor(useDynamicColor);
+
+    final bool oledEnhance =
+        setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
+    themeNotifier.setOledEnhance(oledEnhance);
+
+    _themeInitialized = true;
   }
 
   void setPreventClose() async {
@@ -215,78 +255,84 @@ class _AppWidgetState extends State<AppWidget>
     await trayManager.setContextMenu(trayMenu);
   }
 
+  ThemeData _buildLightTheme(ColorScheme? dynamicScheme, Color seedColor) {
+    if (dynamicScheme != null) {
+      return ThemeData(
+        useMaterial3: true,
+        colorScheme: dynamicScheme,
+        brightness: Brightness.light,
+        progressIndicatorTheme: progressIndicatorTheme2024,
+        sliderTheme: sliderTheme2024,
+        pageTransitionsTheme: pageTransitionsTheme2024,
+      );
+    }
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      colorSchemeSeed: seedColor,
+      progressIndicatorTheme: progressIndicatorTheme2024,
+      sliderTheme: sliderTheme2024,
+      pageTransitionsTheme: pageTransitionsTheme2024,
+    );
+  }
+
+  ThemeData _buildDarkTheme(
+    ColorScheme? dynamicScheme,
+    Color seedColor,
+    bool oledEnhance,
+  ) {
+    ThemeData base;
+    if (dynamicScheme != null) {
+      base = ThemeData(
+        useMaterial3: true,
+        colorScheme: dynamicScheme,
+        brightness: Brightness.dark,
+        progressIndicatorTheme: progressIndicatorTheme2024,
+        sliderTheme: sliderTheme2024,
+        pageTransitionsTheme: pageTransitionsTheme2024,
+      );
+    } else {
+      base = ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorSchemeSeed: seedColor,
+        progressIndicatorTheme: progressIndicatorTheme2024,
+        sliderTheme: sliderTheme2024,
+        pageTransitionsTheme: pageTransitionsTheme2024,
+      );
+    }
+    return oledEnhance ? Utils.oledDarkTheme(base) : base;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final ThemeProvider themeProvider = Provider.of<ThemeProvider>(context);
+    final themeState = ref.watch(themeNotifierProvider);
+    final Color seedColor = themeState.seedColor;
+    final bool useDynamicColor = themeState.useDynamicColor;
+    final bool oledEnhance = themeState.oledEnhance;
+
+    // Theme initialization is performed in initState via a
+    // post-frame callback to avoid modifying providers during build.
+
     if (Utils.isDesktop()) {
       _handleTray();
     }
-    dynamic color;
-    dynamic defaultThemeColor =
-        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
-    if (defaultThemeColor == 'default') {
-      color = Colors.green;
-    } else {
-      color = Color(int.parse(defaultThemeColor, radix: 16));
-    }
-    bool oledEnhance =
-        setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    final defaultThemeMode =
-        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
-    if (defaultThemeMode == 'dark') {
-      themeProvider.setThemeMode(ThemeMode.dark, notify: false);
-    }
-    if (defaultThemeMode == 'light') {
-      themeProvider.setThemeMode(ThemeMode.light, notify: false);
-    }
-    if (defaultThemeMode == 'system') {
-      themeProvider.setThemeMode(ThemeMode.system, notify: false);
-    }
-    var defaultDarkTheme = ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: color,
-        progressIndicatorTheme: progressIndicatorTheme2024,
-        sliderTheme: sliderTheme2024,
-        pageTransitionsTheme: pageTransitionsTheme2024);
-    var oledDarkTheme = Utils.oledDarkTheme(defaultDarkTheme);
-    themeProvider.setTheme(
-      ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorSchemeSeed: color,
-          progressIndicatorTheme: progressIndicatorTheme2024,
-          sliderTheme: sliderTheme2024,
-          pageTransitionsTheme: pageTransitionsTheme2024),
-      oledEnhance ? oledDarkTheme : defaultDarkTheme,
-      notify: false,
-    );
-    var app = DynamicColorBuilder(
-      builder: (theme, darkTheme) {
-        if (themeProvider.useDynamicColor) {
-          themeProvider.setTheme(
-            ThemeData(
-                colorScheme: theme,
-                brightness: Brightness.light,
-                progressIndicatorTheme: progressIndicatorTheme2024,
-                sliderTheme: sliderTheme2024,
-                pageTransitionsTheme: pageTransitionsTheme2024),
-            oledEnhance
-                ? Utils.oledDarkTheme(ThemeData(
-                    colorScheme: darkTheme,
-                    brightness: Brightness.dark,
-                    progressIndicatorTheme: progressIndicatorTheme2024,
-                    sliderTheme: sliderTheme2024,
-                    pageTransitionsTheme: pageTransitionsTheme2024))
-                : ThemeData(
-                    colorScheme: darkTheme,
-                    brightness: Brightness.dark,
-                    progressIndicatorTheme: progressIndicatorTheme2024,
-                    sliderTheme: sliderTheme2024,
-                    pageTransitionsTheme: pageTransitionsTheme2024),
-            notify: false,
-          );
-        }
+    final ThemeData fallbackLightTheme = _buildLightTheme(null, seedColor);
+    final ThemeData fallbackDarkTheme =
+        _buildDarkTheme(null, seedColor, oledEnhance);
+
+    final app = DynamicColorBuilder(
+      builder: (dynamicLight, dynamicDark) {
+        final bool canUseDynamic =
+            useDynamicColor && dynamicLight != null && dynamicDark != null;
+
+        final ThemeData lightTheme = canUseDynamic
+            ? _buildLightTheme(dynamicLight, seedColor)
+            : fallbackLightTheme;
+        final ThemeData darkTheme = canUseDynamic
+            ? _buildDarkTheme(dynamicDark, seedColor, oledEnhance)
+            : fallbackDarkTheme;
+
         return MaterialApp.router(
           title: "Kazumi",
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
@@ -296,14 +342,13 @@ class _AppWidgetState extends State<AppWidget>
           ],
           locale: const Locale.fromSubtags(
               languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
-          theme: themeProvider.light,
-          darkTheme: themeProvider.dark,
-          themeMode: themeProvider.themeMode,
-          routerConfig: Modular.routerConfig,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeState.themeMode,
+          routerConfig: router,
         );
       },
     );
-    Modular.setObservers([KazumiDialog.observer]);
 
     // 强制设置高帧率
     if (Platform.isAndroid) {

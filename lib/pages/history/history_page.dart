@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/card/bangumi_history_card.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/history/history_controller.dart';
+import 'package:kazumi/pages/history/providers.dart';
 import 'package:kazumi/utils/constants.dart';
 
-class HistoryPage extends StatefulWidget {
+class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
 
   @override
-  State<HistoryPage> createState() => _HistoryPageState();
+  ConsumerState<HistoryPage> createState() => _HistoryPageState();
 }
 
-class _HistoryPageState extends State<HistoryPage>
+class _HistoryPageState extends ConsumerState<HistoryPage>
     with SingleTickerProviderStateMixin {
-  final HistoryController historyController = Modular.get<HistoryController>();
+  late HistoryController historyController;
 
   /// show delete button
   bool showDelete = false;
@@ -24,7 +24,7 @@ class _HistoryPageState extends State<HistoryPage>
   @override
   void initState() {
     super.initState();
-    historyController.init();
+    historyController = ref.read(historyControllerProvider.notifier);
   }
 
   void onBackPressed(BuildContext context) {
@@ -68,7 +68,8 @@ class _HistoryPageState extends State<HistoryPage>
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {});
-    return Observer(builder: (context) {
+    final state = ref.watch(historyControllerProvider);
+    return Builder(builder: (context) {
       return PopScope(
         canPop: true,
         onPopInvokedWithResult: (bool didPop, Object? result) async {
@@ -89,7 +90,7 @@ class _HistoryPageState extends State<HistoryPage>
                       : const Icon(Icons.edit))
             ],
           ),
-          body: SafeArea(bottom: false, child: renderBody),
+          body: SafeArea(bottom: false, child: renderBody(state)),
           floatingActionButton: FloatingActionButton(
             child: const Icon(Icons.clear_all),
             onPressed: () {
@@ -101,9 +102,9 @@ class _HistoryPageState extends State<HistoryPage>
     });
   }
 
-  Widget get renderBody {
-    if (historyController.histories.isNotEmpty) {
-      return contentGrid;
+  Widget renderBody(HistoryState state) {
+    if (state.histories.isNotEmpty) {
+      return contentGrid(state);
     } else {
       return const Center(
         child: Text('没有找到历史记录 (´;ω;`)'),
@@ -111,7 +112,7 @@ class _HistoryPageState extends State<HistoryPage>
     }
   }
 
-  Widget get contentGrid {
+  Widget contentGrid(HistoryState state) {
     int crossCount = 1;
     if (MediaQuery.sizeOf(context).width > LayoutBreakpoint.compact['width']!) {
       crossCount = 2;
@@ -132,15 +133,15 @@ class _HistoryPageState extends State<HistoryPage>
           ),
           delegate: SliverChildBuilderDelegate(
             (BuildContext context, int index) {
-              return historyController.histories.isNotEmpty
+              return state.histories.isNotEmpty
                   ? BangumiHistoryCardV(
                       showDelete: showDelete,
                       cardHeight: cardHeight,
-                      historyItem: historyController.histories[index])
+                      historyItem: state.histories[index])
                   : null;
             },
-            childCount: historyController.histories.isNotEmpty
-                ? historyController.histories.length
+            childCount: state.histories.isNotEmpty
+                ? state.histories.length
                 : 10,
           ),
         ),

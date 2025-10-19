@@ -1,23 +1,24 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/plugins/plugins_providers.dart';
 
-class PluginViewPage extends StatefulWidget {
+class PluginViewPage extends ConsumerStatefulWidget {
   const PluginViewPage({super.key});
 
   @override
-  State<PluginViewPage> createState() => _PluginViewPageState();
+  ConsumerState<PluginViewPage> createState() => _PluginViewPageState();
 }
 
-class _PluginViewPageState extends State<PluginViewPage> {
-  final PluginsController pluginsController = Modular.get<PluginsController>();
+class _PluginViewPageState extends ConsumerState<PluginViewPage> {
+  late final PluginsController pluginsController;
 
   // 是否处于多选模式
   bool isMultiSelectMode = false;
@@ -49,8 +50,10 @@ class _PluginViewPageState extends State<PluginViewPage> {
                 title: const Text('新建规则'),
                 onTap: () {
                   KazumiDialog.dismiss();
-                  Modular.to.pushNamed('/settings/plugin/editor',
-                      arguments: Plugin.fromTemplate());
+                  context.push(
+                    '/settings/plugin/editor',
+                    extra: Plugin.fromTemplate(),
+                  );
                 },
               ),
               const SizedBox(height: 10),
@@ -58,8 +61,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                 title: const Text('从规则仓库导入'),
                 onTap: () {
                   KazumiDialog.dismiss();
-                  Modular.to.pushNamed('/settings/plugin/shop',
-                      arguments: Plugin.fromTemplate());
+                  context.push('/settings/plugin/shop');
                 },
               ),
               const SizedBox(height: 10),
@@ -129,11 +131,14 @@ class _PluginViewPageState extends State<PluginViewPage> {
   @override
   void initState() {
     super.initState();
+    pluginsController = ref.read(pluginsControllerProvider.notifier);
   }
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {});
+    final pluginsState = ref.watch(pluginsControllerProvider);
+    final pluginList = pluginsState.pluginList;
     return PopScope(
       canPop: !isMultiSelectMode,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -220,139 +225,132 @@ class _PluginViewPageState extends State<PluginViewPage> {
             ],
           ],
         ),
-        body: Observer(builder: (context) {
-          return pluginsController.pluginList.isEmpty
-              ? const Center(
-                  child: Text('啊咧（⊙.⊙） 没有可用规则的说'),
-                )
-              : Builder(builder: (context) {
-                  return ReorderableListView.builder(
-                      buildDefaultDragHandles: false,
-                      proxyDecorator: (child, index, animation) {
-                        return Material(
-                          elevation: 0,
-                          color: Colors.transparent,
-                          child: child,
-                        );
-                      },
-                      onReorder: (int oldIndex, int newIndex) {
-                        pluginsController.onReorder(oldIndex, newIndex);
-                      },
-                      itemCount: pluginsController.pluginList.length,
-                      itemBuilder: (context, index) {
-                        var plugin = pluginsController.pluginList[index];
-                        bool canUpdate =
-                            pluginsController.pluginUpdateStatus(plugin) ==
-                                'updatable';
-                        return Card(
-                            key: ValueKey(index),
-                            margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                            child: ListTile(
-                              trailing: pluginCardTrailing(index),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
-                              onLongPress: () {
-                                if (!isMultiSelectMode) {
-                                  setState(() {
-                                    isMultiSelectMode = true;
-                                    selectedNames.add(plugin.name);
-                                  });
+        body: pluginList.isEmpty
+            ? const Center(
+                child: Text('啊咧（⊙.⊙） 没有可用规则的说'),
+              )
+            : Builder(builder: (context) {
+                return ReorderableListView.builder(
+                    buildDefaultDragHandles: false,
+                    proxyDecorator: (child, index, animation) {
+                      return Material(
+                        elevation: 0,
+                        color: Colors.transparent,
+                        child: child,
+                      );
+                    },
+                    onReorder: (int oldIndex, int newIndex) {
+                      pluginsController.onReorder(oldIndex, newIndex);
+                    },
+                    itemCount: pluginList.length,
+                    itemBuilder: (context, index) {
+                      final plugin = pluginList[index];
+                      final bool canUpdate =
+                          pluginsController.pluginUpdateStatus(plugin) ==
+                              'updatable';
+                      return Card(
+                        key: ValueKey(index),
+                        margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                        child: ListTile(
+                          trailing: pluginCardTrailing(index, plugin),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          onLongPress: () {
+                            if (!isMultiSelectMode) {
+                              setState(() {
+                                isMultiSelectMode = true;
+                                selectedNames.add(plugin.name);
+                              });
+                            }
+                          },
+                          onTap: () {
+                            if (isMultiSelectMode) {
+                              setState(() {
+                                if (selectedNames.contains(plugin.name)) {
+                                  selectedNames.remove(plugin.name);
+                                  if (selectedNames.isEmpty) {
+                                    isMultiSelectMode = false;
+                                  }
+                                } else {
+                                  selectedNames.add(plugin.name);
                                 }
-                              },
-                              onTap: () {
-                                if (isMultiSelectMode) {
-                                  setState(() {
-                                    if (selectedNames.contains(plugin.name)) {
-                                      selectedNames.remove(plugin.name);
-                                      if (selectedNames.isEmpty) {
-                                        isMultiSelectMode = false;
-                                      }
-                                    } else {
-                                      selectedNames.add(plugin.name);
-                                    }
-                                  });
-                                }
-                              },
-                              selected: selectedNames.contains(plugin.name),
-                              selectedTileColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              title: Text(
-                                plugin.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              });
+                            }
+                          },
+                          selected: selectedNames.contains(plugin.name),
+                          selectedTileColor:
+                              Theme.of(context).colorScheme.primaryContainer,
+                          title: Text(
+                            plugin.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
                                 children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        'Version: ${plugin.version}',
-                                        style:
-                                            const TextStyle(color: Colors.grey),
-                                      ),
-                                      if (canUpdate) ...[
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .errorContainer,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            '可更新',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onErrorContainer,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                      if (pluginsController.validityTracker
-                                          .isSearchValid(plugin.name)) ...[
-                                        const SizedBox(width: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .tertiaryContainer,
-                                            borderRadius:
-                                                BorderRadius.circular(4),
-                                          ),
-                                          child: Text(
-                                            '搜索有效',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onTertiaryContainer,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                  Text(
+                                    'Version: ${plugin.version}',
+                                    style: const TextStyle(color: Colors.grey),
                                   ),
+                                  if (canUpdate) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .errorContainer,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '可更新',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onErrorContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (pluginsController.validityTracker
+                                      .isSearchValid(plugin.name)) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .tertiaryContainer,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        '搜索有效',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onTertiaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
-                            ));
-                      });
-                });
-        }),
+                            ],
+                          ),
+                        ),
+                      );
+                    });
+              }),
       ),
     );
   }
 
-  Widget pluginCardTrailing(int index) {
-    final plugin = pluginsController.pluginList[index];
+  Widget pluginCardTrailing(int index, Plugin plugin) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
       isMultiSelectMode
           ? Checkbox(
@@ -370,7 +368,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                 });
               },
             )
-          : popupMenuButton(index),
+          : popupMenuButton(index, plugin),
       ReorderableDragStartListener(
         index: index,
         child: const Icon(Icons.drag_handle), // 单独的拖拽按钮
@@ -378,8 +376,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
     ]);
   }
 
-  Widget popupMenuButton(int index) {
-    final plugin = pluginsController.pluginList[index];
+  Widget popupMenuButton(int index, Plugin plugin) {
     return MenuAnchor(
       consumeOutsideTap: true,
       builder:
@@ -435,7 +432,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
         MenuItemButton(
           requestFocusOnHover: false,
           onPressed: () {
-            Modular.to.pushNamed('/settings/plugin/editor', arguments: plugin);
+            context.push('/settings/plugin/editor', extra: plugin);
           },
           child: Container(
             height: 48,
@@ -460,7 +457,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                 title: const Text('规则链接'),
                 content: SelectableText(
                   Utils.jsonToKazumiBase64(json
-                      .encode(pluginsController.pluginList[index].toJson())),
+                      .encode(plugin.toJson())),
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
@@ -478,7 +475,7 @@ class _PluginViewPageState extends State<PluginViewPage> {
                       Clipboard.setData(ClipboardData(
                         text: Utils.jsonToKazumiBase64(
                           json.encode(
-                            pluginsController.pluginList[index].toJson(),
+                            plugin.toJson(),
                           ),
                         ),
                       ));

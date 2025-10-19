@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 
 class WebviewItemImpel extends StatefulWidget {
-  const WebviewItemImpel({super.key});
+  const WebviewItemImpel({
+    super.key,
+    required this.webviewController,
+  });
+
+  final WebviewItemController webviewController;
 
   @override
   State<WebviewItemImpel> createState() => _WebviewItemImpelState();
 }
 
 class _WebviewItemImpelState extends State<WebviewItemImpel> {
-  final webviewItemController = Modular.get<WebviewItemController>();
-
   @override
   void initState() {
     super.initState();
@@ -21,7 +23,7 @@ class _WebviewItemImpelState extends State<WebviewItemImpel> {
 
   @override
   void dispose() {
-    webviewItemController.dispose();
+    widget.webviewController.dispose();
     super.dispose();
   }
 
@@ -32,15 +34,15 @@ class _WebviewItemImpelState extends State<WebviewItemImpel> {
 
   Future<void> initPlatformState() async {
     // 初始化Webview
-    if (webviewItemController.webviewController == null) {
-      await webviewItemController.init();
+    if (widget.webviewController.webviewController == null) {
+      await widget.webviewController.init();
     }
     if (!mounted) return;
     setState(() {});
   }
 
   Widget get compositeView {
-    if (webviewItemController.webviewController == null) {
+    if (widget.webviewController.webviewController == null) {
       return const Text(
         'Not Initialized',
         style: TextStyle(
@@ -49,7 +51,8 @@ class _WebviewItemImpelState extends State<WebviewItemImpel> {
         ),
       );
     } else {
-      return WebViewWidget(controller: webviewItemController.webviewController);
+      return WebViewWidget(
+          controller: widget.webviewController.webviewController);
     }
   }
 }

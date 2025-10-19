@@ -1,63 +1,107 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
-import 'package:mobx/mobx.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
-part 'popular_controller.g.dart';
+/// Popular 页面所需的全部状态
+class PopularState {
+  final String currentTag;
+  final List<BangumiItem> bangumiList; // 按标签获取的番组
+  final List<BangumiItem> trendList; // 热门趋势番组
+  final double scrollOffset;
+  final bool isLoadingMore;
+  final bool isTimeOut;
 
-class PopularController = _PopularController with _$PopularController;
+  const PopularState({
+    this.currentTag = '',
+    this.bangumiList = const [],
+    this.trendList = const [],
+    this.scrollOffset = 0.0,
+    this.isLoadingMore = false,
+    this.isTimeOut = false,
+  });
 
-abstract class _PopularController with Store {
-  final ScrollController scrollController = ScrollController();
+  PopularState copyWith({
+    String? currentTag,
+    List<BangumiItem>? bangumiList,
+    List<BangumiItem>? trendList,
+    double? scrollOffset,
+    bool? isLoadingMore,
+    bool? isTimeOut,
+  }) {
+    return PopularState(
+      currentTag: currentTag ?? this.currentTag,
+      bangumiList: bangumiList ?? this.bangumiList,
+      trendList: trendList ?? this.trendList,
+      scrollOffset: scrollOffset ?? this.scrollOffset,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isTimeOut: isTimeOut ?? this.isTimeOut,
+    );
+  }
+}
 
-  @observable
-  String currentTag = '';
+/// 负责处理热门番组/标签番组的加载逻辑
+/// 迁移自 MobX -> Riverpod StateNotifier
+class PopularController extends SafeStateNotifier<PopularState> {
+  PopularController() : super(const PopularState());
 
-  @observable
-  ObservableList<BangumiItem> bangumiList = ObservableList.of([]);
-
-  @observable
-  ObservableList<BangumiItem> trendList = ObservableList.of([]);
-
-  double scrollOffset = 0.0;
-
-  @observable
-  bool isLoadingMore = false;
-
-  @observable
-  bool isTimeOut = false;
-
-  void setCurrentTag(String s) {
-    currentTag = s;
+  void setCurrentTag(String tag) {
+    state = state.copyWith(currentTag: tag);
   }
 
   void clearBangumiList() {
-    bangumiList.clear();
+    state = state.copyWith(bangumiList: []);
+  }
+
+  void updateScrollOffset(double offset) {
+    // 仅在数值有明显变化时更新，避免频繁 rebuild
+    if ((offset - state.scrollOffset).abs() > 8) {
+      state = state.copyWith(scrollOffset: offset);
+    }
   }
 
   Future<void> queryBangumiByTrend({String type = 'add'}) async {
+    if (state.isLoadingMore) return;
+    List<BangumiItem> trendList = state.trendList;
     if (type == 'init') {
-      trendList.clear();
+      trendList = [];
     }
-    isLoadingMore = true;
-    var result =
-        await BangumiHTTP.getBangumiTrendsList(offset: trendList.length);
-    trendList.addAll(result);
-    isLoadingMore = false;
-    isTimeOut = trendList.isEmpty;
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      final result = await BangumiHTTP.getBangumiTrendsList(offset: trendList.length);
+      trendList = [...trendList, ...result];
+      state = state.copyWith(
+        trendList: trendList,
+        isLoadingMore: false,
+        isTimeOut: trendList.isEmpty,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingMore: false, isTimeOut: trendList.isEmpty);
+    }
   }
 
   Future<void> queryBangumiByTag({String type = 'add'}) async {
+    if (state.isLoadingMore) return;
+    List<BangumiItem> bangumiList = state.bangumiList;
     if (type == 'init') {
-      bangumiList.clear();
+      bangumiList = [];
     }
-    isLoadingMore = true;
-    int randomNumber = Random().nextInt(8000) + 1;
-    var tag = currentTag;
-    var result = await BangumiHTTP.getBangumiList(rank: randomNumber, tag: tag);
-    bangumiList.addAll(result);
-    isLoadingMore = false;
-    isTimeOut = bangumiList.isEmpty;
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      int randomNumber = Random().nextInt(8000) + 1;
+      final result = await BangumiHTTP.getBangumiList(
+        rank: randomNumber,
+        tag: state.currentTag,
+      );
+      bangumiList = [...bangumiList, ...result];
+      state = state.copyWith(
+        bangumiList: bangumiList,
+        isLoadingMore: false,
+        isTimeOut: bangumiList.isEmpty,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoadingMore: false, isTimeOut: bangumiList.isEmpty);
+    }
   }
 }
+

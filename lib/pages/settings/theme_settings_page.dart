@@ -1,51 +1,41 @@
+import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/card/palette_card.dart';
-import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/bean/settings/theme_provider.dart';
-import 'package:kazumi/pages/popular/popular_controller.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/settings/color_type.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
-import 'package:provider/provider.dart';
+import 'providers.dart';
 
-class ThemeSettingsPage extends StatefulWidget {
+class ThemeSettingsPage extends ConsumerStatefulWidget {
   const ThemeSettingsPage({super.key});
 
   @override
-  State<ThemeSettingsPage> createState() => _ThemeSettingsPageState();
+  ConsumerState<ThemeSettingsPage> createState() => _ThemeSettingsPageState();
 }
 
-class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
+class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
   Box setting = GStorage.setting;
-  late dynamic defaultDanmakuArea;
   late dynamic defaultThemeMode;
   late dynamic defaultThemeColor;
   late bool oledEnhance;
   late bool useDynamicColor;
   late bool showWindowButton;
-  final PopularController popularController = Modular.get<PopularController>();
-  late final ThemeProvider themeProvider;
   final MenuController menuController = MenuController();
 
   @override
   void initState() {
     super.initState();
-    defaultThemeMode =
-        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
-    defaultThemeColor =
-        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
+    defaultThemeMode = setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
+    defaultThemeColor = setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
     oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    useDynamicColor =
-        setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
-    showWindowButton =
-        setting.get(SettingBoxKey.showWindowButton, defaultValue: false);
-    themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    useDynamicColor = setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
+    showWindowButton = setting.get(SettingBoxKey.showWindowButton, defaultValue: false);
   }
 
   void onBackPressed(BuildContext context) {
@@ -56,60 +46,27 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
   }
 
   void setTheme(Color? color) {
-    var defaultDarkTheme = ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: color,
-        progressIndicatorTheme: progressIndicatorTheme2024,
-        sliderTheme: sliderTheme2024,
-        pageTransitionsTheme: pageTransitionsTheme2024);
-    var oledDarkTheme = Utils.oledDarkTheme(defaultDarkTheme);
-    themeProvider.setTheme(
-      ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorSchemeSeed: color,
-          progressIndicatorTheme: progressIndicatorTheme2024,
-          sliderTheme: sliderTheme2024,
-          pageTransitionsTheme: pageTransitionsTheme2024),
-      oledEnhance ? oledDarkTheme : defaultDarkTheme,
-    );
+    final seed = color ?? Colors.green;
+    ref.read(themeNotifierProvider.notifier).setSeedColor(seed);
     defaultThemeColor = color?.value.toRadixString(16) ?? 'default';
     setting.put(SettingBoxKey.themeColor, defaultThemeColor);
   }
 
   void resetTheme() {
-    var defaultDarkTheme = ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.green,
-        progressIndicatorTheme: progressIndicatorTheme2024,
-        sliderTheme: sliderTheme2024,
-        pageTransitionsTheme: pageTransitionsTheme2024);
-    var oledDarkTheme = Utils.oledDarkTheme(defaultDarkTheme);
-    themeProvider.setTheme(
-      ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorSchemeSeed: Colors.green,
-          progressIndicatorTheme: progressIndicatorTheme2024,
-          sliderTheme: sliderTheme2024,
-          pageTransitionsTheme: pageTransitionsTheme2024),
-      oledEnhance ? oledDarkTheme : defaultDarkTheme,
-    );
+    ref.read(themeNotifierProvider.notifier).setSeedColor(Colors.green);
     defaultThemeColor = 'default';
     setting.put(SettingBoxKey.themeColor, 'default');
   }
 
   void updateTheme(String theme) async {
     if (theme == 'dark') {
-      themeProvider.setThemeMode(ThemeMode.dark);
+      ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
     }
     if (theme == 'light') {
-      themeProvider.setThemeMode(ThemeMode.light);
+      ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
     }
     if (theme == 'system') {
-      themeProvider.setThemeMode(ThemeMode.system);
+    ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
     }
     await setting.put(SettingBoxKey.themeMode, theme);
     setState(() {
@@ -118,18 +75,13 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
   }
 
   void updateOledEnhance() {
-    dynamic color;
     oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    if (defaultThemeColor == 'default') {
-      color = Colors.green;
-    } else {
-      color = Color(int.parse(defaultThemeColor, radix: 16));
-    }
-    setTheme(color);
+    ref.read(themeNotifierProvider.notifier).setOledEnhance(oledEnhance);
   }
 
   @override
   Widget build(BuildContext context) {
+  ref.watch(themeNotifierProvider);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -312,7 +264,8 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                     useDynamicColor = value ?? !useDynamicColor;
                     await setting.put(
                         SettingBoxKey.useDynamicColor, useDynamicColor);
-                    themeProvider.setDynamic(useDynamicColor);
+                    ref.read(themeNotifierProvider.notifier)
+                        .setUseDynamicColor(useDynamicColor);
                     setState(() {});
                   },
                   title: const Text('动态配色'),
@@ -357,7 +310,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                 tiles: [
                   SettingsTile.navigation(
                     onPressed: (_) async {
-                      Modular.to.pushNamed('/settings/theme/display');
+                      context.push('/settings/theme/display');
                     },
                     title: const Text('屏幕帧率'),
                   ),

@@ -1,54 +1,46 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
+import 'providers.dart';
 
-class PlayerSettingsPage extends StatefulWidget {
-  const PlayerSettingsPage({super.key});
+class PlayerSettingsPage extends ConsumerStatefulWidget {
+  const PlayerSettingsPage({Key? key}) : super(key: key);
 
   @override
-  State<PlayerSettingsPage> createState() => _PlayerSettingsPageState();
+  ConsumerState<PlayerSettingsPage> createState() => _PlayerSettingsPageState();
 }
 
-class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
+class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
   Box setting = GStorage.setting;
-  late double defaultPlaySpeed;
-  late int defaultAspectRatioType;
-  late bool hAenable;
-  late bool androidEnableOpenSLES;
-  late bool lowMemoryMode;
-  late bool playResume;
-  late bool showPlayerError;
-  late bool privateMode;
-  late bool playerDebugMode;
-  late bool playerDisableAnimations;
   final MenuController menuController = MenuController();
 
   @override
   void initState() {
     super.initState();
-    defaultPlaySpeed =
-        setting.get(SettingBoxKey.defaultPlaySpeed, defaultValue: 1.0);
-    defaultAspectRatioType =
-        setting.get(SettingBoxKey.defaultAspectRatioType, defaultValue: 1);
-    hAenable = setting.get(SettingBoxKey.hAenable, defaultValue: true);
-    androidEnableOpenSLES =
-        setting.get(SettingBoxKey.androidEnableOpenSLES, defaultValue: true);
-    lowMemoryMode =
-        setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false);
-    playResume = setting.get(SettingBoxKey.playResume, defaultValue: true);
-    privateMode = setting.get(SettingBoxKey.privateMode, defaultValue: false);
-    showPlayerError =
-        setting.get(SettingBoxKey.showPlayerError, defaultValue: true);
-    playerDebugMode =
-        setting.get(SettingBoxKey.playerDebugMode, defaultValue: false);
-    playerDisableAnimations =
-        setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false);
+    final notifier = ref.read(playerSettingsProvider.notifier);
+    notifier.initialize(
+      PlayerSettingsState(
+        defaultPlaySpeed: (setting.get(SettingBoxKey.defaultPlaySpeed, defaultValue: 1.0) as num).toDouble(),
+        defaultAspectRatioType: setting.get(SettingBoxKey.defaultAspectRatioType, defaultValue: 1) as int,
+        hAenable: setting.get(SettingBoxKey.hAenable, defaultValue: true) as bool,
+        androidEnableOpenSLES:
+            setting.get(SettingBoxKey.androidEnableOpenSLES, defaultValue: true) as bool,
+        lowMemoryMode: setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false) as bool,
+        playResume: setting.get(SettingBoxKey.playResume, defaultValue: true) as bool,
+        showPlayerError: setting.get(SettingBoxKey.showPlayerError, defaultValue: true) as bool,
+        privateMode: setting.get(SettingBoxKey.privateMode, defaultValue: false) as bool,
+        playerDebugMode: setting.get(SettingBoxKey.playerDebugMode, defaultValue: false) as bool,
+        playerDisableAnimations:
+            setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false) as bool,
+      ),
+    );
   }
 
   void onBackPressed(BuildContext context) {
@@ -60,20 +52,17 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
 
   void updateDefaultPlaySpeed(double speed) {
     setting.put(SettingBoxKey.defaultPlaySpeed, speed);
-    setState(() {
-      defaultPlaySpeed = speed;
-    });
+    ref.read(playerSettingsProvider.notifier).setDefaultPlaySpeed(speed);
   }
 
   void updateDefaultAspectRatioType(int type) {
     setting.put(SettingBoxKey.defaultAspectRatioType, type);
-    setState(() {
-      defaultAspectRatioType = type;
-    });
+    ref.read(playerSettingsProvider.notifier).setDefaultAspectRatioType(type);
   }
 
   @override
   Widget build(BuildContext context) {
+    final playerState = ref.watch(playerSettingsProvider);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -88,47 +77,45 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    hAenable = value ?? !hAenable;
-                    await setting.put(SettingBoxKey.hAenable, hAenable);
-                    setState(() {});
+                    final v = value ?? !playerState.hAenable;
+                    await setting.put(SettingBoxKey.hAenable, v);
+                    ref.read(playerSettingsProvider.notifier).setHAEnable(v);
                   },
                   title: const Text('硬件解码'),
-                  initialValue: hAenable,
+                  initialValue: playerState.hAenable,
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) async {
-                    await Modular.to.pushNamed('/settings/player/decoder');
+                    context.push('/settings/player/decoder');
                   },
                   title: const Text('硬件解码器'),
                   description: const Text('仅在硬件解码启用时生效'),
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    lowMemoryMode = value ?? !lowMemoryMode;
-                    await setting.put(
-                        SettingBoxKey.lowMemoryMode, lowMemoryMode);
-                    setState(() {});
+                    final v = value ?? !playerState.lowMemoryMode;
+                    await setting.put(SettingBoxKey.lowMemoryMode, v);
+                    ref.read(playerSettingsProvider.notifier).setLowMemoryMode(v);
                   },
                   title: const Text('低内存模式'),
                   description: const Text('禁用高级缓存以减少内存占用'),
-                  initialValue: lowMemoryMode,
+                  initialValue: playerState.lowMemoryMode,
                 ),
                 if (Platform.isAndroid) ...[
                   SettingsTile.switchTile(
                     onToggle: (value) async {
-                      androidEnableOpenSLES = value ?? !androidEnableOpenSLES;
-                      await setting.put(SettingBoxKey.androidEnableOpenSLES,
-                          androidEnableOpenSLES);
-                      setState(() {});
+                      final v = value ?? !playerState.androidEnableOpenSLES;
+                      await setting.put(SettingBoxKey.androidEnableOpenSLES, v);
+                      ref.read(playerSettingsProvider.notifier).setAndroidEnableOpenSLES(v);
                     },
                     title: const Text('低延迟音频'),
                     description: const Text('启用OpenSLES音频输出以降低延时'),
-                    initialValue: androidEnableOpenSLES,
+                    initialValue: playerState.androidEnableOpenSLES,
                   ),
                 ],
                 SettingsTile.navigation(
                   onPressed: (_) async {
-                    Modular.to.pushNamed('/settings/player/super');
+                    context.push('/settings/player/super');
                   },
                   title: const Text('超分辨率'),
                 ),
@@ -138,56 +125,53 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    playResume = value ?? !playResume;
-                    await setting.put(SettingBoxKey.playResume, playResume);
-                    setState(() {});
+                    final v = value ?? !playerState.playResume;
+                    await setting.put(SettingBoxKey.playResume, v);
+                    ref.read(playerSettingsProvider.notifier).setPlayResume(v);
                   },
                   title: const Text('自动跳转'),
                   description: const Text('跳转到上次播放位置'),
-                  initialValue: playResume,
+                  initialValue: playerState.playResume,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    playerDisableAnimations = value ?? !playerDisableAnimations;
-                    await setting.put(SettingBoxKey.playerDisableAnimations,
-                        playerDisableAnimations);
-                    setState(() {});
+                    final v = value ?? !playerState.playerDisableAnimations;
+                    await setting.put(SettingBoxKey.playerDisableAnimations, v);
+                    ref.read(playerSettingsProvider.notifier).setPlayerDisableAnimations(v);
                   },
                   title: const Text('禁用动画'),
                   description: const Text('禁用播放器内的过渡动画'),
-                  initialValue: playerDisableAnimations,
+                  initialValue: playerState.playerDisableAnimations,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    showPlayerError = value ?? !showPlayerError;
-                    await setting.put(
-                        SettingBoxKey.showPlayerError, showPlayerError);
-                    setState(() {});
+                    final v = value ?? !playerState.showPlayerError;
+                    await setting.put(SettingBoxKey.showPlayerError, v);
+                    ref.read(playerSettingsProvider.notifier).setShowPlayerError(v);
                   },
                   title: const Text('错误提示'),
                   description: const Text('显示播放器内部错误提示'),
-                  initialValue: showPlayerError,
+                  initialValue: playerState.showPlayerError,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    playerDebugMode = value ?? !playerDebugMode;
-                    await setting.put(
-                        SettingBoxKey.playerDebugMode, playerDebugMode);
-                    setState(() {});
+                    final v = value ?? !playerState.playerDebugMode;
+                    await setting.put(SettingBoxKey.playerDebugMode, v);
+                    ref.read(playerSettingsProvider.notifier).setPlayerDebugMode(v);
                   },
                   title: const Text('调试模式'),
                   description: const Text('记录播放器内部日志'),
-                  initialValue: playerDebugMode,
+                  initialValue: playerState.playerDebugMode,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    privateMode = value ?? !privateMode;
-                    await setting.put(SettingBoxKey.privateMode, privateMode);
-                    setState(() {});
+                    final v = value ?? !playerState.privateMode;
+                    await setting.put(SettingBoxKey.privateMode, v);
+                    ref.read(playerSettingsProvider.notifier).setPrivateMode(v);
                   },
                   title: const Text('隐身模式'),
                   description: const Text('不保留观看记录'),
-                  initialValue: privateMode,
+                  initialValue: playerState.privateMode,
                 ),
               ],
             ),
@@ -196,14 +180,13 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                 SettingsTile(
                   title: const Text('默认倍速'),
                   description: Slider(
-                    value: defaultPlaySpeed,
+                    value: playerState.defaultPlaySpeed,
                     min: 0.25,
                     max: 3,
                     divisions: 11,
-                    label: '${defaultPlaySpeed}x',
+                    label: '${playerState.defaultPlaySpeed}x',
                     onChanged: (value) {
-                      updateDefaultPlaySpeed(
-                          double.parse(value.toStringAsFixed(2)));
+                      updateDefaultPlaySpeed(double.parse(value.toStringAsFixed(2)));
                     },
                   ),
                 ),
@@ -221,15 +204,14 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                     controller: menuController,
                     builder: (_, __, ___) {
                       return Text(
-                        aspectRatioTypeMap[defaultAspectRatioType] ?? '自动',
+                        aspectRatioTypeMap[playerState.defaultAspectRatioType] ?? '自动',
                       );
                     },
                     menuChildren: [
                       for (final entry in aspectRatioTypeMap.entries)
                         MenuItemButton(
                           requestFocusOnHover: false,
-                          onPressed: () =>
-                              updateDefaultAspectRatioType(entry.key),
+                          onPressed: () => updateDefaultAspectRatioType(entry.key),
                           child: Container(
                             height: 48,
                             constraints: BoxConstraints(minWidth: 112),
@@ -238,7 +220,7 @@ class _PlayerSettingsPageState extends State<PlayerSettingsPage> {
                               child: Text(
                                 entry.value,
                                 style: TextStyle(
-                                  color: entry.key == defaultAspectRatioType
+                                  color: entry.key == playerState.defaultAspectRatioType
                                       ? Theme.of(context).colorScheme.primary
                                       : null,
                                 ),

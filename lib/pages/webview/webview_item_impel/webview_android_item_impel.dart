@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:kazumi/pages/webview/webview_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_android_controller_impel.dart';
 
 class WebviewAndroidItemImpel extends StatefulWidget {
-  const WebviewAndroidItemImpel({super.key});
+  const WebviewAndroidItemImpel({
+    super.key,
+    required this.webviewController,
+  });
+
+  final WebviewAndroidItemControllerImpel webviewController;
 
   @override
   State<WebviewAndroidItemImpel> createState() =>
@@ -12,18 +15,15 @@ class WebviewAndroidItemImpel extends StatefulWidget {
 }
 
 class _WebviewAndroidItemImpelState extends State<WebviewAndroidItemImpel> {
-  final webviewAndroidItemController =
-      Modular.get<WebviewItemController>() as WebviewAndroidItemControllerImpel;
-
   @override
   void initState() {
     super.initState();
-    webviewAndroidItemController.init();
+    widget.webviewController.init();
   }
 
   @override
   void dispose() {
-    webviewAndroidItemController.dispose();
+    widget.webviewController.dispose();
     super.dispose();
   }
 

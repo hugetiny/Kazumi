@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:canvas_danmaku/models/danmaku_content_item.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/pages/player/player_controller.dart';
+import 'package:kazumi/pages/player/player_state.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/webview/webview_item.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
@@ -11,7 +12,6 @@ import 'package:kazumi/pages/history/history_controller.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/pages/player/player_item.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
@@ -22,23 +22,26 @@ import 'package:scrollview_observer/scrollview_observer.dart';
 import 'package:kazumi/pages/player/episode_comments_sheet.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
+import 'package:kazumi/pages/video/providers.dart';
+import 'package:kazumi/pages/player/player_providers.dart';
+import 'package:kazumi/pages/history/providers.dart';
+import 'package:kazumi/pages/webview/providers.dart';
+import 'package:kazumi/pages/video/video_state.dart';
 
-class VideoPage extends StatefulWidget {
+class VideoPage extends ConsumerStatefulWidget {
   const VideoPage({super.key});
 
   @override
-  State<VideoPage> createState() => _VideoPageState();
+  ConsumerState<VideoPage> createState() => _VideoPageState();
 }
 
-class _VideoPageState extends State<VideoPage>
+class _VideoPageState extends ConsumerState<VideoPage>
     with TickerProviderStateMixin, WindowListener {
   Box setting = GStorage.setting;
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
-  final PlayerController playerController = Modular.get<PlayerController>();
-  final HistoryController historyController = Modular.get<HistoryController>();
-  final WebviewItemController webviewItemController =
-      Modular.get<WebviewItemController>();
+  late final VideoPageController videoPageController;
+  late final PlayerController playerController;
+  late final HistoryController historyController;
+  late final WebviewItemController webviewItemController;
   late bool playResume;
   bool showDebugLog = false;
   List<String> webviewLogLines = [];
@@ -73,6 +76,10 @@ class _VideoPageState extends State<VideoPage>
   @override
   void initState() {
     super.initState();
+    videoPageController = ref.read(videoControllerProvider.notifier);
+    playerController = ref.read(playerControllerProvider.notifier);
+    historyController = ref.read(historyControllerProvider.notifier);
+    webviewItemController = ref.read(webviewItemControllerProvider);
     windowManager.addListener(this);
     // Check fullscreen when enter video page
     // in case user use system controls to enter fullscreen outside video page
@@ -177,18 +184,14 @@ class _VideoPageState extends State<VideoPage>
     try {
       _logSubscription.cancel();
     } catch (_) {}
-    try {
-      playerController.dispose();
-    } catch (e) {
-      KazumiLogger().log(Level.error, '播放器释放失败: $e');
-    }
     if (!Utils.isDesktop()) {
       try {
         ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
       } catch (_) {}
     }
-    videoPageController.episodeInfo.reset();
-    videoPageController.episodeCommentsList.clear();
+    unawaited(playerController.stop());
+    videoPageController.resetEpisodeInfo();
+    videoPageController.clearEpisodeComments();
     Utils.unlockScreenRotation();
     tabController.dispose();
     super.dispose();
@@ -234,8 +237,8 @@ class _VideoPageState extends State<VideoPage>
     clearWebviewLog();
     hideDebugConsole();
     videoPageController.loading = true;
-    videoPageController.episodeInfo.reset();
-    videoPageController.episodeCommentsList.clear();
+    videoPageController.resetEpisodeInfo();
+    videoPageController.clearEpisodeComments();
     await playerController.stop();
     await videoPageController.changeEpisode(episode,
         currentRoad: currentRoad, offset: offset);
@@ -292,13 +295,15 @@ class _VideoPageState extends State<VideoPage>
       Utils.exitFullScreen();
       videoPageController.isFullscreen = false;
     }
+    await playerController.stop();
     Navigator.of(context).pop();
   }
 
   /// 发送弹幕 由于接口限制, 暂时未提交云端
   void sendDanmaku(String msg) async {
     keyboardFocus.requestFocus();
-    if (playerController.danDanmakus.isEmpty) {
+    final playerState = ref.read(playerControllerProvider);
+    if (playerState.danDanmakus.isEmpty) {
       KazumiDialog.showToast(
         message: '当前剧集不支持弹幕发送的说',
       );
@@ -383,6 +388,8 @@ class _VideoPageState extends State<VideoPage>
   Widget build(BuildContext context) {
     final bool isWideScreen =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
+    final videoState = ref.watch(videoControllerProvider);
+    final playerState = ref.watch(playerControllerProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       openTabBodyAnimated();
     });
@@ -397,74 +404,74 @@ class _VideoPageState extends State<VideoPage>
       child: OrientationBuilder(builder: (context, orientation) {
         if (!Utils.isDesktop()) {
           if (orientation == Orientation.landscape &&
-              !videoPageController.isFullscreen) {
+              !videoState.isFullscreen) {
             videoPageController.enterFullScreen();
           } else if (orientation == Orientation.portrait &&
-              videoPageController.isFullscreen) {
+              videoState.isFullscreen) {
             videoPageController.exitFullScreen();
             menuJumpToCurrentEpisode();
             videoPageController.showTabBody = true;
           }
         }
-        return Observer(builder: (context) {
-          return Scaffold(
-            appBar: ((videoPageController.currentPlugin.useNativePlayer ||
-                    videoPageController.isFullscreen)
-                ? null
-                : SysAppBar(title: Text(videoPageController.title))),
-            body: SafeArea(
-                top: !videoPageController.isFullscreen,
-                // set iOS and Android navigation bar to immersive
-                bottom: false,
-                left: !videoPageController.isFullscreen,
-                right: !videoPageController.isFullscreen,
-                child: Stack(
-                  alignment: Alignment.centerRight,
-                  children: [
-                    Column(
-                      children: [
-                        Flexible(
-                          // make it unflexible when not wideScreen.
-                          flex: (isWideScreen) ? 1 : 0,
-                          child: Container(
-                            color: Colors.black,
-                            height: (isWideScreen)
-                                ? MediaQuery.sizeOf(context).height
-                                : MediaQuery.sizeOf(context).width * 9 / 16,
-                            width: MediaQuery.sizeOf(context).width,
-                            child: playerBody,
-                          ),
+        final plugin = videoState.currentPlugin;
+        final isFullscreen = videoState.isFullscreen;
+        return Scaffold(
+          appBar: ((plugin?.useNativePlayer ?? false) || isFullscreen)
+              ? null
+              : SysAppBar(title: Text(videoState.title)),
+          body: SafeArea(
+              top: !isFullscreen,
+              // set iOS and Android navigation bar to immersive
+              bottom: false,
+              left: !isFullscreen,
+              right: !isFullscreen,
+              child: Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  Column(
+                    children: [
+                      Flexible(
+                        // make it unflexible when not wideScreen.
+                        flex: (isWideScreen) ? 1 : 0,
+                        child: Container(
+                          color: Colors.black,
+                          height: (isWideScreen)
+                              ? MediaQuery.sizeOf(context).height
+                              : MediaQuery.sizeOf(context).width * 9 / 16,
+                          width: MediaQuery.sizeOf(context).width,
+                          child: playerBody(videoState, playerState),
                         ),
-                        // when not wideScreen, show tabBody on the bottom
-                        if (!isWideScreen) Expanded(child: tabBody),
-                      ],
-                    ),
+                      ),
+                      // when not wideScreen, show tabBody on the bottom
+                      if (!isWideScreen)
+                        Expanded(child: tabBody(videoState, playerState)),
+                    ],
+                  ),
 
-                    // when is wideScreen, show tabBody on the right side with SlideTransition or direct visibility
-                    if (isWideScreen && videoPageController.showTabBody) ...[
-                      if (disableAnimations) ...[
-                        sideTabMask,
-                        sideTabBody,
-                      ] else ...[
-                        FadeTransition(
-                          opacity: _maskOpacityAnimation,
-                          child: sideTabMask,
-                        ),
-                        SlideTransition(
-                          position: _rightOffsetAnimation,
-                          child: sideTabBody,
-                        ),
-                      ],
+                  // when is wideScreen, show tabBody on the right side with SlideTransition or direct visibility
+                  if (isWideScreen && videoState.showTabBody) ...[
+                    if (disableAnimations) ...[
+                      sideTabMask(videoState),
+                      sideTabBody(videoState, playerState),
+                    ] else ...[
+                      FadeTransition(
+                        opacity: _maskOpacityAnimation,
+                        child: sideTabMask(videoState),
+                      ),
+                      SlideTransition(
+                        position: _rightOffsetAnimation,
+                        child: sideTabBody(videoState, playerState),
+                      ),
                     ],
                   ],
-                )),
-          );
-        });
+                ],
+              )),
+        );
       }),
     );
   }
 
-  Widget get sideTabBody {
+  Widget sideTabBody(VideoPageState videoState, PlayerState playerState) {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height,
       width: (!Utils.isDesktop() && !Utils.isTablet())
@@ -477,11 +484,11 @@ class _VideoPageState extends State<VideoPage>
         child: GridViewObserver(
           controller: observerController,
           child: (Utils.isDesktop() || Utils.isTablet())
-              ? tabBody
+              ? tabBody(videoState, playerState)
               : Column(
                   children: [
-                    menuBar,
-                    menuBody,
+                    menuBar(videoState),
+                    menuBody(videoState),
                   ],
                 ),
         ),
@@ -489,7 +496,7 @@ class _VideoPageState extends State<VideoPage>
     );
   }
 
-  Widget get sideTabMask {
+  Widget sideTabMask(VideoPageState _) {
     return GestureDetector(
       onTap: closeTabBodyAnimated,
       child: Container(
@@ -509,7 +516,13 @@ class _VideoPageState extends State<VideoPage>
     );
   }
 
-  Widget get playerBody {
+  Widget playerBody(VideoPageState videoState, PlayerState playerState) {
+    final plugin = videoState.currentPlugin;
+    final useNativePlayer = plugin?.useNativePlayer ?? false;
+    final isFullscreen = videoState.isFullscreen;
+    final isLoading = videoState.loading;
+    final isPlayerLoading = playerState.loading;
+
     return Stack(
       children: [
         // webview log component (not player log, used for video parsing)
@@ -517,8 +530,7 @@ class _VideoPageState extends State<VideoPage>
           child: Stack(
             children: [
               Positioned.fill(
-                child: (videoPageController.currentPlugin.useNativePlayer &&
-                        playerController.loading)
+                child: (useNativePlayer && isPlayerLoading)
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -538,7 +550,7 @@ class _VideoPageState extends State<VideoPage>
                     : Container(),
               ),
               Visibility(
-                visible: videoPageController.loading,
+                visible: isLoading,
                 child: Container(
                   color: Colors.black,
                   child: Align(
@@ -562,9 +574,7 @@ class _VideoPageState extends State<VideoPage>
                 ),
               ),
               Visibility(
-                visible: (videoPageController.loading ||
-                        (videoPageController.currentPlugin.useNativePlayer &&
-                            playerController.loading)) &&
+                visible: (isLoading || (useNativePlayer && isPlayerLoading)) &&
                     showDebugLog,
                 child: Container(
                   color: Colors.black,
@@ -586,76 +596,67 @@ class _VideoPageState extends State<VideoPage>
                   ),
                 ),
               ),
-              ((videoPageController.currentPlugin.useNativePlayer ||
-                      videoPageController.isFullscreen))
-                  ? Stack(
+              if (useNativePlayer || isFullscreen)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: EmbeddedNativeControlArea(
+                    requireOffset: !isFullscreen,
+                    child: Row(
                       children: [
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: EmbeddedNativeControlArea(
-                            requireOffset: !videoPageController.isFullscreen,
-                            child: Row(
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.arrow_back,
-                                      color: Colors.white),
-                                  onPressed: () => onBackPressed(context),
-                                ),
-                                const Expanded(
-                                    child: dtb.DragToMoveArea(
-                                        child: SizedBox(height: 40))),
-                                IconButton(
-                                  icon: const Icon(Icons.refresh_outlined,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    changeEpisode(
-                                        videoPageController.currentEpisode,
-                                        currentRoad:
-                                            videoPageController.currentRoad);
-                                  },
-                                ),
-                                Visibility(
-                                  visible: MediaQuery.sizeOf(context).width >
-                                      MediaQuery.sizeOf(context).height,
-                                  child: IconButton(
-                                    onPressed: () {
-                                      videoPageController.showTabBody =
-                                          !videoPageController.showTabBody;
-                                      openTabBodyAnimated();
-                                    },
-                                    icon: Icon(
-                                      videoPageController.showTabBody
-                                          ? Icons.menu_open
-                                          : Icons.menu_open_outlined,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                      showDebugLog
-                                          ? Icons.bug_report
-                                          : Icons.bug_report_outlined,
-                                      color: Colors.white),
-                                  onPressed: () {
-                                    switchDebugConsole();
-                                  },
-                                ),
-                              ],
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () => onBackPressed(context),
+                        ),
+                        const Expanded(
+                            child: dtb.DragToMoveArea(
+                                child: SizedBox(height: 40))),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_outlined,
+                              color: Colors.white),
+                          onPressed: () {
+                            changeEpisode(videoState.currentEpisode,
+                                currentRoad: videoState.currentRoad);
+                          },
+                        ),
+                        Visibility(
+                          visible: MediaQuery.sizeOf(context).width >
+                              MediaQuery.sizeOf(context).height,
+                          child: IconButton(
+                            onPressed: () {
+                              videoPageController.showTabBody =
+                                  !videoState.showTabBody;
+                              openTabBodyAnimated();
+                            },
+                            icon: Icon(
+                              videoState.showTabBody
+                                  ? Icons.menu_open
+                                  : Icons.menu_open_outlined,
+                              color: Colors.white,
                             ),
                           ),
                         ),
+                        IconButton(
+                          icon: Icon(
+                              showDebugLog
+                                  ? Icons.bug_report
+                                  : Icons.bug_report_outlined,
+                              color: Colors.white),
+                          onPressed: () {
+                            switchDebugConsole();
+                          },
+                        ),
                       ],
-                    )
-                  : Container(),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
         Positioned.fill(
-          child: (!videoPageController.currentPlugin.useNativePlayer ||
-                  playerController.loading)
+          child: (!useNativePlayer || isPlayerLoading)
               ? Container()
               : PlayerItem(
                   openMenu: openTabBodyAnimated,
@@ -671,17 +672,19 @@ class _VideoPageState extends State<VideoPage>
         /// workaround for webview_windows
         /// The webview_windows component cannot be removed from the widget tree; otherwise, it can never be reinitialized.
         Positioned(
-            child: SizedBox(
-                height: (videoPageController.loading ||
-                        videoPageController.currentPlugin.useNativePlayer)
-                    ? 0
-                    : null,
-                child: const WebviewItem()))
+          child: SizedBox(
+            height: (isLoading || useNativePlayer) ? 0 : null,
+            child: WebviewItem(
+              videoPageController: videoPageController,
+              webviewController: webviewItemController,
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget get menuBar {
+  Widget menuBar(VideoPageState videoState) {
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -690,7 +693,7 @@ class _VideoPageState extends State<VideoPage>
           const Text(' 合集 '),
           Expanded(
             child: Text(
-              videoPageController.title,
+              videoState.title,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12,
@@ -723,7 +726,7 @@ class _VideoPageState extends State<VideoPage>
               );
             },
             menuChildren: List<MenuItemButton>.generate(
-              videoPageController.roadList.length,
+              videoState.roadList.length,
               (int i) => MenuItemButton(
                 onPressed: () {
                   setState(() {
@@ -753,62 +756,64 @@ class _VideoPageState extends State<VideoPage>
     );
   }
 
-  Widget get menuBody {
-    var cardList = <Widget>[];
-    for (var road in videoPageController.roadList) {
-      if (road.name == '播放列表${currentRoad + 1}') {
-        int count = 1;
-        for (var urlItem in road.data) {
-          int count0 = count;
-          cardList.add(Container(
-            margin: const EdgeInsets.only(bottom: 4), // 改为bottom间距
+  Widget menuBody(VideoPageState videoState) {
+    final cardList = <Widget>[];
+    for (final road in videoState.roadList) {
+      if (road.name != '播放列表${currentRoad + 1}') continue;
+      var episodeIndex = 1;
+      for (final urlItem in road.data) {
+        final currentIndex = episodeIndex;
+        cardList.add(
+          Container(
+            margin: const EdgeInsets.only(bottom: 4),
             child: Material(
               color: Theme.of(context).colorScheme.onInverseSurface,
               borderRadius: BorderRadius.circular(6),
               clipBehavior: Clip.hardEdge,
               child: InkWell(
                 onTap: () async {
-                  if (count0 == videoPageController.currentEpisode &&
-                      videoPageController.currentRoad == currentRoad) {
+                  final isCurrentEpisode =
+                      currentIndex == videoState.currentEpisode &&
+                          videoState.currentRoad == currentRoad;
+                  if (isCurrentEpisode) {
                     return;
                   }
                   KazumiLogger().log(Level.info, '视频链接为 $urlItem');
                   closeTabBodyAnimated();
-                  changeEpisode(count0, currentRoad: currentRoad);
+                  changeEpisode(currentIndex, currentRoad: currentRoad);
                 },
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
+                    children: [
                       Row(
                         children: [
-                          if (count0 == (videoPageController.currentEpisode) &&
-                              currentRoad ==
-                                  videoPageController.currentRoad) ...<Widget>[
+                          if (currentIndex == videoState.currentEpisode &&
+                              currentRoad == videoState.currentRoad) ...[
                             Image.asset(
                               'assets/images/playing.gif',
                               color: Theme.of(context).colorScheme.primary,
                               height: 12,
                             ),
-                            const SizedBox(width: 6)
+                            const SizedBox(width: 6),
                           ],
                           Expanded(
-                              child: Text(
-                            road.identifier[count0 - 1],
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            child: Text(
+                              road.identifier[currentIndex - 1],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: (count0 ==
-                                            videoPageController
-                                                .currentEpisode &&
-                                        currentRoad ==
-                                            videoPageController.currentRoad)
+                                color: (currentIndex ==
+                                            videoState.currentEpisode &&
+                                        currentRoad == videoState.currentRoad)
                                     ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.onSurface),
-                          )),
+                                    : Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
                           const SizedBox(width: 2),
                         ],
                       ),
@@ -818,42 +823,45 @@ class _VideoPageState extends State<VideoPage>
                 ),
               ),
             ),
-          ));
-          count++;
-        }
+          ),
+        );
+        episodeIndex++;
       }
     }
+
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.only(top: 0, right: 8, left: 8),
+        padding: const EdgeInsets.only(right: 8, left: 8),
         child: GridView.builder(
           scrollDirection: Axis.vertical,
           controller: scrollController,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 3,
             crossAxisSpacing: 10,
             mainAxisSpacing: 5,
             mainAxisExtent: 70,
           ),
           itemCount: cardList.length,
-          itemBuilder: (context, index) {
-            return cardList[index];
-          },
+          itemBuilder: (context, index) => cardList[index],
         ),
       ),
     );
   }
 
-  Widget get tabBody {
-    int episodeNum = 0;
-    episodeNum = Utils.extractEpisodeNumber(videoPageController
-        .roadList[videoPageController.currentRoad]
-        .identifier[videoPageController.currentEpisode - 1]);
-    if (episodeNum == 0 ||
-        episodeNum >
-            videoPageController
-                .roadList[videoPageController.currentRoad].identifier.length) {
-      episodeNum = videoPageController.currentEpisode;
+  Widget tabBody(VideoPageState videoState, PlayerState playerState) {
+    final roads = videoState.roadList;
+    final currentRoadIndex = videoState.currentRoad;
+    final currentEpisodeIndex = videoState.currentEpisode;
+    var episodeNum = currentEpisodeIndex;
+    if (roads.length > currentRoadIndex &&
+        roads[currentRoadIndex].identifier.length >= currentEpisodeIndex) {
+      final identifier =
+          roads[currentRoadIndex].identifier[currentEpisodeIndex - 1];
+      final parsedEpisode = Utils.extractEpisodeNumber(identifier);
+      if (parsedEpisode > 0 &&
+          parsedEpisode <= roads[currentRoadIndex].identifier.length) {
+        episodeNum = parsedEpisode;
+      }
     }
 
     return Container(
@@ -889,7 +897,7 @@ class _VideoPageState extends State<VideoPage>
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(25),
                       border: Border.all(
-                        color: playerController.danmakuOn
+                        color: playerState.danmakuOn
                             ? Theme.of(context).hintColor
                             : Theme.of(context).disabledColor,
                         width: 0.5,
@@ -899,10 +907,9 @@ class _VideoPageState extends State<VideoPage>
                     height: 31,
                     child: GestureDetector(
                       onTap: () {
-                        if (playerController.danmakuOn &&
-                            !videoPageController.loading) {
+                        if (playerState.danmakuOn && !videoState.loading) {
                           showMobileDanmakuInput();
-                        } else if (videoPageController.loading) {
+                        } else if (videoState.loading) {
                           KazumiDialog.showToast(message: '请等待视频加载完成');
                         } else {
                           KazumiDialog.showToast(message: '请先打开弹幕');
@@ -911,13 +918,11 @@ class _VideoPageState extends State<VideoPage>
                       child: Row(
                         children: [
                           Text(
-                            playerController.danmakuOn
-                                ? '  点我发弹幕  '
-                                : '  已关闭弹幕  ',
+                            playerState.danmakuOn ? '  点我发弹幕  ' : '  已关闭弹幕  ',
                             softWrap: false,
                             overflow: TextOverflow.clip,
                             style: TextStyle(
-                              color: playerController.danmakuOn
+                              color: playerState.danmakuOn
                                   ? Theme.of(context).hintColor
                                   : Theme.of(context).disabledColor,
                             ),
@@ -925,7 +930,7 @@ class _VideoPageState extends State<VideoPage>
                           Icon(
                             Icons.send_rounded,
                             size: 20,
-                            color: playerController.danmakuOn
+                            color: playerState.danmakuOn
                                 ? Theme.of(context).hintColor
                                 : Theme.of(context).disabledColor,
                           ),
@@ -946,8 +951,8 @@ class _VideoPageState extends State<VideoPage>
                     controller: observerController,
                     child: Column(
                       children: [
-                        menuBar,
-                        menuBody,
+                        menuBar(videoState),
+                        menuBody(videoState),
                       ],
                     ),
                   ),

@@ -1,36 +1,35 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/bean/widget/custom_dropdown_menu.dart';
 import 'package:kazumi/pages/popular/popular_controller.dart';
+import 'package:kazumi/pages/popular/providers.dart';
 import 'package:kazumi/bean/card/bangumi_card.dart';
 import 'package:kazumi/utils/constants.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
-import 'package:kazumi/pages/menu/menu.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/bean/appbar/drag_to_move_bar.dart' as dtb;
 
-class PopularPage extends StatefulWidget {
+class PopularPage extends ConsumerStatefulWidget {
   const PopularPage({super.key});
 
   @override
-  State<PopularPage> createState() => _PopularPageState();
+  ConsumerState<PopularPage> createState() => _PopularPageState();
 }
 
-class _PopularPageState extends State<PopularPage>
+class _PopularPageState extends ConsumerState<PopularPage>
     with AutomaticKeepAliveClientMixin {
   DateTime? _lastPressedAt;
-  late NavigationBarState navigationBarState;
   final FocusNode _focusNode = FocusNode();
   final ScrollController scrollController = ScrollController();
-  final PopularController popularController = Modular.get<PopularController>();
+  late PopularController popularController;
 
   // Key used to position the dropdown menu for the tag selector
   final GlobalKey selectorKey = GlobalKey();
@@ -42,7 +41,9 @@ class _PopularPageState extends State<PopularPage>
   void initState() {
     super.initState();
     scrollController.addListener(scrollListener);
-    if (popularController.trendList.isEmpty) {
+    final state = ref.read(popularControllerProvider);
+    popularController = ref.read(popularControllerProvider.notifier);
+    if (state.trendList.isEmpty) {
       popularController.queryBangumiByTrend();
     }
   }
@@ -60,12 +61,12 @@ class _PopularPageState extends State<PopularPage>
   }
 
   void scrollListener() {
-    popularController.scrollOffset = scrollController.offset;
-    if (scrollController.position.pixels >=
-            scrollController.position.maxScrollExtent - 200 &&
-        !popularController.isLoadingMore) {
+    final state = ref.read(popularControllerProvider);
+    popularController.updateScrollOffset(scrollController.offset);
+    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200 &&
+        !state.isLoadingMore) {
       KazumiLogger().log(Level.info, 'Popular is loading more');
-      if (popularController.currentTag != '') {
+      if (state.currentTag != '') {
         popularController.queryBangumiByTag();
       } else {
         popularController.queryBangumiByTrend();
@@ -92,16 +93,13 @@ class _PopularPageState extends State<PopularPage>
     }
     SystemNavigator.pop();
   }
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (didPop) {
-          return;
-        }
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
         onBackPressed(context);
       },
       child: Scaffold(
@@ -110,48 +108,51 @@ class _PopularPageState extends State<PopularPage>
           slivers: [
             buildSliverAppBar(),
             SliverToBoxAdapter(
-              child: Observer(
-                builder: (_) => AnimatedOpacity(
-                  opacity: popularController.isLoadingMore ? 1.0 : 0.0,
+              child: Consumer(builder: (context, ref, _) {
+                final state = ref.watch(popularControllerProvider);
+                return AnimatedOpacity(
+                  opacity: state.isLoadingMore ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),
-                  child: popularController.isLoadingMore
+                  child: state.isLoadingMore
                       ? const LinearProgressIndicator(minHeight: 4)
                       : const SizedBox(height: 4),
-                ),
-              ),
+                );
+              }),
             ),
             SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                    StyleString.cardSpace, 0, StyleString.cardSpace, 0),
-                sliver: Observer(builder: (_) {
-                  if (popularController.isTimeOut) {
-                    return SliverToBoxAdapter(
-                      child: SizedBox(
-                        height: 400,
-                        child: GeneralErrorWidget(
-                          errMsg: '什么都没有找到 (´;ω;`)',
-                          actions: [
-                            GeneralErrorButton(
-                              onPressed: () {
-                                if (popularController.trendList.isEmpty) {
-                                  popularController.queryBangumiByTrend();
-                                } else {
-                                  popularController.queryBangumiByTag();
-                                }
-                              },
-                              text: '点击重试',
-                            ),
-                          ],
-                        ),
+              padding: const EdgeInsets.fromLTRB(
+                  StyleString.cardSpace, 0, StyleString.cardSpace, 0),
+              sliver: Consumer(builder: (context, ref, _) {
+                final state = ref.watch(popularControllerProvider);
+                if (state.isTimeOut) {
+                  return SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 400,
+                      child: GeneralErrorWidget(
+                        errMsg: '什么都没有找到 (´;ω;`)',
+                        actions: [
+                          GeneralErrorButton(
+                            onPressed: () {
+                              if (state.trendList.isEmpty) {
+                                popularController.queryBangumiByTrend();
+                              } else {
+                                popularController.queryBangumiByTag();
+                              }
+                            },
+                            text: '点击重试',
+                          ),
+                        ],
                       ),
-                    );
-                  }
-                  return contentGrid(
-                    (popularController.currentTag == '')
-                        ? popularController.trendList
-                        : popularController.bangumiList,
+                    ),
                   );
-                })),
+                }
+                return contentGrid(
+                  (state.currentTag == '')
+                      ? state.trendList
+                      : state.bangumiList,
+                );
+              }),
+            ),
           ],
         ),
         floatingActionButton: FloatingActionButton(
@@ -200,7 +201,7 @@ class _PopularPageState extends State<PopularPage>
 
   Widget buildSliverAppBar() {
     final theme = Theme.of(context);
-    return SliverAppBar(
+  return SliverAppBar(
       pinned: true,
       stretch: true,
       expandedHeight: 120,
@@ -229,31 +230,30 @@ class _PopularPageState extends State<PopularPage>
                       left: 16, top: 8, bottom: 8, right: 60),
                   child: SizedBox(
                     height: 44,
-                    child: Observer(
-                      builder: (_) {
-                        final bool isTrend = popularController.currentTag == '';
-                        return InkWell(
-                          key: selectorKey,
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: showTagMenu,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                isTrend ? '热门番组' : popularController.currentTag,
-                                style: theme.textTheme.headlineMedium!.copyWith(
-                                  fontWeight: fontWeight,
-                                  fontSize: fontSize,
-                                ),
+                    child: Consumer(builder: (context, ref, _) {
+                      final state = ref.watch(popularControllerProvider);
+                      final bool isTrend = state.currentTag == '';
+                      return InkWell(
+                        key: selectorKey,
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: showTagMenu,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              isTrend ? '热门番组' : state.currentTag,
+                              style: theme.textTheme.headlineMedium!.copyWith(
+                                fontWeight: fontWeight,
+                                fontSize: fontSize,
                               ),
-                              const SizedBox(width: 4),
-                              Icon(Icons.keyboard_arrow_down,
-                                  size: fontSize, color: theme.iconTheme.color),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(Icons.keyboard_arrow_down,
+                                size: fontSize, color: theme.iconTheme.color),
+                          ],
+                        ),
+                      );
+                    }),
                   ),
                 ),
               );
@@ -269,14 +269,14 @@ class _PopularPageState extends State<PopularPage>
       if (MediaQuery.of(context).orientation == Orientation.portrait)
         IconButton(
           tooltip: '搜索',
-          onPressed: () => Modular.to.pushNamed('/search/'),
+          onPressed: () => context.push('/search'),
           icon: const Icon(Icons.search),
         ),
     ];
     actions.add(
       IconButton(
         tooltip: '历史记录',
-        onPressed: () => Modular.to.pushNamed('/settings/history/'),
+        onPressed: () => context.push('/settings/history'),
         icon: const Icon(Icons.history),
       ),
     );
@@ -328,15 +328,16 @@ class _PopularPageState extends State<PopularPage>
     );
 
     if (selected == null) return;
-    if (selected == '' && popularController.currentTag != '') {
+    final state = ref.read(popularControllerProvider);
+    if (selected == '' && state.currentTag != '') {
       scrollController.animateTo(0,
           duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       popularController.setCurrentTag('');
       popularController.clearBangumiList();
-      if (popularController.trendList.isEmpty) {
+      if (state.trendList.isEmpty) {
         await popularController.queryBangumiByTrend();
       }
-    } else if (selected != '' && selected != popularController.currentTag) {
+    } else if (selected != '' && selected != state.currentTag) {
       scrollController.animateTo(0,
           duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
       popularController.setCurrentTag(selected);

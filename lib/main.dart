@@ -1,9 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:kazumi/app_module.dart';
 import 'package:kazumi/app_widget.dart';
-import 'package:flutter_modular/flutter_modular.dart';
-import 'package:kazumi/bean/settings/theme_provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -13,8 +10,8 @@ import 'package:kazumi/utils/utils.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/pages/error/storage_error_page.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,12 +72,8 @@ void main() async {
   Request();
   await Request.setCookie();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: ModularApp(
-        module: AppModule(),
-        child: const AppWidget(),
-      ),
+    const ProviderScope(
+      child: AppWidget(),
     ),
   );
 }

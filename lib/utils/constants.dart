@@ -23,9 +23,8 @@ const SliderThemeData sliderTheme2024 = SliderThemeData(
   showValueIndicator: ShowValueIndicator.always,
 );
 
-/// The page transition method defined here is managed by flutter, and the native transition method of flutter is set here.
-/// Transition method here will be overridden by the transition method of modular, and do not set the transition method in modular to prevent
-/// the native transition method from failing
+/// The page transition method defined here is managed by Flutter and used by
+/// the app-wide router configuration to ensure consistent transitions.
 const PageTransitionsTheme pageTransitionsTheme2024 = PageTransitionsTheme(
   builders: {
     TargetPlatform.android: CupertinoPageTransitionsBuilder(),

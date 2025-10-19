@@ -1,13 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:webview_windows/webview_windows.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 
 class WebviewWindowsItemImpel extends StatefulWidget {
-  const WebviewWindowsItemImpel({super.key});
+  const WebviewWindowsItemImpel({
+    super.key,
+    required this.webviewController,
+    required this.videoPageController,
+  });
+
+  final WebviewItemController<WebviewController> webviewController;
+  final VideoPageController videoPageController;
 
   @override
   State<WebviewWindowsItemImpel> createState() =>
@@ -16,9 +22,6 @@ class WebviewWindowsItemImpel extends StatefulWidget {
 
 class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
   final List<StreamSubscription> _subscriptions = [];
-  final webviewDesktopItemController = Modular.get<WebviewItemController>();
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
 
   @override
   void initState() {
@@ -33,29 +36,32 @@ class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
         s.cancel();
       } catch (_) {}
     }
-    webviewDesktopItemController.dispose();
+    widget.webviewController.dispose();
     super.dispose();
   }
 
   Future<void> initPlatformState() async {
     // 初始化Webview
-    if (webviewDesktopItemController.webviewController == null) {
-      await webviewDesktopItemController.init();
+    if (widget.webviewController.webviewController == null) {
+      await widget.webviewController.init();
     }
     // 接受全屏事件
-    _subscriptions.add(webviewDesktopItemController
-        .webviewController.containsFullScreenElementChanged
-        .listen((flag) {
-      videoPageController.isFullscreen = flag;
-      windowManager.setFullScreen(flag);
-    }));
+    final controller = widget.webviewController.webviewController;
+    if (controller != null) {
+      _subscriptions.add(controller.containsFullScreenElementChanged
+          .listen((flag) {
+        widget.videoPageController.isFullscreen = flag;
+        windowManager.setFullScreen(flag);
+      }));
+    }
     if (!mounted) return;
 
     setState(() {});
   }
 
   Widget get compositeView {
-    if (webviewDesktopItemController.webviewController == null) {
+    final controller = widget.webviewController.webviewController;
+    if (controller == null) {
       return const Text(
         'Not Initialized',
         style: TextStyle(
@@ -64,7 +70,7 @@ class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
         ),
       );
     } else {
-      return Webview(webviewDesktopItemController.webviewController);
+      return Webview(controller);
     }
   }
 

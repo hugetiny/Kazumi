@@ -1,94 +1,106 @@
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/anime_season.dart';
-import 'package:mobx/mobx.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
-part 'timeline_controller.g.dart';
+class TimelineState {
+  final List<List<BangumiItem>> bangumiCalendar;
+  final String seasonString;
+  final bool isLoading;
+  final bool isTimeOut;
+  final int sortType; // 1 default 2 score 3 heat
+  final DateTime selectedDate;
 
-class TimelineController = _TimelineController with _$TimelineController;
+  TimelineState({
+    this.bangumiCalendar = const [],
+    this.seasonString = '',
+    this.isLoading = false,
+    this.isTimeOut = false,
+    this.sortType = 1,
+    DateTime? selectedDate,
+  }) : selectedDate = selectedDate ?? DateTime.now();
 
-abstract class _TimelineController with Store {
-  @observable
-  ObservableList<List<BangumiItem>> bangumiCalendar =
-      ObservableList<List<BangumiItem>>();
+  TimelineState copyWith({
+    List<List<BangumiItem>>? bangumiCalendar,
+    String? seasonString,
+    bool? isLoading,
+    bool? isTimeOut,
+    int? sortType,
+    DateTime? selectedDate,
+  }) => TimelineState(
+        bangumiCalendar: bangumiCalendar ?? this.bangumiCalendar,
+        seasonString: seasonString ?? this.seasonString,
+        isLoading: isLoading ?? this.isLoading,
+        isTimeOut: isTimeOut ?? this.isTimeOut,
+        sortType: sortType ?? this.sortType,
+        selectedDate: selectedDate ?? this.selectedDate,
+      );
+}
 
-  @observable
-  String seasonString = '';
+class TimelineController extends SafeStateNotifier<TimelineState> {
+  TimelineController() : super(TimelineState());
 
-  @observable
-  bool isLoading = false;
-
-  @observable
-  bool isTimeOut = false;
-
-  int sortType = 1;
-
-  late DateTime selectedDate;
-
-  void init() {
-    selectedDate = DateTime.now();
-    seasonString = AnimeSeason(selectedDate).toString();
-    getSchedules();
+  Future<void> init() async {
+    final now = DateTime.now();
+    state = state.copyWith(
+      selectedDate: now,
+      seasonString: AnimeSeason(now).toString(),
+    );
+    await getSchedules();
   }
 
   Future<void> getSchedules() async {
-    isLoading = true;
-    isTimeOut = false;
-    bangumiCalendar.clear();
-    final resBangumiCalendar = await BangumiHTTP.getCalendar();
-    bangumiCalendar.clear();
-    bangumiCalendar.addAll(resBangumiCalendar);
-    changeSortType(sortType);
-    isLoading = false;
-    isTimeOut = bangumiCalendar.isEmpty;
+    state = state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
+    final res = await BangumiHTTP.getCalendar();
+    final sorted = _sortCalendar(res, state.sortType);
+    state = state.copyWith(
+      bangumiCalendar: sorted,
+      isLoading: false,
+      isTimeOut: res.isEmpty,
+    );
   }
 
   Future<void> getSchedulesBySeason() async {
-    // 4次获取，每次最多20部
-    isLoading = true;
-    isTimeOut = false;
-    bangumiCalendar.clear();
-    var time = 0;
+    state = state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
     const maxTime = 4;
     const limit = 20;
-    var resBangumiCalendar = List.generate(7, (_) => <BangumiItem>[]);
-    for (time = 0; time < maxTime; time++) {
+    var aggregated = List.generate(7, (_) => <BangumiItem>[]);
+    for (var time = 0; time < maxTime; time++) {
       final offset = time * limit;
-      var newList = await BangumiHTTP.getCalendarBySearch(
-          AnimeSeason(selectedDate).toSeasonStartAndEnd(), limit, offset);
-      for (int i = 0; i < resBangumiCalendar.length; ++i) {
-        resBangumiCalendar[i].addAll(newList[i]);
+      final newList = await BangumiHTTP.getCalendarBySearch(
+        AnimeSeason(state.selectedDate).toSeasonStartAndEnd(),
+        limit,
+        offset,
+      );
+      for (int i = 0; i < aggregated.length; ++i) {
+        aggregated[i].addAll(newList[i]);
       }
-      bangumiCalendar.clear();
-      bangumiCalendar.addAll(resBangumiCalendar);
+      state = state.copyWith(bangumiCalendar: aggregated.map((e) => [...e]).toList());
     }
-    isLoading = false;
-    if (bangumiCalendar.isEmpty) {
-      isTimeOut = true;
-    } else {
-      isTimeOut = bangumiCalendar.every((innerList) => innerList.isEmpty);
+    final empty = aggregated.every((l) => l.isEmpty);
+    if (!empty) {
+      aggregated = _sortCalendar(aggregated, state.sortType);
     }
-    if (!isTimeOut) {
-      changeSortType(sortType);
-    }
+    state = state.copyWith(
+      bangumiCalendar: aggregated,
+      isLoading: false,
+      isTimeOut: empty,
+    );
   }
 
   void tryEnterSeason(DateTime date) {
-    selectedDate = date;
-    seasonString = "加载中 ٩(◦`꒳´◦)۶";
+    state = state.copyWith(selectedDate: date, seasonString: '加载中 ٩(◦`꒳´◦)۶');
   }
 
-  /// 排序方式
-  /// 1. default
-  /// 2. score
-  /// 3. heat
   void changeSortType(int type) {
-    if (type < 1 || type > 3) {
-      return;
-    }
-    sortType = type;
-    var resBangumiCalendar = bangumiCalendar.toList();
-    for (var dayList in resBangumiCalendar) {
+    if (type < 1 || type > 3) return;
+    final sorted = _sortCalendar(state.bangumiCalendar, type);
+    state = state.copyWith(sortType: type, bangumiCalendar: sorted);
+  }
+
+  List<List<BangumiItem>> _sortCalendar(List<List<BangumiItem>> calendar, int sortType) {
+    final copy = calendar.map((d) => [...d]).toList();
+    for (var dayList in copy) {
       switch (sortType) {
         case 1:
           dayList.sort((a, b) => a.id.compareTo(b.id));
@@ -99,10 +111,15 @@ abstract class _TimelineController with Store {
         case 3:
           dayList.sort((a, b) => (b.votes).compareTo(a.votes));
           break;
-        default:
       }
     }
-    bangumiCalendar.clear();
-    bangumiCalendar.addAll(resBangumiCalendar);
+    return copy;
+  }
+
+  void finalizeSeasonString() {
+    state = state.copyWith(
+      seasonString: AnimeSeason(state.selectedDate).toString(),
+    );
   }
 }
+

@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/pages/history/history_controller.dart';
+import 'package:kazumi/pages/history/providers.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
+import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
+import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/utils.dart';
 
 // 视频历史记录卡片 - 水平布局
-class BangumiHistoryCardV extends StatefulWidget {
+class BangumiHistoryCardV extends ConsumerStatefulWidget {
   const BangumiHistoryCardV({
     super.key,
     required this.historyItem,
@@ -28,14 +32,21 @@ class BangumiHistoryCardV extends StatefulWidget {
   final double? cardWidth;
 
   @override
-  State<BangumiHistoryCardV> createState() => _BangumiHistoryCardVState();
+  ConsumerState<BangumiHistoryCardV> createState() => _BangumiHistoryCardVState();
 }
 
-class _BangumiHistoryCardVState extends State<BangumiHistoryCardV> {
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
-  final PluginsController pluginsController = Modular.get<PluginsController>();
-  final HistoryController historyController = Modular.get<HistoryController>();
+class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
+  late final VideoPageController videoPageController;
+  late final PluginsController pluginsController;
+  late final HistoryController historyController;
+
+  @override
+  void initState() {
+    super.initState();
+    videoPageController = ref.read(videoControllerProvider.notifier);
+    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    historyController = ref.read(historyControllerProvider.notifier);
+  }
 
   Widget propertyChip({
     required String title,
@@ -95,6 +106,7 @@ class _BangumiHistoryCardVState extends State<BangumiHistoryCardV> {
             );
             return;
           }
+          final router = GoRouter.of(context);
           KazumiDialog.showLoading(
             msg: '获取中',
             barrierDismissible: Utils.isDesktop(),
@@ -125,7 +137,10 @@ class _BangumiHistoryCardVState extends State<BangumiHistoryCardV> {
             await videoPageController.queryRoads(widget.historyItem.lastSrc,
                 videoPageController.currentPlugin.name);
             KazumiDialog.dismiss();
-            Modular.to.pushNamed('/video/');
+            if (!mounted) {
+              return;
+            }
+            router.push('/video');
           } catch (_) {
             KazumiLogger().log(Level.warning, "获取视频播放列表失败");
             KazumiDialog.dismiss();
@@ -200,10 +215,7 @@ class _BangumiHistoryCardVState extends State<BangumiHistoryCardV> {
                     ),
                     tooltip: '番剧详情',
                     onPressed: () {
-                      Modular.to.pushNamed(
-                        '/info/',
-                        arguments: widget.historyItem.bangumiItem,
-                      );
+                      context.push('/info', extra: widget.historyItem.bangumiItem);
                     },
                   ),
                 ],

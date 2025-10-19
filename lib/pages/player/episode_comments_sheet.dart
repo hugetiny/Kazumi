@@ -1,11 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/card/episode_comments_card.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
+import 'package:kazumi/pages/video/providers.dart';
+import 'package:kazumi/pages/video/video_state.dart';
 
 class EpisodeInfo extends InheritedWidget {
   /// This widget receives changes of episode and notify it's child,
@@ -22,16 +23,16 @@ class EpisodeInfo extends InheritedWidget {
   }
 }
 
-class EpisodeCommentsSheet extends StatefulWidget {
+class EpisodeCommentsSheet extends ConsumerStatefulWidget {
   const EpisodeCommentsSheet({super.key});
 
   @override
-  State<EpisodeCommentsSheet> createState() => _EpisodeCommentsSheetState();
+  ConsumerState<EpisodeCommentsSheet> createState() => _EpisodeCommentsSheetState();
 }
 
-class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
+class _EpisodeCommentsSheetState
+    extends ConsumerState<EpisodeCommentsSheet> {
+  late final VideoPageController videoPageController;
   bool commentsQueryTimeout = false;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
@@ -41,6 +42,7 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
 
   @override
   void initState() {
+    videoPageController = ref.read(videoControllerProvider.notifier);
     super.initState();
   }
 
@@ -78,7 +80,7 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
     super.dispose();
   }
 
-  Widget get episodeCommentsBody {
+  Widget _buildEpisodeCommentsBody(VideoPageState videoState) {
     return CustomScrollView(
       scrollBehavior: const ScrollBehavior().copyWith(
         // Scrollbars' movement is not linear so hide it.
@@ -93,45 +95,42 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-          sliver: Observer(builder: (context) {
-            if (commentsQueryTimeout) {
-              return const SliverFillRemaining(
-                child: Center(
-                  child: Text('空空如也'),
-                ),
-              );
-            }
-            return SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  // Fix scroll issue caused by height change of network images
-                  // by keeping loaded cards alive.
-                  return KeepAlive(
-                    keepAlive: true,
-                    child: IndexedSemantics(
-                      index: index,
-                      child: SelectionArea(
-                        child: EpisodeCommentsCard(
-                          commentItem:
-                              videoPageController.episodeCommentsList[index],
+          sliver: commentsQueryTimeout
+              ? const SliverFillRemaining(
+                  child: Center(
+                    child: Text('空空如也'),
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      // Fix scroll issue caused by height change of network images
+                      // by keeping loaded cards alive.
+                      return KeepAlive(
+                        keepAlive: true,
+                        child: IndexedSemantics(
+                          index: index,
+                          child: SelectionArea(
+                            child: EpisodeCommentsCard(
+                              commentItem: videoState.episodeComments[index],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-                childCount: videoPageController.episodeCommentsList.length,
-                addAutomaticKeepAlives: false,
-                addRepaintBoundaries: false,
-                addSemanticIndexes: false,
-              ),
-            );
-          }),
+                      );
+                    },
+                    childCount: videoState.episodeComments.length,
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: false,
+                    addSemanticIndexes: false,
+                  ),
+                ),
         ),
       ],
     );
   }
 
-  Widget get commentsInfo {
+  Widget _buildCommentsInfo(VideoPageState videoState) {
+    final currentEpisodeInfo = videoState.episodeInfo;
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -143,15 +142,15 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    '${videoPageController.episodeInfo.readType()}.${videoPageController.episodeInfo.episode} ${videoPageController.episodeInfo.name}',
+          '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline)),
                 Text(
-                    (videoPageController.episodeInfo.nameCn != '')
-                        ? '${videoPageController.episodeInfo.readType()}.${videoPageController.episodeInfo.episode} ${videoPageController.episodeInfo.nameCn}'
-                        : '${videoPageController.episodeInfo.readType()}.${videoPageController.episodeInfo.episode} ${videoPageController.episodeInfo.name}',
+          (currentEpisodeInfo.nameCn != '')
+            ? '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.nameCn}'
+            : '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
@@ -228,13 +227,17 @@ class _EpisodeCommentsSheetState extends State<EpisodeCommentsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final videoState = ref.watch(videoControllerProvider);
     final int episode = EpisodeInfo.of(context)!.episode;
     return Scaffold(
       body: RefreshIndicator(
         key: _refreshIndicatorKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [commentsInfo, Expanded(child: episodeCommentsBody)],
+          children: [
+            _buildCommentsInfo(videoState),
+            Expanded(child: _buildEpisodeCommentsBody(videoState)),
+          ],
         ),
         onRefresh: () async {
           await loadComments(ep == 0 ? episode : ep);

@@ -1,31 +1,28 @@
 import 'dart:async';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/plugins/plugins.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 
 class QueryManager {
   QueryManager({
     required this.infoController,
+    required this.pluginsController,
   });
 
   final InfoController infoController;
-  final PluginsController pluginsController = Modular.get<PluginsController>();
-  late StreamController _controller;
+  final PluginsController pluginsController;
+  StreamController<PluginSearchResponse>? _controller;
   bool _isCancelled = false;
 
   Future<void> querySource(String keyword, String pluginName) async {
-    for (PluginSearchResponse pluginSearchResponse
-        in infoController.pluginSearchResponseList) {
-      if (pluginSearchResponse.pluginName == pluginName) {
-        infoController.pluginSearchResponseList.remove(pluginSearchResponse);
-        break;
-      }
+    final responses = infoController.pluginSearchResponseList;
+    final existingIndex =
+        responses.indexWhere((response) => response.pluginName == pluginName);
+    if (existingIndex != -1) {
+      responses.removeAt(existingIndex);
     }
-    if (infoController.pluginSearchStatus.containsKey(pluginName)) {
-      infoController.pluginSearchStatus[pluginName] = 'pending';
-    }
+    infoController.pluginSearchStatus[pluginName] = 'pending';
     for (Plugin plugin in pluginsController.pluginList) {
       if (plugin.name == pluginName) {
         plugin.queryBangumi(keyword, shouldRethrow: true).then((result) {
@@ -46,7 +43,7 @@ class QueryManager {
   }
 
   Future<void> queryAllSource(String keyword) async {
-    _controller = StreamController();
+  _controller = StreamController<PluginSearchResponse>();
     infoController.pluginSearchResponseList.clear();
 
     for (Plugin plugin in pluginsController.pluginList) {
@@ -63,7 +60,7 @@ class QueryManager {
         if (result.data.isNotEmpty) {
           pluginsController.validityTracker.markSearchValid(plugin.name);
         }
-        _controller.add(result);
+  _controller?.add(result);
       }).catchError((error) {
         if (_isCancelled) return;
 
@@ -71,7 +68,11 @@ class QueryManager {
       });
     }
 
-    await for (var result in _controller.stream) {
+    final controller = _controller;
+    if (controller == null) {
+      return;
+    }
+    await for (var result in controller.stream) {
       if (_isCancelled) break;
 
       infoController.pluginSearchResponseList.add(result);
@@ -80,6 +81,7 @@ class QueryManager {
 
   void cancel() {
     _isCancelled = true;
-    _controller.close();
+    _controller?.close();
+    _controller = null;
   }
 }

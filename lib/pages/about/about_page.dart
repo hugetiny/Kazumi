@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
@@ -14,14 +15,14 @@ import 'package:kazumi/utils/utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AboutPage extends StatefulWidget {
+class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
 
   @override
-  State<AboutPage> createState() => _AboutPageState();
+  ConsumerState<AboutPage> createState() => _AboutPageState();
 }
 
-class _AboutPageState extends State<AboutPage> {
+class _AboutPageState extends ConsumerState<AboutPage> {
   final exitBehaviorTitles = <String>['退出 Kazumi', '最小化至托盘', '每次都询问'];
   late dynamic defaultDanmakuArea;
   late dynamic defaultThemeMode;
@@ -31,12 +32,13 @@ class _AboutPageState extends State<AboutPage> {
       setting.get(SettingBoxKey.exitBehavior, defaultValue: 2);
   late bool autoUpdate;
   double _cacheSizeMB = -1;
-  final MyController myController = Modular.get<MyController>();
+  late final MyController myController;
   final MenuController menuController = MenuController();
 
   @override
   void initState() {
     super.initState();
+    myController = ref.read(myControllerProvider.notifier);
     autoUpdate = setting.get(SettingBoxKey.autoUpdate, defaultValue: true);
     _getCacheSize();
   }
@@ -145,7 +147,7 @@ class _AboutPageState extends State<AboutPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    Modular.to.pushNamed('/settings/about/license');
+                    _push('/settings/about/license');
                   },
                   title: const Text('开源许可证'),
                   description: const Text('查看所有开源许可证'),
@@ -250,7 +252,7 @@ class _AboutPageState extends State<AboutPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    Modular.to.pushNamed('/settings/about/logs');
+                    _push('/settings/about/logs');
                   },
                   title: const Text('错误日志'),
                 ),
@@ -294,5 +296,10 @@ class _AboutPageState extends State<AboutPage> {
         ),
       ),
     );
+  }
+
+  void _push(String path) {
+    if (!mounted) return;
+    context.push(path);
   }
 }

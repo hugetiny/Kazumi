@@ -1,6 +1,5 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:mobx/mobx.dart';
+import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle, AssetManifest;
 import 'package:path_provider/path_provider.dart';
 import 'package:kazumi/plugins/plugins.dart';
@@ -11,20 +10,34 @@ import 'package:kazumi/modules/plugin/plugin_http_module.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/request/api.dart';
-
-part 'plugins_controller.g.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
 // 从 1.5.1 版本开始，规则文件储存在单一的 plugins.json 文件中。
 // 之前的版本中，规则以分离文件形式存储，版本更新后将这些分离文件合并为单一的 plugins.json 文件。
 
-class PluginsController = _PluginsController with _$PluginsController;
+class PluginsState {
+  const PluginsState({
+    this.pluginList = const [],
+    this.pluginHTTPList = const [],
+  });
 
-abstract class _PluginsController with Store {
-  @observable
-  ObservableList<Plugin> pluginList = ObservableList.of([]);
+  final List<Plugin> pluginList;
+  final List<PluginHTTPItem> pluginHTTPList;
 
-  @observable
-  ObservableList<PluginHTTPItem> pluginHTTPList = ObservableList.of([]);
+  PluginsState copyWith({
+    List<Plugin>? pluginList,
+    List<PluginHTTPItem>? pluginHTTPList,
+  }) {
+    return PluginsState(
+      pluginList: pluginList ?? this.pluginList,
+      pluginHTTPList: pluginHTTPList ?? this.pluginHTTPList,
+    );
+  }
+}
+
+class PluginsController extends SafeStateNotifier<PluginsState> {
+  PluginsController()
+      : super(const PluginsState());
 
   // 规则有效性追踪器
   final validityTracker = PluginValidityTracker();
@@ -37,6 +50,10 @@ abstract class _PluginsController with Store {
   Directory? oldPluginDirectory;
 
   Directory? newPluginDirectory;
+
+  List<Plugin> get pluginList => state.pluginList;
+
+  List<PluginHTTPItem> get pluginHTTPList => state.pluginHTTPList;
 
   // Initializes the plugin directory and loads all plugins
   Future<void> init() async {
@@ -54,27 +71,29 @@ abstract class _PluginsController with Store {
 
   // Loads all plugins from the directory, populates the plugin list, and saves to plugins.json if needed
   Future<void> loadAllPlugins() async {
-    pluginList.clear();
     KazumiLogger()
         .log(Level.info, 'Plugins Directory: ${newPluginDirectory!.path}');
     if (await newPluginDirectory!.exists()) {
       final pluginsFile = File('${newPluginDirectory!.path}/$pluginsFileName');
       if (await pluginsFile.exists()) {
         final jsonString = await pluginsFile.readAsString();
-        pluginList.addAll(getPluginListFromJson(jsonString));
+        final plugins = getPluginListFromJson(jsonString);
+        _setPluginList(plugins);
         KazumiLogger()
-            .log(Level.info, 'Current Plugin number: ${pluginList.length}');
+            .log(Level.info, 'Current Plugin number: ${plugins.length}');
       } else {
         // No plugins.json
         var jsonFiles = await getPluginFiles();
+        final List<Plugin> plugins = [];
         for (var filePath in jsonFiles) {
           final file = File(filePath);
           final jsonString = await file.readAsString();
           final data = jsonDecode(jsonString);
           final plugin = Plugin.fromJson(data);
-          pluginList.add(plugin);
+          plugins.add(plugin);
           await file.delete(recursive: true);
         }
+        _setPluginList(plugins);
         savePlugins();
       }
     } else {
@@ -103,11 +122,13 @@ abstract class _PluginsController with Store {
     final jsonFiles = assets.where((String asset) =>
         asset.startsWith('assets/plugins/') && asset.endsWith('.json'));
 
+    final List<Plugin> plugins = [...pluginList];
     for (var filePath in jsonFiles) {
       final jsonString = await rootBundle.loadString(filePath);
       final plugin = Plugin.fromJson(jsonDecode(jsonString));
-      pluginList.add(plugin);
+      plugins.add(plugin);
     }
+    _setPluginList(plugins);
     await savePlugins();
     KazumiLogger().log(Level.info,
         '${jsonFiles.length} plugin files copied to ${newPluginDirectory!.path}');
@@ -132,23 +153,21 @@ abstract class _PluginsController with Store {
   }
 
   Future<void> removePlugin(Plugin plugin) async {
-    pluginList.removeWhere((p) => p.name == plugin.name);
+    final updated = pluginList.where((p) => p.name != plugin.name).toList();
+    _setPluginList(updated);
     await savePlugins();
   }
 
   // Update or add plugin
   void updatePlugin(Plugin plugin) {
-    bool flag = false;
-    for (int i = 0; i < pluginList.length; ++i) {
-      if (pluginList[i].name == plugin.name) {
-        pluginList.replaceRange(i, i + 1, [plugin]);
-        flag = true;
-        break;
-      }
+    final updated = [...pluginList];
+    final index = updated.indexWhere((p) => p.name == plugin.name);
+    if (index >= 0) {
+      updated[index] = plugin;
+    } else {
+      updated.add(plugin);
     }
-    if (!flag) {
-      pluginList.add(plugin);
-    }
+    _setPluginList(updated);
     savePlugins();
   }
 
@@ -156,8 +175,10 @@ abstract class _PluginsController with Store {
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }
-    final plugin = pluginList.removeAt(oldIndex);
-    pluginList.insert(newIndex, plugin);
+    final updated = [...pluginList];
+    final plugin = updated.removeAt(oldIndex);
+    updated.insert(newIndex, plugin);
+    _setPluginList(updated);
     savePlugins();
   }
 
@@ -169,9 +190,11 @@ abstract class _PluginsController with Store {
   }
 
   Future<void> queryPluginHTTPList() async {
-    pluginHTTPList.clear();
     var pluginHTTPListRes = await PluginHTTP.getPluginList();
-    pluginHTTPList.addAll(pluginHTTPListRes);
+    if (!mounted) return;
+    state = state.copyWith(
+      pluginHTTPList: List<PluginHTTPItem>.unmodifiable(pluginHTTPListRes),
+    );
   }
 
   Future<Plugin?> queryPluginHTTP(String name) async {
@@ -234,12 +257,17 @@ abstract class _PluginsController with Store {
   }
 
   void removePlugins(Set<String> pluginNames) {
-    for (int i = pluginList.length - 1; i >= 0; --i) {
-      var name = pluginList[i].name;
-      if (pluginNames.contains(name)) {
-        pluginList.removeAt(i);
-      }
-    }
+    final updated = pluginList
+        .where((plugin) => !pluginNames.contains(plugin.name))
+        .toList();
+    _setPluginList(updated);
     savePlugins();
+  }
+
+  void _setPluginList(List<Plugin> plugins) {
+    if (!mounted) return;
+    state = state.copyWith(
+      pluginList: List<Plugin>.unmodifiable(plugins),
+    );
   }
 }

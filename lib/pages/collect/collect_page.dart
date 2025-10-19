@@ -1,29 +1,28 @@
-import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
 import 'package:kazumi/utils/constants.dart';
-import 'package:kazumi/pages/menu/menu.dart';
 import 'package:kazumi/bean/card/bangumi_card.dart';
 import 'package:kazumi/pages/collect/collect_controller.dart';
+import 'package:kazumi/pages/collect/providers.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
-import 'package:provider/provider.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/pages/menu/navigation_provider.dart';
 
-class CollectPage extends StatefulWidget {
+class CollectPage extends ConsumerStatefulWidget {
   const CollectPage({super.key});
 
   @override
-  State<CollectPage> createState() => _CollectPageState();
+  ConsumerState<CollectPage> createState() => _CollectPageState();
 }
 
-class _CollectPageState extends State<CollectPage>
+class _CollectPageState extends ConsumerState<CollectPage>
     with SingleTickerProviderStateMixin {
-  final CollectController collectController = Modular.get<CollectController>();
-  late NavigationBarState navigationBarState;
+  late CollectController collectController;
   TabController? tabController;
   bool showDelete = false;
   bool syncCollectiblesing = false;
@@ -34,17 +33,15 @@ class _CollectPageState extends State<CollectPage>
       KazumiDialog.dismiss();
       return;
     }
-    navigationBarState.updateSelectedIndex(0);
-    Modular.to.navigate('/tab/popular/');
+  ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    context.go('/tab/popular');
   }
 
   @override
   void initState() {
     super.initState();
-    collectController.loadCollectibles();
+  collectController = ref.read(collectControllerProvider.notifier);
     tabController = TabController(vsync: this, length: tabs.length);
-    navigationBarState =
-        Provider.of<NavigationBarState>(context, listen: false);
   }
 
   @override
@@ -121,18 +118,18 @@ class _CollectPageState extends State<CollectPage>
                   width: 32, height: 32, child: CircularProgressIndicator())
               : const Icon(Icons.cloud_sync),
         ),
-        body: Observer(builder: (context) {
-          return renderBody;
+        body: Consumer(builder: (context, ref, _) {
+          final state = ref.watch(collectControllerProvider);
+          return renderBody(state);
         }),
       ),
     );
   }
-
-  Widget get renderBody {
-    if (collectController.collectibles.isNotEmpty) {
+  Widget renderBody(CollectState state) {
+    if (state.collectibles.isNotEmpty) {
       return TabBarView(
         controller: tabController,
-        children: contentGrid(collectController.collectibles),
+        children: contentGrid(state.collectibles),
       );
     } else {
       return const Center(

@@ -1,16 +1,11 @@
 import 'dart:io';
-import 'package:mobx/mobx.dart';
 import 'package:flutter/services.dart' show rootBundle, AssetManifest;
 import 'package:path_provider/path_provider.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
 import 'package:kazumi/utils/logger.dart';
 
-part 'shaders_controller.g.dart';
-
-class ShadersController = _ShadersController with _$ShadersController;
-
-abstract class _ShadersController with Store {
+class ShadersController {
   late Directory shadersDirectory;
 
   Future<void> copyShadersToExternalDirectory() async {

@@ -2,15 +2,17 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:kazumi/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_modular/flutter_modular.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
+import 'package:kazumi/pages/info/providers.dart';
 import 'package:kazumi/bean/card/bangumi_info_card.dart';
 import 'package:kazumi/pages/info/source_sheet.dart';
-import 'package:kazumi/plugins/plugins_controller.dart';
+import 'package:kazumi/plugins/plugins_providers.dart';
+import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:logger/logger.dart';
@@ -18,24 +20,22 @@ import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/pages/info/info_tabview.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/bean/appbar/drag_to_move_bar.dart' as dtb;
 
-class InfoPage extends StatefulWidget {
-  const InfoPage({super.key});
+class InfoPage extends ConsumerStatefulWidget {
+  const InfoPage({super.key, this.bangumi});
+
+  final BangumiItem? bangumi;
 
   @override
-  State<InfoPage> createState() => _InfoPageState();
+  ConsumerState<InfoPage> createState() => _InfoPageState();
 }
 
-class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
-  /// Don't use modular singleton here. We may have multiple info pages.
-  /// Use a new instance of InfoController for each info page.
-  final InfoController infoController = InfoController();
-  final VideoPageController videoPageController =
-      Modular.get<VideoPageController>();
-  final PluginsController pluginsController = Modular.get<PluginsController>();
+class _InfoPageState extends ConsumerState<InfoPage>
+    with TickerProviderStateMixin {
+  late final InfoController infoController;
+  late final VideoPageController videoPageController;
   late TabController sourceTabController;
   late TabController infoTabController;
 
@@ -46,16 +46,14 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
   bool staffIsLoading = false;
   bool staffQueryTimeout = false;
 
-  final inputBangumiIten = Modular.args.data as BangumiItem;
-
   Future<void> loadCharacters() async {
     if (charactersIsLoading) return;
     setState(() {
       charactersIsLoading = true;
       charactersQueryTimeout = false;
     });
-    infoController
-        .queryBangumiCharactersByID(infoController.bangumiItem.id)
+  infoController
+    .queryBangumiCharactersByID(infoController.bangumiItem.id)
         .then((_) {
       if (infoController.characterList.isEmpty && mounted) {
         setState(() {
@@ -77,8 +75,8 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
       staffIsLoading = true;
       staffQueryTimeout = false;
     });
-    infoController
-        .queryBangumiStaffsByID(infoController.bangumiItem.id)
+  infoController
+    .queryBangumiStaffsByID(infoController.bangumiItem.id)
         .then((_) {
       if (infoController.staffList.isEmpty && mounted) {
         setState(() {
@@ -100,8 +98,8 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
       commentsIsLoading = true;
       commentsQueryTimeout = false;
     });
-    infoController
-        .queryBangumiCommentsByID(infoController.bangumiItem.id, offset: offset)
+  infoController
+    .queryBangumiCommentsByID(infoController.bangumiItem.id, offset: offset)
         .then((_) {
       if (infoController.commentsList.isEmpty && mounted) {
         setState(() {
@@ -120,11 +118,12 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    infoController.bangumiItem = inputBangumiIten;
-    infoController.characterList.clear();
-    infoController.commentsList.clear();
-    infoController.staffList.clear();
-    infoController.pluginSearchResponseList.clear();
+    infoController = ref.read(infoControllerProvider.notifier);
+    videoPageController = ref.read(videoControllerProvider.notifier);
+    if (widget.bangumi != null) {
+      infoController.bangumiItem = widget.bangumi!;
+    }
+  infoController.resetListsForNewBangumi();
     videoPageController.currentEpisode = 1;
     // Because the gap between different bangumi API response is too large, sometimes we need to query the bangumi info again
     // We need the type parameter to determine whether to attach the new data to the old data
@@ -133,8 +132,9 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
         infoController.bangumiItem.votesCount.isEmpty) {
       queryBangumiInfoByID(infoController.bangumiItem.id, type: 'attach');
     }
-    sourceTabController =
-        TabController(length: pluginsController.pluginList.length, vsync: this);
+  final pluginsController = ref.read(pluginsControllerProvider);
+  sourceTabController =
+    TabController(length: pluginsController.pluginList.length, vsync: this);
     infoTabController = TabController(length: 5, vsync: this);
     infoTabController.addListener(() {
       int index = infoTabController.index;
@@ -156,10 +156,7 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    infoController.characterList.clear();
-    infoController.commentsList.clear();
-    infoController.staffList.clear();
-    infoController.pluginSearchResponseList.clear();
+  infoController.resetListsForNewBangumi();
     videoPageController.currentEpisode = 1;
     sourceTabController.dispose();
     infoTabController.dispose();
@@ -177,6 +174,7 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(infoControllerProvider);
     final List<String> tabs = <String>['概览', '吐槽', '角色', '评论', '制作人员'];
     final bool showWindowButton = GStorage.setting
         .get(SettingBoxKey.showWindowButton, defaultValue: false);
@@ -259,70 +257,67 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
                             MediaQuery.paddingOf(context).top,
                     flexibleSpace: FlexibleSpaceBar(
                       collapseMode: CollapseMode.pin,
-                      background: Observer(builder: (context) {
-                        return Stack(
-                          children: [
-                            // No background image when loading to make loading looks better
-                            if (!infoController.isLoading)
-                              Positioned.fill(
-                                bottom: kTextTabBarHeight,
-                                child: IgnorePointer(
-                                  child: Opacity(
-                                    opacity: 0.4,
-                                    child: LayoutBuilder(
-                                      builder: (context, boxConstraints) {
-                                        return ImageFiltered(
-                                          imageFilter: ImageFilter.blur(
-                                              sigmaX: 15.0, sigmaY: 15.0),
-                                          child: ShaderMask(
-                                            shaderCallback: (Rect bounds) {
-                                              return const LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                colors: [
-                                                  Colors.white,
-                                                  Colors.transparent,
-                                                ],
-                                                stops: [0.8, 1],
-                                              ).createShader(bounds);
-                                            },
-                                            child: NetworkImgLayer(
-                                              src: infoController.bangumiItem
-                                                      .images['large'] ??
-                                                  '',
-                                              width: boxConstraints.maxWidth,
-                                              height: boxConstraints.maxHeight,
-                                              fadeInDuration: const Duration(
-                                                  milliseconds: 0),
-                                              fadeOutDuration: const Duration(
-                                                  milliseconds: 0),
-                                            ),
+                      background: Stack(
+                        children: [
+                          if (!state.isLoading)
+                            Positioned.fill(
+                              bottom: kTextTabBarHeight,
+                              child: IgnorePointer(
+                                child: Opacity(
+                                  opacity: 0.4,
+                                  child: LayoutBuilder(
+                                    builder: (context, boxConstraints) {
+                                      return ImageFiltered(
+                                        imageFilter: ImageFilter.blur(
+                                            sigmaX: 15.0, sigmaY: 15.0),
+                                        child: ShaderMask(
+                                          shaderCallback: (Rect bounds) {
+                                            return const LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Colors.white,
+                                                Colors.transparent,
+                                              ],
+                                              stops: [0.8, 1],
+                                            ).createShader(bounds);
+                                          },
+                                          child: NetworkImgLayer(
+                                            src: infoController
+                                                    .bangumiItem.images['large'] ??
+                                                '',
+                                            width: boxConstraints.maxWidth,
+                                            height: boxConstraints.maxHeight,
+                                            fadeInDuration:
+                                                const Duration(milliseconds: 0),
+                                            fadeOutDuration:
+                                                const Duration(milliseconds: 0),
                                           ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            SafeArea(
-                              bottom: false,
-                              child: EmbeddedNativeControlArea(
-                                child: Align(
-                                  alignment: Alignment.topCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                        16, kToolbarHeight, 16, 0),
-                                    child: BangumiInfoCardV(
-                                      bangumiItem: infoController.bangumiItem,
-                                      isLoading: infoController.isLoading,
-                                    ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        );
-                      }),
+                          SafeArea(
+                            bottom: false,
+                            child: EmbeddedNativeControlArea(
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                      16, kToolbarHeight, 16, 0),
+                                  child: BangumiInfoCardV(
+                                    bangumiItem: infoController.bangumiItem,
+                                    isLoading: state.isLoading,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     forceElevated: innerBoxIsScrolled,
                     bottom: TabBar(
@@ -336,22 +331,20 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
                 ),
               ];
             },
-            body: Observer(builder: (context) {
-              return InfoTabView(
-                tabController: infoTabController,
-                bangumiItem: infoController.bangumiItem,
-                commentsQueryTimeout: commentsQueryTimeout,
-                charactersQueryTimeout: charactersQueryTimeout,
-                staffQueryTimeout: staffQueryTimeout,
-                loadMoreComments: loadMoreComments,
-                loadCharacters: loadCharacters,
-                loadStaff: loadStaff,
-                commentsList: infoController.commentsList,
-                characterList: infoController.characterList,
-                staffList: infoController.staffList,
-                isLoading: infoController.isLoading,
-              );
-            }),
+            body: InfoTabView(
+              tabController: infoTabController,
+              bangumiItem: infoController.bangumiItem,
+              commentsQueryTimeout: commentsQueryTimeout,
+              charactersQueryTimeout: charactersQueryTimeout,
+              staffQueryTimeout: staffQueryTimeout,
+              loadMoreComments: loadMoreComments,
+              loadCharacters: loadCharacters,
+              loadStaff: loadStaff,
+              commentsList: state.commentsList,
+              characterList: state.characterList,
+              staffList: state.staffList,
+              isLoading: state.isLoading,
+            ),
           ),
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.play_arrow_rounded),
@@ -374,7 +367,10 @@ class _InfoPageState extends State<InfoPage> with TickerProviderStateMixin {
                 showDragHandle: true,
                 context: context,
                 builder: (context) {
-                  return SourceSheet(tabController: sourceTabController, infoController: infoController);
+                  return SourceSheet(
+                    tabController: sourceTabController,
+                    infoController: infoController,
+                  );
                 },
               );
             },

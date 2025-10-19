@@ -1,129 +1,213 @@
-import 'package:kazumi/modules/roads/road_module.dart';
-import 'package:kazumi/plugins/plugins_controller.dart';
-import 'package:flutter_modular/flutter_modular.dart';
-import 'package:kazumi/plugins/plugins.dart';
-import 'package:kazumi/pages/webview/webview_controller.dart';
-import 'package:kazumi/pages/history/history_controller.dart';
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
-import 'package:mobx/mobx.dart';
-import 'package:logger/logger.dart';
-import 'package:kazumi/utils/utils.dart';
-import 'package:kazumi/utils/logger.dart';
-import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/modules/bangumi/episode_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
+import 'package:kazumi/modules/roads/road_module.dart';
+import 'package:kazumi/plugins/plugins.dart';
+import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/request/bangumi.dart';
-import 'package:dio/dio.dart';
+import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/pages/webview/webview_controller.dart';
+import 'package:logger/logger.dart';
+import 'package:window_manager/window_manager.dart';
+import 'package:kazumi/utils/safe_state_notifier.dart';
 
-part 'video_controller.g.dart';
+import 'video_state.dart';
 
-class VideoPageController = _VideoPageController with _$VideoPageController;
+class VideoPageController extends SafeStateNotifier<VideoPageState> {
+  VideoPageController({
+    required this.pluginsController,
+    required this.webviewController,
+  }) : super(VideoPageState.initial());
 
-abstract class _VideoPageController with Store {
-  late BangumiItem bangumiItem;
-  EpisodeInfo episodeInfo = EpisodeInfo.fromTemplate();
+  final PluginsController pluginsController;
+  final WebviewItemController<dynamic> webviewController;
 
-  @observable
-  var episodeCommentsList = ObservableList<EpisodeCommentItem>();
-
-  @observable
-  bool loading = true;
-
-  @observable
-  int currentEpisode = 1;
-
-  @observable
-  int currentRoad = 0;
-
-  /// 全屏状态
-  @observable
-  bool isFullscreen = false;
-
-  /// 画中画状态
-  @observable
-  bool isPip = false;
-
-  /// 播放列表显示状态
-  @observable
-  bool showTabBody = true;
-
-  /// 上次观看位置
-  @observable
-  int historyOffset = 0;
-
-  /// 和 bangumiItem 中的标题不同，此标题来自于视频源
-  String title = '';
-
-  String src = '';
-
-  @observable
-  var roadList = ObservableList<Road>();
-
-  late Plugin currentPlugin;
-
-  /// 用于取消正在进行的 queryRoads 操作
   CancelToken? _queryRoadsCancelToken;
 
-  final PluginsController pluginsController = Modular.get<PluginsController>();
-  final HistoryController historyController = Modular.get<HistoryController>();
+  BangumiItem get bangumiItem {
+    final item = state.bangumiItem;
+    if (item == null) {
+      throw StateError('bangumiItem is not set');
+    }
+    return item;
+  }
+
+  set bangumiItem(BangumiItem value) {
+    state = state.copyWith(bangumiItem: value);
+  }
+
+  EpisodeInfo get episodeInfo => state.episodeInfo;
+  set episodeInfo(EpisodeInfo value) {
+    state = state.copyWith(episodeInfo: value);
+  }
+
+  List<EpisodeCommentItem> get episodeCommentsList => state.episodeComments;
+
+  void resetEpisodeInfo() {
+    state = state.copyWith(episodeInfo: EpisodeInfo.fromTemplate());
+  }
+
+  void clearEpisodeComments() {
+    state = state.copyWith(resetEpisodeComments: true);
+  }
+
+  void addEpisodeComments(Iterable<EpisodeCommentItem> comments) {
+    final updated = [...state.episodeComments, ...comments];
+    state = state.copyWith(episodeComments: updated);
+  }
+
+  bool get loading => state.loading;
+  set loading(bool value) {
+    if (state.loading == value) return;
+    state = state.copyWith(loading: value);
+  }
+
+  int get currentEpisode => state.currentEpisode;
+  set currentEpisode(int value) {
+    if (state.currentEpisode == value) return;
+    state = state.copyWith(currentEpisode: value);
+  }
+
+  int get currentRoad => state.currentRoad;
+  set currentRoad(int value) {
+    if (state.currentRoad == value) return;
+    state = state.copyWith(currentRoad: value);
+  }
+
+  bool get isFullscreen => state.isFullscreen;
+  set isFullscreen(bool value) {
+    if (state.isFullscreen == value) return;
+    state = state.copyWith(isFullscreen: value);
+  }
+
+  bool get isPip => state.isPip;
+  set isPip(bool value) {
+    if (state.isPip == value) return;
+    state = state.copyWith(isPip: value);
+  }
+
+  bool get showTabBody => state.showTabBody;
+  set showTabBody(bool value) {
+    if (state.showTabBody == value) return;
+    state = state.copyWith(showTabBody: value);
+  }
+
+  int get historyOffset => state.historyOffset;
+  set historyOffset(int value) {
+    if (state.historyOffset == value) return;
+    state = state.copyWith(historyOffset: value);
+  }
+
+  String get title => state.title;
+  set title(String value) {
+    if (state.title == value) return;
+    state = state.copyWith(title: value);
+  }
+
+  String get src => state.src;
+  set src(String value) {
+    if (state.src == value) return;
+    state = state.copyWith(src: value);
+  }
+
+  List<Road> get roadList => state.roadList;
+
+  Plugin get currentPlugin {
+    final plugin = state.currentPlugin;
+    if (plugin == null) {
+      throw StateError('currentPlugin is not set');
+    }
+    return plugin;
+  }
+
+  set currentPlugin(Plugin plugin) {
+    state = state.copyWith(currentPlugin: plugin);
+  }
 
   Future<void> changeEpisode(int episode,
       {int currentRoad = 0, int offset = 0}) async {
+    if (state.roadList.isEmpty) {
+      KazumiLogger().log(Level.warning, '尝试切换剧集时播放列表为空 episode: $episode');
+      return;
+    }
+    if (currentRoad >= state.roadList.length) {
+      KazumiLogger()
+          .log(Level.warning, '尝试切换剧集时播放列表索引越界 currentRoad: $currentRoad');
+      return;
+    }
+    if (episode <= 0 || episode > state.roadList[currentRoad].data.length) {
+      KazumiLogger().log(Level.warning,
+          '尝试切换剧集时集数越界 episode: $episode currentRoad: $currentRoad');
+      return;
+    }
     currentEpisode = episode;
     this.currentRoad = currentRoad;
-    String chapterName = roadList[currentRoad].identifier[episode - 1];
+    historyOffset = offset;
+    final chapterName = state.roadList[currentRoad].identifier[episode - 1];
     KazumiLogger().log(Level.info, '跳转到$chapterName');
-    String urlItem = roadList[currentRoad].data[episode - 1];
-    if (urlItem.contains(currentPlugin.baseUrl) ||
-        urlItem.contains(currentPlugin.baseUrl.replaceAll('https', 'http'))) {
-      urlItem = urlItem;
-    } else {
-      urlItem = currentPlugin.baseUrl + urlItem;
+    var urlItem = state.roadList[currentRoad].data[episode - 1];
+    final plugin = currentPlugin;
+    if (!urlItem.contains(plugin.baseUrl) &&
+        !urlItem.contains(plugin.baseUrl.replaceAll('https', 'http'))) {
+      urlItem = plugin.baseUrl + urlItem;
     }
-    final webviewItemController = Modular.get<WebviewItemController>();
-    await webviewItemController.loadUrl(
-        urlItem, currentPlugin.useNativePlayer, currentPlugin.useLegacyParser,
-        offset: offset);
+    await webviewController.loadUrl(
+      urlItem,
+      plugin.useNativePlayer,
+      plugin.useLegacyParser,
+      offset: offset,
+    );
   }
 
   Future<void> queryBangumiEpisodeCommentsByID(int id, int episode) async {
-    episodeCommentsList.clear();
+    clearEpisodeComments();
     episodeInfo = await BangumiHTTP.getBangumiEpisodeByID(id, episode);
-    await BangumiHTTP.getBangumiCommentsByEpisodeID(episodeInfo.id)
-        .then((value) {
-      episodeCommentsList.addAll(value.commentList);
-    });
-    KazumiLogger().log(Level.info, '已加载评论列表长度 ${episodeCommentsList.length}');
+    final result =
+        await BangumiHTTP.getBangumiCommentsByEpisodeID(episodeInfo.id);
+    addEpisodeComments(result.commentList);
+    KazumiLogger().log(Level.info, '已加载评论列表长度 ${state.episodeComments.length}');
   }
 
-  Future<void> queryRoads(String url, String pluginName, {CancelToken? cancelToken}) async {
-    if (cancelToken != null) {
-      _queryRoadsCancelToken?.cancel();
-      _queryRoadsCancelToken = cancelToken;
-    } else {
-      _queryRoadsCancelToken?.cancel();
-      _queryRoadsCancelToken = CancelToken();
-      cancelToken = _queryRoadsCancelToken;
-    }
+  Future<void> queryRoads(String url, String pluginName,
+      {CancelToken? cancelToken}) async {
+    cancelToken ??= CancelToken();
+    _queryRoadsCancelToken?.cancel();
+    _queryRoadsCancelToken = cancelToken;
 
-    final PluginsController pluginsController =
-        Modular.get<PluginsController>();
-    roadList.clear();
-    for (Plugin plugin in pluginsController.pluginList) {
+    Plugin? matched;
+    for (final plugin in pluginsController.pluginList) {
       if (plugin.name == pluginName) {
-        roadList.addAll(await plugin.querychapterRoads(url, cancelToken: cancelToken));
+        matched = plugin;
+        break;
       }
     }
-    KazumiLogger().log(Level.info, '播放列表长度 ${roadList.length}');
-    KazumiLogger().log(Level.info, '第一播放列表选集数 ${roadList[0].data.length}');
+
+    if (matched == null) {
+      KazumiLogger().log(Level.warning, '未找到插件 $pluginName');
+      state = state.copyWith(roadList: const []);
+      return;
+    }
+
+    final roads =
+        await matched.querychapterRoads(url, cancelToken: cancelToken);
+    state = state.copyWith(roadList: List<Road>.from(roads));
+    KazumiLogger().log(Level.info, '播放列表长度 ${state.roadList.length}');
+    if (state.roadList.isNotEmpty) {
+      KazumiLogger()
+          .log(Level.info, '第一播放列表选集数 ${state.roadList.first.data.length}');
+    }
   }
 
   void cancelQueryRoads() {
-    if (_queryRoadsCancelToken != null) {
-      if (!_queryRoadsCancelToken!.isCancelled) {
-        _queryRoadsCancelToken!.cancel();
-      }
+    if (_queryRoadsCancelToken != null &&
+        !_queryRoadsCancelToken!.isCancelled) {
+      _queryRoadsCancelToken!.cancel();
     }
+    _queryRoadsCancelToken = null;
   }
 
   void enterFullScreen() {
@@ -137,18 +221,18 @@ abstract class _VideoPageController with Store {
     Utils.exitFullScreen();
   }
 
-  void isDesktopFullscreen() async {
+  Future<void> isDesktopFullscreen() async {
     if (Utils.isDesktop()) {
       isFullscreen = await windowManager.isFullScreen();
     }
   }
 
-  void handleOnEnterFullScreen() async {
+  void handleOnEnterFullScreen() {
     isFullscreen = true;
     showTabBody = false;
   }
 
-  void handleOnExitFullScreen() async {
+  void handleOnExitFullScreen() {
     isFullscreen = false;
   }
 }
