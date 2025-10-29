@@ -98,6 +98,9 @@ if (bestMatch != null) {
 ```
 
 ### API Integration Example
+
+**Note**: This is a placeholder example showing how to parse subtitle data from external APIs. Actual subtitle API integration (OpenSubtitles, SubDB, etc.) is pending future work. The `fromApiResponse` helper method is designed to make such integration straightforward once APIs are connected.
+
 ```dart
 // Parse subtitle candidates from external API
 final apiResponse = [

@@ -72,9 +72,9 @@ This document summarizes the implementation status of all planned features in th
 
 ---
 
-### 3. Automatic Subtitle Download and Matching 🔄 **IN PROGRESS**
+### 3. Automatic Subtitle Download and Matching 🔄 **CORE COMPLETE**
 
-**Status**: Core module implemented, UI integration pending
+**Status**: Core module implemented and ready for UI integration
 
 **Implementation Details**:
 - **Subtitle Matcher**: Heuristic-based selection algorithm
@@ -233,12 +233,12 @@ print(t.metadata.refresh); // "Refresh Metadata" or "刷新元数据"
 |---------|--------|----------------|---------------|
 | Metadata Collection | ✅ Complete | 100% | Manual |
 | Playback Enhancements | ✅ Complete | 100% | Manual |
-| Subtitle Matching | 🔄 Core Complete | 60% | Pending |
+| Subtitle Matching | 🔄 Core Complete | 70% | Pending |
 | Download Manager | ✅ Complete | 100% | Manual |
 | Video Management | ✅ Complete | 100% | Manual |
 | Multi-Language | ✅ Complete | 100% | N/A |
 
-**Overall Progress**: 5.6/6 features complete (93%)
+**Overall Progress**: 5.7/6 features complete (95%)
 
 ---
 
