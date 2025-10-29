@@ -53,6 +53,12 @@ class _MyPageState extends ConsumerState<MyPage> {
                   title: const Text('播放历史记录'),
                   description: const Text('查看播放过的番剧'),
                 ),
+                SettingsTile.navigation(
+                  onPressed: (_) => context.push('/my/download'),
+                  leading: const Icon(Icons.download_rounded),
+                  title: const Text('下载管理'),
+                  description: const Text('管理下载任务'),
+                ),
               ],
             ),
           ],

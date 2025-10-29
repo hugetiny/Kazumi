@@ -9,6 +9,7 @@ import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_change_module.dart';
 import 'package:kazumi/modules/search/search_history_module.dart';
 import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
+import 'package:kazumi/modules/download/download_task.dart';
 import 'package:kazumi/utils/api_credentials.dart';
 
 class GStorage {
@@ -36,6 +37,7 @@ class GStorage {
     Hive.registerAdapter(EpisodeMetadataAdapter());
     Hive.registerAdapter(MetadataSourceSnapshotAdapter());
     Hive.registerAdapter(MetadataRecordAdapter());
+    Hive.registerAdapter(DownloadTaskAdapter());
     favorites = await Hive.openBox('favorites');
     collectibles = await Hive.openBox('collectibles');
     histories = await Hive.openBox('histories');

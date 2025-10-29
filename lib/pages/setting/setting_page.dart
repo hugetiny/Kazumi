@@ -277,6 +277,19 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ],
             ),
             SettingsSection(
+              title: const Text('下载'),
+              tiles: [
+                SettingsTile.navigation(
+                  onPressed: (_) {
+                    context.push('/settings/download');
+                  },
+                  leading: const Icon(Icons.download),
+                  title: const Text('下载设置'),
+                  description: const Text('配置 aria2 下载参数'),
+                ),
+              ],
+            ),
+            SettingsSection(
               title: const Text('其他'),
               tiles: [
                 SettingsTile.navigation(
