@@ -31,10 +31,15 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     tabController =
         TabController(vsync: this, length: tabs.length, initialIndex: weekday);
     timelineController = ref.read(timelineControllerProvider.notifier);
-    final state = ref.read(timelineControllerProvider);
-    if (state.bangumiCalendar.isEmpty) {
-      timelineController.init();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final state = ref.read(timelineControllerProvider);
+      if (state.bangumiCalendar.isEmpty) {
+        timelineController.init();
+      }
+    });
   }
 
   @override

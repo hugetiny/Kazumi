@@ -10,7 +10,7 @@ import 'package:kazumi/modules/plugin/plugin_http_module.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/request/api.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // 从 1.5.1 版本开始，规则文件储存在单一的 plugins.json 文件中。
 // 之前的版本中，规则以分离文件形式存储，版本更新后将这些分离文件合并为单一的 plugins.json 文件。
@@ -35,9 +35,18 @@ class PluginsState {
   }
 }
 
-class PluginsController extends SafeStateNotifier<PluginsState> {
-  PluginsController()
-      : super(const PluginsState());
+class PluginsController extends Notifier<PluginsState> {
+  bool _isDisposed = false;
+
+  @override
+  PluginsState build() {
+    _isDisposed = false;
+    ref.onDispose(() {
+      _isDisposed = true;
+    });
+    Future.microtask(init);
+    return const PluginsState();
+  }
 
   // 规则有效性追踪器
   final validityTracker = PluginValidityTracker();
@@ -186,12 +195,14 @@ class PluginsController extends SafeStateNotifier<PluginsState> {
     final jsonData = jsonEncode(pluginListToJson());
     final pluginsFile = File('${newPluginDirectory!.path}/$pluginsFileName');
     await pluginsFile.writeAsString(jsonData);
-    KazumiLogger().log(Level.info, '已更新插件文件 $pluginsFileName');
+  KazumiLogger().log(Level.info, '已更新源文件 $pluginsFileName');
   }
 
   Future<void> queryPluginHTTPList() async {
     var pluginHTTPListRes = await PluginHTTP.getPluginList();
-    if (!mounted) return;
+    if (_isDisposed) {
+      return;
+    }
     state = state.copyWith(
       pluginHTTPList: List<PluginHTTPItem>.unmodifiable(pluginHTTPListRes),
     );
@@ -265,7 +276,9 @@ class PluginsController extends SafeStateNotifier<PluginsState> {
   }
 
   void _setPluginList(List<Plugin> plugins) {
-    if (!mounted) return;
+    if (_isDisposed) {
+      return;
+    }
     state = state.copyWith(
       pluginList: List<Plugin>.unmodifiable(plugins),
     );

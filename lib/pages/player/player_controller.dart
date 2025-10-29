@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:media_kit/media_kit.dart' hide PlayerState;
@@ -19,18 +20,19 @@ import 'package:kazumi/shaders/shaders_controller.dart';
 import 'package:kazumi/utils/syncplay.dart';
 import 'package:kazumi/utils/external_player.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/pages/player/player_state.dart';
 import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/shaders/providers.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
 
-class PlayerController extends SafeStateNotifier<PlayerState> {
-  PlayerController(this.ref) : super(const PlayerState()) {
+class PlayerController extends Notifier<PlayerState> {
+  @override
+  PlayerState build() {
     _initializeDependencies();
+    ref.onDispose(() {
+      unawaited(disposeResources());
+    });
+    return const PlayerState();
   }
-
-  final Ref ref;
 
   late final VideoPageController videoPageController;
   late final ShadersController shadersController;
@@ -57,7 +59,7 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
   bool androidEnableOpenSLES = true;
   bool lowMemoryMode = false;
   bool autoPlay = true;
-  bool playerDebugMode = false;
+  bool playerDebugMode = kDebugMode;
   int forwardTime = 80;
 
   // 播放器实时状态
@@ -214,8 +216,10 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
     autoPlay = setting.get(SettingBoxKey.autoPlay, defaultValue: true);
     lowMemoryMode =
         setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false);
-    playerDebugMode =
-        setting.get(SettingBoxKey.playerDebugMode, defaultValue: false);
+    playerDebugMode = setting.get(
+      SettingBoxKey.playerDebugMode,
+      defaultValue: kDebugMode,
+    );
     if (videoPageController.currentPlugin.userAgent == '') {
       userAgent = Utils.getRandomUA();
     } else {
@@ -407,16 +411,12 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
     videoController = null;
   }
 
-  @override
-  void dispose() {
-    unawaited(disposeResources());
-    super.dispose();
-  }
-
-  Future<void> stop() async {
+  Future<void> stop({bool updateState = true}) async {
     try {
       await mediaPlayer?.stop();
-      state = state.copyWith(loading: true);
+      if (updateState) {
+        state = state.copyWith(loading: true);
+      }
     } catch (_) {}
   }
 
@@ -715,6 +715,21 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
   }
 
   // --- UI state helpers ---
+
+  void resetUiState({required bool danmakuEnabled}) {
+    state = state.copyWith(
+      danmakuOn: danmakuEnabled,
+      lockPanel: false,
+      showVideoController: true,
+      showSeekTime: false,
+      showBrightness: false,
+      showVolume: false,
+      showPlaySpeed: false,
+      brightnessSeeking: false,
+      volumeSeeking: false,
+      canHidePlayerPanel: true,
+    );
+  }
 
   Map<int, List<Danmaku>> get danDanmakus => state.danDanmakus;
   set danDanmakus(Map<int, List<Danmaku>> value) {

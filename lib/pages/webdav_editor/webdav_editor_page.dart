@@ -48,7 +48,7 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const SysAppBar(
-        title: Text('WEBDAV编辑'),
+  title: Text('WebDAV 设置'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -109,19 +109,19 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
           try {
             await webDav.init();
           } catch (e) {
-            KazumiDialog.showToast(message: '配置失败 ${e.toString()}');
+            KazumiDialog.showToast(message: '配置失败：${e.toString()}');
             await setting.put(SettingBoxKey.webDavEnable, false);
             await ref
                 .read(webDavSettingsControllerProvider.notifier)
                 .refreshFromStorage();
             return;
           }
-          KazumiDialog.showToast(message: '配置成功, 开始测试');
+          KazumiDialog.showToast(message: '配置成功，开始测试。');
           try {
             await webDav.ping();
-            KazumiDialog.showToast(message: '测试成功');
+            KazumiDialog.showToast(message: '测试成功。');
           } catch (e) {
-            KazumiDialog.showToast(message: '测试失败 ${e.toString()}');
+            KazumiDialog.showToast(message: '测试失败：${e.toString()}');
             await setting.put(SettingBoxKey.webDavEnable, false);
           }
           await ref

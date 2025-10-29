@@ -19,7 +19,7 @@ class PluginHTTP {
         } catch (_) {}
       }
     } catch (e) {
-      debugPrint('获取插件仓库错误${e.toString()}');
+      debugPrint('获取源仓库错误${e.toString()}');
     }
     return pluginHTTPItemList;
   }
@@ -30,8 +30,8 @@ class PluginHTTP {
       var res = await Request().get('${Api.pluginShop}$name.json');
       final jsonData = json.decode(res.data);
       plugin = Plugin.fromJson(jsonData);
-    } catch(e) {
-      debugPrint('获取插件 $name 错误 ${e.toString()}');
+    } catch (e) {
+      debugPrint('获取源 $name 错误 ${e.toString()}');
     }
     return plugin;
   }

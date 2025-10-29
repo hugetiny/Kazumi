@@ -193,9 +193,9 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
                     },
               child: Text(
                 status == 'install'
-                    ? '安装'
+                    ? '添加'
                     : status == 'installed'
-                        ? '已安装'
+                        ? '已添加'
                         : '更新',
               ),
             ),
@@ -216,7 +216,7 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
               if (!mounted) {
                 return;
               }
-              context.push('/settings/webdav');
+              context.go('/tab/my');
             },
             text: enableGitProxy ? '禁用镜像' : '启用镜像',
           ),

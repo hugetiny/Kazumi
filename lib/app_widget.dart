@@ -6,6 +6,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
@@ -14,7 +15,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/router.dart';
-import 'package:kazumi/pages/settings/providers.dart';
+import 'package:kazumi/pages/setting/providers.dart';
 
 class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
@@ -33,6 +34,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   @override
   void initState() {
+    LocaleSettings.setLocale(AppLocale.zhCn);
     trayManager.addListener(this);
     windowManager.addListener(this);
     setPreventClose();
@@ -321,33 +323,31 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     final ThemeData fallbackDarkTheme =
         _buildDarkTheme(null, seedColor, oledEnhance);
 
-    final app = DynamicColorBuilder(
-      builder: (dynamicLight, dynamicDark) {
-        final bool canUseDynamic =
-            useDynamicColor && dynamicLight != null && dynamicDark != null;
+    final Widget app = TranslationProvider(
+      child: DynamicColorBuilder(
+        builder: (dynamicLight, dynamicDark) {
+          final bool canUseDynamic =
+              useDynamicColor && dynamicLight != null && dynamicDark != null;
 
-        final ThemeData lightTheme = canUseDynamic
-            ? _buildLightTheme(dynamicLight, seedColor)
-            : fallbackLightTheme;
-        final ThemeData darkTheme = canUseDynamic
-            ? _buildDarkTheme(dynamicDark, seedColor, oledEnhance)
-            : fallbackDarkTheme;
+          final ThemeData lightTheme = canUseDynamic
+              ? _buildLightTheme(dynamicLight, seedColor)
+              : fallbackLightTheme;
+          final ThemeData darkTheme = canUseDynamic
+              ? _buildDarkTheme(dynamicDark, seedColor, oledEnhance)
+              : fallbackDarkTheme;
 
-        return MaterialApp.router(
-          title: "Kazumi",
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          supportedLocales: const [
-            Locale.fromSubtags(
-                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
-          ],
-          locale: const Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeState.themeMode,
-          routerConfig: router,
-        );
-      },
+          return MaterialApp.router(
+            title: LocaleSettings.currentLocale.translations.app.title,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            locale: LocaleSettings.currentLocale.flutterLocale,
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: themeState.themeMode,
+            routerConfig: router,
+          );
+        },
+      ),
     );
 
     // 强制设置高帧率

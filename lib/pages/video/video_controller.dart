@@ -6,25 +6,30 @@ import 'package:kazumi/modules/bangumi/episode_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
 import 'package:kazumi/modules/roads/road_module.dart';
 import 'package:kazumi/plugins/plugins.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
+import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
+import 'package:kazumi/pages/webview/providers.dart';
 import 'package:logger/logger.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
 
 import 'video_state.dart';
 
-class VideoPageController extends SafeStateNotifier<VideoPageState> {
-  VideoPageController({
-    required this.pluginsController,
-    required this.webviewController,
-  }) : super(VideoPageState.initial());
+class VideoPageController extends Notifier<VideoPageState> {
+  late final PluginsController pluginsController;
+  late final WebviewItemController<dynamic> webviewController;
 
-  final PluginsController pluginsController;
-  final WebviewItemController<dynamic> webviewController;
+  @override
+  VideoPageState build() {
+    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    webviewController = ref.read(webviewItemControllerProvider);
+    ref.onDispose(cancelQueryRoads);
+    return VideoPageState.initial();
+  }
 
   CancelToken? _queryRoadsCancelToken;
 
@@ -187,7 +192,7 @@ class VideoPageController extends SafeStateNotifier<VideoPageState> {
     }
 
     if (matched == null) {
-      KazumiLogger().log(Level.warning, '未找到插件 $pluginName');
+  KazumiLogger().log(Level.warning, '未找到源 $pluginName');
       state = state.copyWith(roadList: const []);
       return;
     }

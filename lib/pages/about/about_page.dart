@@ -7,11 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/setting/setting_controller.dart';
 import 'package:kazumi/request/api.dart';
-import 'package:kazumi/utils/mortis.dart';
 import 'package:kazumi/utils/storage.dart';
-import 'package:kazumi/utils/utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -23,17 +21,13 @@ class AboutPage extends ConsumerStatefulWidget {
 }
 
 class _AboutPageState extends ConsumerState<AboutPage> {
-  final exitBehaviorTitles = <String>['退出 Kazumi', '最小化至托盘', '每次都询问'];
   late dynamic defaultDanmakuArea;
   late dynamic defaultThemeMode;
   late dynamic defaultThemeColor;
   Box setting = GStorage.setting;
-  late int exitBehavior =
-      setting.get(SettingBoxKey.exitBehavior, defaultValue: 2);
   late bool autoUpdate;
   double _cacheSizeMB = -1;
   late final MyController myController;
-  final MenuController menuController = MenuController();
 
   @override
   void initState() {
@@ -132,6 +126,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final String danDanAppId = GStorage.readDanDanAppId();
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
@@ -193,68 +188,9 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     launchUrl(Uri.parse(Api.dandanIndex),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('弹幕来源'),
-                  description: Text('ID: ${mortis['id']}'),
+                  title: const Text('弹幕源'),
+                  description: Text('ID: $danDanAppId'),
                   value: const Text('DanDanPlay'),
-                ),
-              ],
-            ),
-            if (Utils.isDesktop()) // 之后如果有非桌面平台的新选项可以移除
-              SettingsSection(
-                title: const Text('默认行为'),
-                tiles: [
-                  SettingsTile.navigation(
-                    onPressed: (_) {
-                      if (menuController.isOpen) {
-                        menuController.close();
-                      } else {
-                        menuController.open();
-                      }
-                    },
-                    title: const Text('关闭时'),
-                    value: MenuAnchor(
-                      consumeOutsideTap: true,
-                      controller: menuController,
-                      builder: (_, __, ___) {
-                        return Text(exitBehaviorTitles[exitBehavior]);
-                      },
-                      menuChildren: [
-                        for (int i = 0; i < 3; i++)
-                          MenuItemButton(
-                            requestFocusOnHover: false,
-                            onPressed: () {
-                              exitBehavior = i;
-                              setting.put(SettingBoxKey.exitBehavior, i);
-                              setState(() {});
-                            },
-                            child: Container(
-                              height: 48,
-                              constraints: BoxConstraints(minWidth: 112),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  exitBehaviorTitles[i],
-                                  style: TextStyle(
-                                    color: i == exitBehavior
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            SettingsSection(
-              tiles: [
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    _push('/settings/about/logs');
-                  },
-                  title: const Text('错误日志'),
                 ),
               ],
             ),

@@ -1,7 +1,7 @@
 import 'dart:math';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
 
 /// Popular 页面所需的全部状态
 class PopularState {
@@ -41,9 +41,10 @@ class PopularState {
 }
 
 /// 负责处理热门番组/标签番组的加载逻辑
-/// 迁移自 MobX -> Riverpod StateNotifier
-class PopularController extends SafeStateNotifier<PopularState> {
-  PopularController() : super(const PopularState());
+/// 由旧的 MobX 架构迁移至 Riverpod Notifier
+class PopularController extends Notifier<PopularState> {
+  @override
+  PopularState build() => const PopularState();
 
   void setCurrentTag(String tag) {
     state = state.copyWith(currentTag: tag);

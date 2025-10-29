@@ -8,6 +8,8 @@ import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_change_module.dart';
 import 'package:kazumi/modules/search/search_history_module.dart';
+import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
+import 'package:kazumi/utils/api_credentials.dart';
 
 class GStorage {
   /// Don't use favorites box, it's replaced by collectibles.
@@ -18,6 +20,10 @@ class GStorage {
   static late Box<String> shieldList;
   static late final Box<dynamic> setting;
   static late Box<SearchHistory> searchHistory;
+  static late Box<MetadataRecord> metadataCache;
+  static late Box<dynamic> downloadTasks;
+  static late Box<dynamic> torrentEntries;
+  static late Box<dynamic> playbackProfiles;
 
   static Future init() async {
     Hive.registerAdapter(BangumiItemAdapter());
@@ -27,6 +33,9 @@ class GStorage {
     Hive.registerAdapter(HistoryAdapter());
     Hive.registerAdapter(CollectedBangumiChangeAdapter());
     Hive.registerAdapter(SearchHistoryAdapter());
+    Hive.registerAdapter(EpisodeMetadataAdapter());
+    Hive.registerAdapter(MetadataSourceSnapshotAdapter());
+    Hive.registerAdapter(MetadataRecordAdapter());
     favorites = await Hive.openBox('favorites');
     collectibles = await Hive.openBox('collectibles');
     histories = await Hive.openBox('histories');
@@ -34,6 +43,12 @@ class GStorage {
     collectChanges = await Hive.openBox('collectchanges');
     shieldList = await Hive.openBox('shieldList');
     searchHistory = await Hive.openBox('searchHistory');
+    metadataCache = await Hive.openBox<MetadataRecord>('metadataCache');
+    downloadTasks = await Hive.openBox('downloadTasks');
+    torrentEntries = await Hive.openBox('torrentEntries');
+    playbackProfiles = await Hive.openBox('playbackProfiles');
+
+    await _ensureRetentionDefaults();
   }
 
   static Future<void> backupBox(String boxName, String backupFilePath) async {
@@ -75,7 +90,7 @@ class GStorage {
     final tempBox =
         await Hive.openBox('tempCollectiblesBox', bytes: backupContent);
     final tempBoxItems = tempBox.toMap().entries;
-    debugPrint('webDav追番列表长度 ${tempBoxItems.length}');
+    debugPrint('webDav源列表长度 ${tempBoxItems.length}');
 
     await collectibles.clear();
     for (var tempBoxItem in tempBoxItems) {
@@ -91,7 +106,7 @@ class GStorage {
     final tempBox =
         await Hive.openBox('tempCollectiblesBox', bytes: backupContent);
     final tempBoxItems = tempBox.toMap().entries;
-    debugPrint('webDav追番列表长度 ${tempBoxItems.length}');
+    debugPrint('webDav源列表长度 ${tempBoxItems.length}');
 
     final List<CollectedBangumi> collectibles = [];
     for (var tempBoxItem in tempBoxItems) {
@@ -108,7 +123,7 @@ class GStorage {
     final tempBox =
         await Hive.openBox('tempCollectChangesBox', bytes: backupContent);
     final tempBoxItems = tempBox.toMap().entries;
-    debugPrint('webDav追番变更列表长度 ${tempBoxItems.length}');
+    debugPrint('webDav源变更列表长度 ${tempBoxItems.length}');
 
     final List<CollectedBangumiChange> collectChanges = [];
     for (var tempBoxItem in tempBoxItems) {
@@ -138,8 +153,8 @@ class GStorage {
       // We can directly remove the item from the remote list.
       if (change.action == 3) {
         // Action 3: delete
-        remoteCollectibles.removeWhere(
-            (b) => b.bangumiItem.id == change.bangumiID);
+        remoteCollectibles
+            .removeWhere((b) => b.bangumiItem.id == change.bangumiID);
       } else {
         // For add/update, we still need to look up the local collectible.
         final changedBangumiID = change.bangumiID.toString();
@@ -202,6 +217,117 @@ class GStorage {
 
   // Prevent instantiation
   GStorage._();
+
+  static Future<void> _ensureRetentionDefaults() async {
+    final Locale platformLocale =
+        WidgetsBinding.instance.platformDispatcher.locale;
+    final bool bangumiDefault = _shouldEnableBangumiByDefault(platformLocale);
+
+    if (!setting.containsKey(SettingBoxKey.metadataRetentionHours)) {
+      await setting.put(SettingBoxKey.metadataRetentionHours, 24);
+    }
+    if (!setting.containsKey(SettingBoxKey.downloadRetentionHours)) {
+      await setting.put(SettingBoxKey.downloadRetentionHours, 24);
+    }
+    if (!setting.containsKey(SettingBoxKey.playbackProfileRetentionHours)) {
+      await setting.put(SettingBoxKey.playbackProfileRetentionHours, 24);
+    }
+    if (!setting.containsKey(SettingBoxKey.metadataBangumiEnabled)) {
+      await setting.put(SettingBoxKey.metadataBangumiEnabled, bangumiDefault);
+    }
+    if (!setting.containsKey(SettingBoxKey.metadataTmdbEnabled)) {
+      await setting.put(SettingBoxKey.metadataTmdbEnabled, true);
+    }
+    if (!setting.containsKey(SettingBoxKey.metadataPreferredLocale)) {
+      await setting.put(SettingBoxKey.metadataPreferredLocale, '');
+    }
+    if (!setting.containsKey(SettingBoxKey.tmdbApiKey)) {
+      await setting.put(SettingBoxKey.tmdbApiKey, '');
+    }
+    if (!setting.containsKey(SettingBoxKey.danDanAppId)) {
+      await setting.put(SettingBoxKey.danDanAppId, '');
+    }
+    if (!setting.containsKey(SettingBoxKey.danDanApiKey)) {
+      await setting.put(SettingBoxKey.danDanApiKey, '');
+    }
+    if (!setting.containsKey(SettingBoxKey.aria2Endpoint)) {
+      await setting.put(
+          SettingBoxKey.aria2Endpoint, 'http://127.0.0.1:6800/jsonrpc');
+    }
+    if (!setting.containsKey(SettingBoxKey.aria2Secret)) {
+      await setting.put(SettingBoxKey.aria2Secret, '');
+    }
+    if (!setting.containsKey(SettingBoxKey.aria2TimeoutSeconds)) {
+      await setting.put(SettingBoxKey.aria2TimeoutSeconds, 15);
+    }
+    if (!setting.containsKey(SettingBoxKey.aria2MaxConcurrentDownloads)) {
+      await setting.put(SettingBoxKey.aria2MaxConcurrentDownloads, 2);
+    }
+    if (!setting.containsKey(SettingBoxKey.torrentConsentAccepted)) {
+      await setting.put(SettingBoxKey.torrentConsentAccepted, false);
+    }
+    if (!setting.containsKey(SettingBoxKey.torrentConsentTimestamp)) {
+      await setting.put(SettingBoxKey.torrentConsentTimestamp, 0);
+    }
+  }
+
+  static bool _shouldEnableBangumiByDefault(Locale locale) {
+    final String code = locale.languageCode.toLowerCase();
+    return code == 'zh' || code == 'ja';
+  }
+
+  static Duration metadataRetentionDuration() {
+    return Duration(
+        hours: _readRetentionHours(
+      SettingBoxKey.metadataRetentionHours,
+      24,
+    ));
+  }
+
+  static Duration downloadRetentionDuration() {
+    return Duration(
+        hours: _readRetentionHours(
+      SettingBoxKey.downloadRetentionHours,
+      24,
+    ));
+  }
+
+  static Duration playbackProfileRetentionDuration() {
+    return Duration(
+        hours: _readRetentionHours(
+      SettingBoxKey.playbackProfileRetentionHours,
+      24,
+    ));
+  }
+
+  static int _readRetentionHours(String key, int fallback) {
+    final dynamic value = setting.get(key, defaultValue: fallback);
+    if (value is int) {
+      return value;
+    }
+    if (value is String) {
+      return int.tryParse(value) ?? fallback;
+    }
+    return fallback;
+  }
+
+  static String readDanDanAppId() {
+    final String? stored =
+        (setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)
+            ?.trim();
+    return (stored != null && stored.isNotEmpty)
+        ? stored
+        : ApiCredentials.danDanAppId;
+  }
+
+  static String readDanDanApiKey() {
+    final String? stored =
+        (setting.get(SettingBoxKey.danDanApiKey, defaultValue: '') as String?)
+            ?.trim();
+    return (stored != null && stored.isNotEmpty)
+        ? stored
+        : ApiCredentials.danDanApiKey;
+  }
 }
 
 class SettingBoxKey {
@@ -253,5 +379,20 @@ class SettingBoxKey {
       androidEnableOpenSLES = 'androidEnableOpenSLES',
       defaultSuperResolutionType = 'defaultSuperResolutionType',
       superResolutionWarn = 'superResolutionWarn',
-      playerDisableAnimations = 'playerDisableAnimations';
+      playerDisableAnimations = 'playerDisableAnimations',
+      metadataRetentionHours = 'metadataRetentionHours',
+      downloadRetentionHours = 'downloadRetentionHours',
+      playbackProfileRetentionHours = 'playbackProfileRetentionHours',
+      metadataBangumiEnabled = 'metadataBangumiEnabled',
+      metadataTmdbEnabled = 'metadataTmdbEnabled',
+      metadataPreferredLocale = 'metadataPreferredLocale',
+      tmdbApiKey = 'tmdbApiKey',
+      danDanAppId = 'danDanAppId',
+      danDanApiKey = 'danDanApiKey',
+      aria2Endpoint = 'aria2Endpoint',
+      aria2Secret = 'aria2Secret',
+      aria2TimeoutSeconds = 'aria2TimeoutSeconds',
+      aria2MaxConcurrentDownloads = 'aria2MaxConcurrentDownloads',
+      torrentConsentAccepted = 'torrentConsentAccepted',
+      torrentConsentTimestamp = 'torrentConsentTimestamp';
 }

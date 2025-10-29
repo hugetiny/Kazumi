@@ -180,7 +180,7 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
                       runSpacing: 4,
                       children: [
                         propertyChip(
-                          title: '来源',
+                          title: '源',
                           value: widget.historyItem.adapterName,
                           showTitle: true,
                         ),

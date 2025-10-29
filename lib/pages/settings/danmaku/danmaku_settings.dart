@@ -30,6 +30,8 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
   late bool danmakuBiliBiliSource;
   late bool danmakuGamerSource;
   late bool danmakuDanDanSource;
+  late String danDanAppIdOverride;
+  late String danDanApiKeyOverride;
 
   @override
   void initState() {
@@ -60,6 +62,14 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
         setting.get(SettingBoxKey.danmakuGamerSource, defaultValue: true);
     danmakuDanDanSource =
         setting.get(SettingBoxKey.danmakuDanDanSource, defaultValue: true);
+    danDanAppIdOverride =
+        (setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)
+                ?.trim() ??
+            '';
+    danDanApiKeyOverride =
+        (setting.get(SettingBoxKey.danDanApiKey, defaultValue: '') as String?)
+                ?.trim() ??
+            '';
   }
 
   void onBackPressed(BuildContext context) {
@@ -97,9 +107,106 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
     });
   }
 
+  String _maskSecret(String secret) {
+    if (secret.isEmpty) {
+      return '未配置';
+    }
+    if (secret.length <= 4) {
+      return '*' * secret.length;
+    }
+    return '${secret.substring(0, 2)}****${secret.substring(secret.length - 2)}';
+  }
+
+  String get _credentialModeLabel =>
+      danDanAppIdOverride.isEmpty && danDanApiKeyOverride.isEmpty
+          ? '内置'
+          : '自定义';
+
+  Future<void> _showDanDanCredentialDialog() async {
+    final TextEditingController appIdController =
+        TextEditingController(text: danDanAppIdOverride);
+    final TextEditingController apiKeyController =
+        TextEditingController(text: danDanApiKeyOverride);
+
+    Future<void> save(String appId, String apiKey) async {
+      await setting.put(SettingBoxKey.danDanAppId, appId);
+      await setting.put(SettingBoxKey.danDanApiKey, apiKey);
+      if (!mounted) return;
+      setState(() {
+        danDanAppIdOverride = appId;
+        danDanApiKeyOverride = apiKey;
+      });
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('自定义 DanDan 凭证'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: appIdController,
+                decoration: const InputDecoration(
+                  labelText: 'AppId',
+                  hintText: '留空使用内置值',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: apiKeyController,
+                decoration: const InputDecoration(
+                  labelText: 'API Key',
+                  hintText: '留空使用内置值',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final NavigatorState navigator = Navigator.of(dialogContext);
+                await save('', '');
+                if (!mounted) return;
+                navigator.pop();
+                KazumiDialog.showToast(message: '已恢复内置凭证');
+              },
+              child: const Text('恢复默认'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final String appId = appIdController.text.trim();
+                final String apiKey = apiKeyController.text.trim();
+                final NavigatorState navigator = Navigator.of(dialogContext);
+                await save(appId, apiKey);
+                if (!mounted) return;
+                navigator.pop();
+                KazumiDialog.showToast(message: '凭证已更新');
+              },
+              child: const Text('保存'),
+            ),
+          ],
+        );
+      },
+    ).whenComplete(() {
+      appIdController.dispose();
+      apiKeyController.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {});
+    final String effectiveDanDanAppId = GStorage.readDanDanAppId();
+    final String effectiveDanDanApiKey = GStorage.readDanDanApiKey();
+    final String maskedApiKey = _maskSecret(effectiveDanDanApiKey);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -127,7 +234,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
               ],
             ),
             SettingsSection(
-              title: const Text('弹幕来源'),
+              title: const Text('弹幕源'),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -158,6 +265,21 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                   },
                   title: const Text('DanDan'),
                   initialValue: danmakuDanDanSource,
+                ),
+              ],
+            ),
+            SettingsSection(
+              title: const Text('凭证'),
+              tiles: [
+                SettingsTile.navigation(
+                  onPressed: (_) async {
+                    await _showDanDanCredentialDialog();
+                  },
+                  title: const Text('DanDan API 凭证'),
+                  description: Text(
+                    'AppId: $effectiveDanDanAppId\nAPI Key: $maskedApiKey',
+                  ),
+                  value: Text(_credentialModeLabel),
                 ),
               ],
             ),

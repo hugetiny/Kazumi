@@ -20,7 +20,7 @@ const ProgressIndicatorThemeData progressIndicatorTheme2024 =
 /// ignore: deprecated_member_use
 const SliderThemeData sliderTheme2024 = SliderThemeData(
   year2023: false,
-  showValueIndicator: ShowValueIndicator.always,
+  showValueIndicator: ShowValueIndicator.onDrag,
 );
 
 /// The page transition method defined here is managed by Flutter and used by

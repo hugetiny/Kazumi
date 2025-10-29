@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 
@@ -42,22 +41,21 @@ class WebDavActionResult {
   const WebDavActionResult({required this.success, required this.message});
 }
 
-class WebDavSettingsController extends SafeStateNotifier<WebDavSettingsState> {
-  WebDavSettingsController() : super(const WebDavSettingsState()) {
-    _loadFromStorage();
-  }
+class WebDavSettingsController extends Notifier<WebDavSettingsState> {
+  @override
+  WebDavSettingsState build() => _loadStateFromStorage();
 
-  Future<void> _loadFromStorage() async {
+  WebDavSettingsState _loadStateFromStorage() {
     final setting = GStorage.setting;
     final enableGitProxy =
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false) as bool;
     final webDavEnable =
         setting.get(SettingBoxKey.webDavEnable, defaultValue: false) as bool;
-    final webDavEnableHistory = setting
-            .get(SettingBoxKey.webDavEnableHistory, defaultValue: false)
-        as bool;
+    final webDavEnableHistory =
+        setting.get(SettingBoxKey.webDavEnableHistory, defaultValue: false)
+            as bool;
 
-    state = state.copyWith(
+    return WebDavSettingsState(
       enableGitProxy: enableGitProxy,
       webDavEnable: webDavEnable,
       webDavEnableHistory: webDavEnable ? webDavEnableHistory : false,
@@ -66,7 +64,7 @@ class WebDavSettingsController extends SafeStateNotifier<WebDavSettingsState> {
   }
 
   Future<void> refreshFromStorage() async {
-    await _loadFromStorage();
+    state = _loadStateFromStorage();
   }
 
   Future<void> toggleGitProxy(bool value) async {
@@ -207,6 +205,6 @@ class WebDavSettingsController extends SafeStateNotifier<WebDavSettingsState> {
 }
 
 final webDavSettingsControllerProvider =
-    StateNotifierProvider<WebDavSettingsController, WebDavSettingsState>(
-  (ref) => WebDavSettingsController(),
+    NotifierProvider<WebDavSettingsController, WebDavSettingsState>(
+  WebDavSettingsController.new,
 );

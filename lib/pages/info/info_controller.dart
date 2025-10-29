@@ -1,52 +1,72 @@
+import 'dart:ui' as ui;
+
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
 import 'package:kazumi/modules/characters/character_item.dart';
+import 'package:kazumi/modules/metadata_sync/metadata_sync_controller.dart';
+import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/modules/staff/staff_item.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
+import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/my/providers.dart';
+import 'package:kazumi/providers/media_suite_providers.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/logger.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:kazumi/utils/storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
 class InfoState {
   final bool isLoading;
+  final bool metadataLoading;
   final List<CommentItem> commentsList;
   final List<CharacterItem> characterList;
   final List<StaffFullItem> staffList;
   final BangumiItem? bangumiItem;
+  final MetadataRecord? metadataRecord;
 
   const InfoState({
     this.isLoading = false,
+    this.metadataLoading = false,
     this.commentsList = const [],
     this.characterList = const [],
     this.staffList = const [],
     this.bangumiItem,
+    this.metadataRecord,
   });
 
   InfoState copyWith({
     bool? isLoading,
+    bool? metadataLoading,
     List<CommentItem>? commentsList,
     List<CharacterItem>? characterList,
     List<StaffFullItem>? staffList,
     BangumiItem? bangumiItem,
+    MetadataRecord? metadataRecord,
   }) {
     return InfoState(
       isLoading: isLoading ?? this.isLoading,
+      metadataLoading: metadataLoading ?? this.metadataLoading,
       commentsList: commentsList ?? this.commentsList,
       characterList: characterList ?? this.characterList,
       staffList: staffList ?? this.staffList,
       bangumiItem: bangumiItem ?? this.bangumiItem,
+      metadataRecord: metadataRecord ?? this.metadataRecord,
     );
   }
 }
 
-class InfoController extends SafeStateNotifier<InfoState> {
-  InfoController({required this.collectController})
-      : super(const InfoState());
+class InfoController extends Notifier<InfoState> {
+  late final CollectController collectController;
+  late final MetadataSyncController _metadataSyncController;
 
-  final CollectController collectController;
+  @override
+  InfoState build() {
+    collectController = ref.read(collectControllerProvider.notifier);
+    _metadataSyncController = ref.read(metadataSyncControllerProvider);
+    return const InfoState();
+  }
   final List<PluginSearchResponse> _legacyPluginSearchResponses = [];
   final Map<String, String> _legacyPluginSearchStatus = {};
 
@@ -56,10 +76,13 @@ class InfoController extends SafeStateNotifier<InfoState> {
     state = state.copyWith(bangumiItem: item);
   }
 
+  MetadataRecord? get metadataRecord => state.metadataRecord;
+
   List<CommentItem> get commentsList => state.commentsList;
   List<CharacterItem> get characterList => state.characterList;
   List<StaffFullItem> get staffList => state.staffList;
   bool get isLoading => state.isLoading;
+  bool get metadataLoading => state.metadataLoading;
 
   void clearComments() {
     if (state.commentsList.isEmpty) return;
@@ -118,8 +141,44 @@ class InfoController extends SafeStateNotifier<InfoState> {
         bangumiItem: updatedItem,
         isLoading: false,
       );
+      await refreshMetadata(forceRefresh: type != 'init');
     } else {
       state = state.copyWith(isLoading: false);
+    }
+  }
+
+  Future<void> refreshMetadata({bool forceRefresh = false}) async {
+    final BangumiItem current = bangumiItem;
+    if (current.id == 0) {
+      return;
+    }
+    state = state.copyWith(metadataLoading: true);
+    final ui.Locale? localeOverride = _resolvePreferredLocale();
+    try {
+      final MetadataRecord? record = await _metadataSyncController.ensureLatest(
+        current.id.toString(),
+        forceRefresh: forceRefresh,
+        localeOverride: localeOverride,
+      );
+      if (record != null) {
+        final BangumiItem merged = _mergeMetadata(current, record);
+        await collectController.updateLocalCollect(merged);
+        state = state.copyWith(
+          bangumiItem: merged,
+          metadataRecord: record,
+          metadataLoading: false,
+        );
+      } else {
+        state = state.copyWith(metadataLoading: false);
+      }
+    } catch (error, stackTrace) {
+      KazumiLogger().log(
+        Level.warning,
+        '[InfoController] Metadata refresh failed for bangumi ${current.id}: $error',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      state = state.copyWith(metadataLoading: false);
     }
   }
 
@@ -180,4 +239,78 @@ class InfoController extends SafeStateNotifier<InfoState> {
     votesCount: [],
     info: '',
   );
+
+  BangumiItem _mergeMetadata(BangumiItem base, MetadataRecord record) {
+    final String displayLocale = _resolveDisplayLocaleTag(record);
+    final String preferredTitle =
+        record.displayTitleForLocale(displayLocale).trim();
+    final String? synopsis =
+        record.synopsisForLocale(displayLocale) ?? record.synopsis[record.localeTag];
+    final Map<String, String> images = Map<String, String>.from(base.images);
+    if (record.posterUrl != null && record.posterUrl!.isNotEmpty) {
+      images['large'] = record.posterUrl!;
+      images['common'] = record.posterUrl!;
+    }
+    if (record.backdropUrl != null && record.backdropUrl!.isNotEmpty) {
+      images['backdrop'] = record.backdropUrl!;
+    }
+    return BangumiItem(
+      id: base.id,
+      type: base.type,
+      name: preferredTitle.isNotEmpty ? preferredTitle : base.name,
+      nameCn: preferredTitle.isNotEmpty ? preferredTitle : base.nameCn,
+      summary: synopsis?.trim().isNotEmpty == true ? synopsis!.trim() : base.summary,
+      airDate: base.airDate,
+      airWeekday: base.airWeekday,
+      rank: base.rank,
+      images: images,
+      tags: base.tags,
+      alias: base.alias,
+      ratingScore: base.ratingScore,
+      votes: base.votes,
+      votesCount: base.votesCount,
+      info: base.info,
+    );
+  }
+
+  ui.Locale? _resolvePreferredLocale() {
+    final String? stored = GStorage.setting
+            .get(SettingBoxKey.metadataPreferredLocale, defaultValue: '')
+        as String?;
+    if (stored == null || stored.isEmpty) {
+      return null;
+    }
+    final List<String> segments = stored.split('-');
+    if (segments.isEmpty) {
+      return null;
+    }
+    if (segments.length == 1) {
+      return ui.Locale(segments.first);
+    }
+    String? scriptCode;
+    String? countryCode;
+    for (final String segment in segments.skip(1)) {
+      if (segment.length == 4 && scriptCode == null) {
+        scriptCode = segment;
+      } else if (countryCode == null) {
+        countryCode = segment;
+      }
+    }
+    return ui.Locale.fromSubtags(
+      languageCode: segments[0],
+      scriptCode: scriptCode,
+      countryCode: countryCode,
+    );
+  }
+
+  String _resolveDisplayLocaleTag(MetadataRecord record) {
+    if (record.localeTag.isNotEmpty) {
+      return record.localeTag;
+    }
+    final ui.Locale? preferred = _resolvePreferredLocale();
+    if (preferred != null) {
+      return preferred.toLanguageTag();
+    }
+    return ui.PlatformDispatcher.instance.locale.toLanguageTag();
+  }
 }

@@ -3,7 +3,5 @@ import 'popular_controller.dart';
 
 /// Popular 页面 controller provider
 final popularControllerProvider =
-		StateNotifierProvider<PopularController, PopularState>((ref) {
-	return PopularController();
-});
+    NotifierProvider<PopularController, PopularState>(PopularController.new);
 

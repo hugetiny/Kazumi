@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:canvas_danmaku/models/danmaku_content_item.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
@@ -27,6 +28,7 @@ import 'package:kazumi/pages/player/player_providers.dart';
 import 'package:kazumi/pages/history/providers.dart';
 import 'package:kazumi/pages/webview/providers.dart';
 import 'package:kazumi/pages/video/video_state.dart';
+import 'package:kazumi/pages/setting/providers.dart';
 
 class VideoPage extends ConsumerStatefulWidget {
   const VideoPage({super.key});
@@ -81,9 +83,6 @@ class _VideoPageState extends ConsumerState<VideoPage>
     historyController = ref.read(historyControllerProvider.notifier);
     webviewItemController = ref.read(webviewItemControllerProvider);
     windowManager.addListener(this);
-    // Check fullscreen when enter video page
-    // in case user use system controls to enter fullscreen outside video page
-    videoPageController.isDesktopFullscreen();
     tabController = TabController(length: 2, vsync: this);
     observerController = GridObserverController(controller: scrollController);
     animation = AnimationController(
@@ -104,29 +103,41 @@ class _VideoPageState extends ConsumerState<VideoPage>
       parent: animation,
       curve: Curves.easeIn,
     ));
-    videoPageController.currentEpisode = 1;
-    videoPageController.currentRoad = 0;
-    videoPageController.historyOffset = 0;
-    videoPageController.showTabBody = true;
     playResume = setting.get(SettingBoxKey.playResume, defaultValue: true);
     disableAnimations =
         setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false);
-    var progress = historyController.lastWatching(
-        videoPageController.bangumiItem,
-        videoPageController.currentPlugin.name);
-    if (progress != null) {
-      if (videoPageController.roadList.length > progress.road) {
-        if (videoPageController.roadList[progress.road].data.length >=
-            progress.episode) {
+    currentRoad = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      videoPageController.isDesktopFullscreen();
+      videoPageController.currentEpisode = 1;
+      videoPageController.currentRoad = 0;
+      videoPageController.historyOffset = 0;
+      videoPageController.showTabBody = true;
+      try {
+        final progress = historyController.lastWatching(
+          videoPageController.bangumiItem,
+          videoPageController.currentPlugin.name,
+        );
+        if (progress != null &&
+            videoPageController.roadList.length > progress.road &&
+            videoPageController.roadList[progress.road].data.length >=
+                progress.episode) {
           videoPageController.currentEpisode = progress.episode;
           videoPageController.currentRoad = progress.road;
           if (playResume) {
             videoPageController.historyOffset = progress.progress.inSeconds;
           }
         }
+      } catch (_) {
+        // Ignore progress restoration when controller state is not ready yet.
       }
-    }
-    currentRoad = videoPageController.currentRoad;
+      setState(() {
+        currentRoad = videoPageController.currentRoad;
+      });
+    });
 
     // webview events listener
     _initSubscription = webviewItemController.onInitialized.listen((event) {
@@ -189,9 +200,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
         ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
       } catch (_) {}
     }
-    unawaited(playerController.stop());
-    videoPageController.resetEpisodeInfo();
-    videoPageController.clearEpisodeComments();
+    unawaited(playerController.stop(updateState: false));
     Utils.unlockScreenRotation();
     tabController.dispose();
     super.dispose();
@@ -390,6 +399,13 @@ class _VideoPageState extends ConsumerState<VideoPage>
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
     final videoState = ref.watch(videoControllerProvider);
     final playerState = ref.watch(playerControllerProvider);
+    final debugModeFromProvider =
+        ref.watch(playerSettingsProvider.select((s) => s.playerDebugMode));
+    final storedDebugMode = setting.get(
+      SettingBoxKey.playerDebugMode,
+      defaultValue: kDebugMode,
+    ) as bool;
+    final debugModeEnabled = debugModeFromProvider || storedDebugMode;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       openTabBodyAnimated();
     });
@@ -439,7 +455,11 @@ class _VideoPageState extends ConsumerState<VideoPage>
                               ? MediaQuery.sizeOf(context).height
                               : MediaQuery.sizeOf(context).width * 9 / 16,
                           width: MediaQuery.sizeOf(context).width,
-                          child: playerBody(videoState, playerState),
+                          child: playerBody(
+                            videoState,
+                            playerState,
+                            debugModeEnabled,
+                          ),
                         ),
                       ),
                       // when not wideScreen, show tabBody on the bottom
@@ -464,6 +484,16 @@ class _VideoPageState extends ConsumerState<VideoPage>
                       ),
                     ],
                   ],
+                  if (debugModeEnabled && showDebugLog)
+                    Positioned.fill(
+                      child: _buildDebugOverlay(
+                        playerState: playerState,
+                        videoState: videoState,
+                        isLoading: videoState.loading,
+                        isPlayerLoading: playerState.loading,
+                        useNativePlayer: plugin?.useNativePlayer ?? false,
+                      ),
+                    ),
                 ],
               )),
         );
@@ -516,7 +546,11 @@ class _VideoPageState extends ConsumerState<VideoPage>
     );
   }
 
-  Widget playerBody(VideoPageState videoState, PlayerState playerState) {
+  Widget playerBody(
+    VideoPageState videoState,
+    PlayerState playerState,
+    bool debugModeEnabled,
+  ) {
     final plugin = videoState.currentPlugin;
     final useNativePlayer = plugin?.useNativePlayer ?? false;
     final isFullscreen = videoState.isFullscreen;
@@ -573,29 +607,6 @@ class _VideoPageState extends ConsumerState<VideoPage>
                       )),
                 ),
               ),
-              Visibility(
-                visible: (isLoading || (useNativePlayer && isPlayerLoading)) &&
-                    showDebugLog,
-                child: Container(
-                  color: Colors.black,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: webviewLogLines.length,
-                      itemBuilder: (context, index) {
-                        return Text(
-                          webviewLogLines.isEmpty ? '' : webviewLogLines[index],
-                          style: const TextStyle(
-                            color: Colors.white,
-                          ),
-                          textAlign: TextAlign.center,
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
               if (useNativePlayer || isFullscreen)
                 Positioned(
                   top: 0,
@@ -638,16 +649,15 @@ class _VideoPageState extends ConsumerState<VideoPage>
                             ),
                           ),
                         ),
-                        IconButton(
-                          icon: Icon(
-                              showDebugLog
-                                  ? Icons.bug_report
-                                  : Icons.bug_report_outlined,
-                              color: Colors.white),
-                          onPressed: () {
-                            switchDebugConsole();
-                          },
-                        ),
+                        if (debugModeEnabled)
+                          IconButton(
+                            icon: Icon(
+                                showDebugLog
+                                    ? Icons.bug_report
+                                    : Icons.bug_report_outlined,
+                                color: Colors.white),
+                            onPressed: switchDebugConsole,
+                          ),
                       ],
                     ),
                   ),
@@ -682,6 +692,390 @@ class _VideoPageState extends ConsumerState<VideoPage>
         ),
       ],
     );
+  }
+
+  Widget _buildDebugOverlay({
+    required PlayerState playerState,
+    required VideoPageState videoState,
+    required bool isLoading,
+    required bool isPlayerLoading,
+    required bool useNativePlayer,
+  }) {
+    final theme = Theme.of(context);
+    final titleStyle = theme.textTheme.titleLarge?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        );
+    final sectionHeaderStyle = theme.textTheme.titleMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        );
+    final labelStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: Colors.white.withOpacity(0.9),
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(
+          color: Colors.white,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        );
+    final valueStyle = theme.textTheme.bodyMedium?.copyWith(
+          color: Colors.white70,
+          height: 1.35,
+        ) ??
+        const TextStyle(
+          color: Colors.white70,
+          fontSize: 13,
+          height: 1.35,
+        );
+
+    final bangumiItem = videoState.bangumiItem;
+    final bangumiName = bangumiItem == null
+        ? '--'
+        : (bangumiItem.nameCn.isNotEmpty
+            ? bangumiItem.nameCn
+            : bangumiItem.name);
+    final plugin = videoState.currentPlugin;
+    final roadCount = videoState.roadList.length;
+    final hasRoad = roadCount > 0 &&
+        videoState.currentRoad >= 0 &&
+        videoState.currentRoad < roadCount;
+    final roadName =
+        hasRoad ? videoState.roadList[videoState.currentRoad].name : '--';
+    final totalEpisodes =
+        hasRoad ? videoState.roadList[videoState.currentRoad].data.length : 0;
+    final episodeText = totalEpisodes > 0
+        ? '${videoState.currentEpisode} / $totalEpisodes'
+        : '${videoState.currentEpisode}';
+    final hasPlayer = playerController.mediaPlayer != null;
+    final resolution =
+        (playerState.playerWidth > 0 && playerState.playerHeight > 0)
+            ? '${playerState.playerWidth} × ${playerState.playerHeight}'
+            : '--';
+    const aspectRatioLabels = {
+      1: '自动',
+      2: '裁剪',
+      3: '拉伸',
+    };
+    const superResolutionLabels = {
+      1: '关闭',
+      2: 'Anime4K Lite',
+      3: 'Anime4K HQ',
+    };
+    final aspectRatioLabel = aspectRatioLabels[playerState.aspectRatioType] ??
+        playerState.aspectRatioType.toString();
+    final superResolutionLabel =
+        superResolutionLabels[playerState.superResolutionType] ??
+            playerState.superResolutionType.toString();
+    final volumeText = playerState.volume < 0
+        ? '--'
+        : '${playerState.volume.toStringAsFixed(1)}%';
+    final brightnessText = playerState.brightness > 0
+        ? playerState.brightness.toStringAsFixed(2)
+        : '--';
+    final syncRoom =
+        playerState.syncplayRoom.isEmpty ? '--' : playerState.syncplayRoom;
+    final syncRtt = playerState.syncplayClientRtt <= 0
+        ? '--'
+        : '${playerState.syncplayClientRtt} ms';
+
+    final sourceSection = <Widget>[
+      _buildKeyValue('番剧', bangumiName, labelStyle, valueStyle),
+      _buildKeyValue('插件', plugin?.name ?? '--', labelStyle, valueStyle),
+      _buildKeyValue('线路', roadName, labelStyle, valueStyle),
+      _buildKeyValue('集数', episodeText, labelStyle, valueStyle),
+      _buildKeyValue('线路数量', roadCount.toString(), labelStyle, valueStyle),
+      _buildKeyValue('源标题', videoState.title, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue('解析地址', videoState.src, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue(
+        '播放地址',
+        playerController.videoUrl.isEmpty ? '--' : playerController.videoUrl,
+        labelStyle,
+        valueStyle,
+        multiline: true,
+      ),
+      _buildKeyValue(
+        'DanDan ID',
+        playerController.bangumiID == 0
+            ? '--'
+            : playerController.bangumiID.toString(),
+        labelStyle,
+        valueStyle,
+      ),
+      _buildKeyValue('SyncPlay 房间', syncRoom, labelStyle, valueStyle),
+      _buildKeyValue('SyncPlay RTT', syncRtt, labelStyle, valueStyle),
+    ];
+
+    final playbackSection = <Widget>[
+      _buildKeyValue(
+          '原生播放器', useNativePlayer ? '是' : '否', labelStyle, valueStyle),
+      _buildKeyValue('解析中', isLoading ? '是' : '否', labelStyle, valueStyle),
+      _buildKeyValue(
+          '播放器加载', isPlayerLoading ? '是' : '否', labelStyle, valueStyle),
+      _buildKeyValue(
+          '播放器初始化', playerState.loading ? '是' : '否', labelStyle, valueStyle),
+      _buildKeyValue(
+        '播放中',
+        hasPlayer ? (playerController.playerPlaying ? '是' : '否') : '--',
+        labelStyle,
+        valueStyle,
+      ),
+      _buildKeyValue(
+        '缓冲中',
+        hasPlayer ? (playerController.playerBuffering ? '是' : '否') : '--',
+        labelStyle,
+        valueStyle,
+      ),
+      _buildKeyValue(
+        '播放完成',
+        hasPlayer ? (playerController.playerCompleted ? '是' : '否') : '--',
+        labelStyle,
+        valueStyle,
+      ),
+      _buildKeyValue(
+          '缓冲标志', playerState.isBuffering ? '是' : '否', labelStyle, valueStyle),
+    ];
+
+    final timingSection = <Widget>[
+      _buildKeyValue('当前位置', _formatDuration(playerState.currentPosition),
+          labelStyle, valueStyle),
+      _buildKeyValue(
+          '缓冲进度', _formatDuration(playerState.buffer), labelStyle, valueStyle),
+      _buildKeyValue(
+          '总时长', _formatDuration(playerState.duration), labelStyle, valueStyle),
+      _buildKeyValue('播放速度', '${playerState.playerSpeed.toStringAsFixed(2)}x',
+          labelStyle, valueStyle),
+      _buildKeyValue('音量', volumeText, labelStyle, valueStyle),
+      _buildKeyValue('亮度', brightnessText, labelStyle, valueStyle),
+      _buildKeyValue('分辨率', resolution, labelStyle, valueStyle),
+      _buildKeyValue('Aspect Ratio', aspectRatioLabel, labelStyle, valueStyle),
+      _buildKeyValue('超分辨率', superResolutionLabel, labelStyle, valueStyle),
+    ];
+
+    final mediaSection = <Widget>[
+      _buildKeyValue(
+          '视频参数', playerState.playerVideoParams, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue(
+          '音频参数', playerState.playerAudioParams, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue('播放列表', playerState.playerPlaylist, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue(
+          '音频轨', playerState.playerAudioTracks, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue(
+          '视频轨', playerState.playerVideoTracks, labelStyle, valueStyle,
+          multiline: true),
+      _buildKeyValue(
+        '音频码率',
+        playerState.playerAudioBitrate.isEmpty
+            ? '--'
+            : playerState.playerAudioBitrate,
+        labelStyle,
+        valueStyle,
+      ),
+    ];
+
+    const maxLogLines = 200;
+    final recentPlayerLogs = playerState.playerLog.length > maxLogLines
+        ? playerState.playerLog
+            .sublist(playerState.playerLog.length - maxLogLines)
+        : List<String>.from(playerState.playerLog);
+    final recentWebviewLogs = webviewLogLines.length > maxLogLines
+        ? webviewLogLines.sublist(webviewLogLines.length - maxLogLines)
+        : List<String>.from(webviewLogLines);
+
+    final playerLogTitle = playerState.playerLog.isEmpty
+        ? '播放器日志（0）'
+        : '播放器日志（${playerState.playerLog.length} 条，展示 ${recentPlayerLogs.length} 条）';
+    final webviewLogTitle = webviewLogLines.isEmpty
+        ? 'WebView 日志（0）'
+        : 'WebView 日志（${webviewLogLines.length} 条，展示 ${recentWebviewLogs.length} 条）';
+
+    return Container(
+      color: Colors.black.withOpacity(0.78),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      '调试信息',
+                      style: titleStyle,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: '关闭调试信息',
+                    onPressed: switchDebugConsole,
+                    icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSection('播放源', sourceSection, sectionHeaderStyle),
+                      _buildSection(
+                          '播放器状态', playbackSection, sectionHeaderStyle),
+                      _buildSection('时间与参数', timingSection, sectionHeaderStyle),
+                      _buildSection('媒体轨道', mediaSection, sectionHeaderStyle),
+                      _buildLogViewer(
+                        webviewLogTitle,
+                        recentWebviewLogs,
+                        sectionHeaderStyle,
+                        valueStyle,
+                      ),
+                      _buildLogViewer(
+                        playerLogTitle,
+                        recentPlayerLogs,
+                        sectionHeaderStyle,
+                        valueStyle,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    String title,
+    List<Widget> children,
+    TextStyle headerStyle,
+  ) {
+    if (children.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: headerStyle),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildKeyValue(
+    String label,
+    String value,
+    TextStyle labelStyle,
+    TextStyle valueStyle, {
+    bool multiline = false,
+  }) {
+    final displayValue = value.isEmpty ? '--' : value;
+    if (multiline) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: labelStyle),
+            const SizedBox(height: 4),
+            SelectableText(displayValue, style: valueStyle),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: SelectableText.rich(
+        TextSpan(
+          children: [
+            TextSpan(text: '$label: ', style: labelStyle),
+            TextSpan(text: displayValue, style: valueStyle),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogViewer(
+    String title,
+    List<String> lines,
+    TextStyle headerStyle,
+    TextStyle valueStyle,
+  ) {
+    if (lines.isEmpty) {
+      return _buildSection(
+        title,
+        [SelectableText('--', style: valueStyle)],
+        headerStyle,
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: headerStyle),
+          const SizedBox(height: 12),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const ClampingScrollPhysics(),
+                itemCount: lines.length,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: SelectableText(
+                    lines[index],
+                    style: valueStyle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    if (duration == Duration.zero) {
+      return '--:--';
+    }
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+    final mm = minutes.toString().padLeft(2, '0');
+    final ss = seconds.toString().padLeft(2, '0');
+    if (hours > 0) {
+      final hh = hours.toString().padLeft(2, '0');
+      return '$hh:$mm:$ss';
+    }
+    return '$mm:$ss';
   }
 
   Widget menuBar(VideoPageState videoState) {

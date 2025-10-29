@@ -41,70 +41,127 @@ class SourceSearchState {
       ..[pluginName] = List<SearchItem>.unmodifiable(data);
     return SourceSearchState(statuses: statuses, results: updatedResults);
   }
-}
 
-final sourceSearchProvider = StateNotifierProvider.autoDispose.family<
-    SourceSearchController, SourceSearchState, String>(
-  (ref, keyword) {
-    final controller = SourceSearchController(ref, keyword);
-    controller.initialize();
-    return controller;
-  },
-);
-
-class SourceSearchController extends StateNotifier<SourceSearchState> {
-  SourceSearchController(this._ref, this._keyword)
-      : super(_initialState(_ref));
-
-  final AutoDisposeStateNotifierProviderRef<SourceSearchController,
-      SourceSearchState> _ref;
-  final String _keyword;
-
-  bool _isDisposed = false;
-  ProviderSubscription<PluginsState>? _pluginListenerCancel;
-
-  static SourceSearchState _initialState(
-      AutoDisposeStateNotifierProviderRef<SourceSearchController,
-              SourceSearchState>
-          ref) {
-    final pluginState = ref.read(pluginsControllerProvider);
-    final pluginNames = pluginState.pluginList.map((plugin) => plugin.name);
-    return SourceSearchState.initial(pluginNames);
+  SourceSearchState removePlugins(Iterable<String> pluginNames) {
+    final names = pluginNames.toSet();
+    final updatedStatuses = Map<String, PluginSearchStatus>.from(statuses)
+      ..removeWhere((key, _) => names.contains(key));
+    final updatedResults = Map<String, List<SearchItem>>.from(results)
+      ..removeWhere((key, _) => names.contains(key));
+    return SourceSearchState(
+      statuses: updatedStatuses,
+      results: updatedResults,
+    );
   }
 
-  PluginsController get _pluginsController =>
-      _ref.read(pluginsControllerProvider.notifier);
+  SourceSearchState addPlugins(Iterable<String> pluginNames) {
+    if (pluginNames.isEmpty) {
+      return this;
+    }
+    final updatedStatuses = Map<String, PluginSearchStatus>.from(statuses);
+    final updatedResults = Map<String, List<SearchItem>>.from(results);
+    for (final name in pluginNames) {
+      updatedStatuses[name] = PluginSearchStatus.pending;
+      updatedResults[name] = const <SearchItem>[];
+    }
+    return SourceSearchState(
+      statuses: updatedStatuses,
+      results: updatedResults,
+    );
+  }
+}
 
-  void initialize() {
-    final pluginState = _ref.read(pluginsControllerProvider);
-    final pluginList = pluginState.pluginList;
-    if (pluginList.isNotEmpty) {
-      _queryAll(pluginList, _keyword);
+final sourceSearchProvider = AutoDisposeNotifierProviderFamily<
+    SourceSearchController, SourceSearchState, String>(
+  SourceSearchController.new,
+);
+
+class SourceSearchController
+    extends AutoDisposeFamilyNotifier<SourceSearchState, String> {
+  late final String _keyword;
+  late String _activeKeyword;
+  late final PluginsController _pluginsController;
+  ProviderSubscription<PluginsState>? _pluginSubscription;
+  bool _isDisposed = false;
+
+  @override
+  SourceSearchState build(String keyword) {
+    _isDisposed = false;
+    ref.onDispose(() {
+      _isDisposed = true;
+      _pluginSubscription?.close();
+      _pluginSubscription = null;
+    });
+
+    _keyword = keyword;
+    _activeKeyword = keyword;
+    _pluginsController = ref.read(pluginsControllerProvider.notifier);
+
+    final pluginState = ref.read(pluginsControllerProvider);
+    final initialNames =
+        pluginState.pluginList.map((plugin) => plugin.name).toList();
+
+    if (pluginState.pluginList.isNotEmpty) {
+      Future.microtask(
+        () => _queryAll(pluginState.pluginList, _keyword),
+      );
     }
 
-    _pluginListenerCancel = _ref.listen<PluginsState>(
+    _pluginSubscription = ref.listen<PluginsState>(
       pluginsControllerProvider,
       (previous, next) {
-        if (_isDisposed) return;
-        final prevNames =
-            previous?.pluginList.map((plugin) => plugin.name).toList() ?? const [];
+        if (_isDisposed) {
+          return;
+        }
+
+        final prevNames = previous?.pluginList
+                .map((plugin) => plugin.name)
+                .toList() ??
+            const [];
         final nextNames =
             next.pluginList.map((plugin) => plugin.name).toList();
 
-        if (!listEquals(prevNames, nextNames)) {
-          state = SourceSearchState.initial(nextNames);
-          if (next.pluginList.isNotEmpty) {
-            _queryAll(next.pluginList, _keyword);
+        if (listEquals(prevNames, nextNames)) {
+          return;
+        }
+
+        final prevSet = prevNames.toSet();
+        final nextSet = nextNames.toSet();
+        final removed = prevSet.difference(nextSet);
+        final added = nextSet.difference(prevSet);
+
+        var updatedState = state;
+        if (removed.isNotEmpty) {
+          updatedState = updatedState.removePlugins(removed);
+        }
+        if (added.isNotEmpty) {
+          updatedState = updatedState.addPlugins(added);
+        }
+        state = updatedState;
+
+        if (added.isEmpty) {
+          return;
+        }
+
+        final newPlugins = next.pluginList
+            .where((plugin) => added.contains(plugin.name))
+            .toList();
+        if (newPlugins.isNotEmpty) {
+          for (final plugin in newPlugins) {
+            unawaited(
+              _queryPlugin(
+                plugin,
+                _activeKeyword,
+                clearExisting: true,
+              ),
+            );
           }
         }
       },
       fireImmediately: false,
     );
 
-    _ref.onDispose(() {
-      _isDisposed = true;
-      _pluginListenerCancel?.close();
-    });
+    return SourceSearchState.initial(initialNames);
   }
 
   Future<void> queryPlugin(
@@ -115,11 +172,31 @@ class SourceSearchController extends StateNotifier<SourceSearchState> {
     if (plugin == null) {
       return;
     }
-    await _queryPlugin(plugin, keywordOverride ?? _keyword,
-        clearExisting: true);
+    await _queryPlugin(
+      plugin,
+      keywordOverride ?? _keyword,
+      clearExisting: true,
+    );
+  }
+
+  Future<void> refresh() async {
+    final pluginList = _pluginsController.pluginList;
+    if (pluginList.isEmpty) {
+      return;
+    }
+    await _queryAll(pluginList, _activeKeyword);
+  }
+
+  Future<void> searchWithKeyword(String keyword) async {
+    final pluginList = _pluginsController.pluginList;
+    if (pluginList.isEmpty) {
+      return;
+    }
+    await _queryAll(pluginList, keyword);
   }
 
   Future<void> _queryAll(List<Plugin> pluginList, String keyword) async {
+    _activeKeyword = keyword;
     for (final plugin in pluginList) {
       _markPending(plugin.name, clearExisting: true);
     }
@@ -155,8 +232,10 @@ class SourceSearchController extends StateNotifier<SourceSearchState> {
       if (_isDisposed) {
         return;
       }
-      KazumiLogger().log(Level.warning,
-          '插件 ${plugin.name} 检索失败: $error');
+      KazumiLogger().log(
+        Level.warning,
+        '源 ${plugin.name} 检索失败: $error',
+      );
       _markError(plugin.name);
     }
   }

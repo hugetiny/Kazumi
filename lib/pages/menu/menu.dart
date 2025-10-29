@@ -23,7 +23,14 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
 
     return OrientationBuilder(builder: (context, orientation) {
       final bool isPortrait = orientation == Orientation.portrait;
-      navigationController.setIsBottom(isPortrait);
+      if (navigationState.isBottom != isPortrait) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          navigationController.setIsBottom(isPortrait);
+        });
+      }
       return isPortrait
           ? bottomMenuWidget(context, navigationState, navigationController)
           : sideMenuWidget(context, navigationState, navigationController);
@@ -47,7 +54,7 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   NavigationDestination(
                     selectedIcon: Icon(Icons.home),
                     icon: Icon(Icons.home_outlined),
-                    label: '推荐',
+                    label: '首页',
                   ),
                   NavigationDestination(
                     selectedIcon: Icon(Icons.timeline),
@@ -55,14 +62,14 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                     label: '时间表',
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_outlined),
-                    label: '追番',
+                    selectedIcon: Icon(Icons.person),
+                    icon: Icon(Icons.person_outline),
+                    label: '我的',
                   ),
                   NavigationDestination(
                     selectedIcon: Icon(Icons.settings),
-                    icon: Icon(Icons.settings),
-                    label: '我的',
+                    icon: Icon(Icons.settings_outlined),
+                    label: '设置',
                   ),
                 ],
                 selectedIndex: state.selectedIndex,
@@ -76,10 +83,10 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                       context.go('/tab/timeline');
                       break;
                     case 2:
-                      context.go('/tab/collect');
+                      context.go('/tab/my');
                       break;
                     case 3:
-                      context.go('/tab/my');
+                      context.go('/tab/setting');
                       break;
                   }
                 },
@@ -114,7 +121,7 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   NavigationRailDestination(
                     selectedIcon: Icon(Icons.home),
                     icon: Icon(Icons.home_outlined),
-                    label: Text('推荐'),
+                    label: Text('首页'),
                   ),
                   NavigationRailDestination(
                     selectedIcon: Icon(Icons.timeline),
@@ -122,14 +129,14 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                     label: Text('时间表'),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_border),
-                    label: Text('追番'),
+                    selectedIcon: Icon(Icons.person),
+                    icon: Icon(Icons.person_outline),
+                    label: Text('我的'),
                   ),
                   NavigationRailDestination(
                     selectedIcon: Icon(Icons.settings),
                     icon: Icon(Icons.settings_outlined),
-                    label: Text('我的'),
+                    label: Text('设置'),
                   ),
                 ],
                 selectedIndex: state.selectedIndex,
@@ -143,10 +150,10 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                       context.go('/tab/timeline');
                       break;
                     case 2:
-                      context.go('/tab/collect');
+                      context.go('/tab/my');
                       break;
                     case 3:
-                      context.go('/tab/my');
+                      context.go('/tab/setting');
                       break;
                   }
                 },

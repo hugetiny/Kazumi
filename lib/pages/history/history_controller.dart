@@ -2,7 +2,7 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/history/history_module.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:hive/hive.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HistoryState {
   final List<History> histories;
@@ -12,17 +12,23 @@ class HistoryState {
       HistoryState(histories: histories ?? this.histories);
 }
 
-class HistoryController extends SafeStateNotifier<HistoryState> {
-  HistoryController() : super(const HistoryState());
+class HistoryController extends Notifier<HistoryState> {
+  @override
+  HistoryState build() {
+    return HistoryState(histories: _sortedHistories());
+  }
 
   Box get setting => GStorage.setting;
   Box<History> get storedHistories => GStorage.histories;
 
-  void init() {
-    final temp = storedHistories.values.toList()
+  List<History> _sortedHistories() {
+    return List<History>.from(storedHistories.values)
       ..sort((a, b) => b.lastWatchTime.millisecondsSinceEpoch -
           a.lastWatchTime.millisecondsSinceEpoch);
-    state = state.copyWith(histories: temp);
+  }
+
+  void refreshHistories() {
+    state = state.copyWith(histories: _sortedHistories());
   }
 
   void updateHistory(
@@ -53,8 +59,8 @@ class HistoryController extends SafeStateNotifier<HistoryState> {
       prog.progress = progress;
     }
 
-    storedHistories.put(history.key, history);
-    init();
+  storedHistories.put(history.key, history);
+  refreshHistories();
   }
 
   Progress? lastWatching(BangumiItem bangumiItem, String adapterName) {
@@ -68,14 +74,14 @@ class HistoryController extends SafeStateNotifier<HistoryState> {
   }
 
   void deleteHistory(History history) {
-    storedHistories.delete(history.key);
-    init();
+  storedHistories.delete(history.key);
+  refreshHistories();
   }
 
   void clearProgress(BangumiItem bangumiItem, String adapterName, int episode) {
-    final history = storedHistories.get(History.getKey(adapterName, bangumiItem));
-    history?.progresses[episode]?.progress = Duration.zero;
-    init();
+  final history = storedHistories.get(History.getKey(adapterName, bangumiItem));
+  history?.progresses[episode]?.progress = Duration.zero;
+  refreshHistories();
   }
 
   void clearAll() {

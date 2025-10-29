@@ -26,6 +26,11 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
   int touchedIndex = -1;
 
   Widget get voteBarChart {
+    final List<int> voteCounts = _normalizedVoteCounts();
+    final int totalVotes = _resolveTotalVotes(voteCounts);
+    if (totalVotes == 0) {
+      return const SizedBox.shrink();
+    }
     return Flexible(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,12 +64,11 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                     getTooltipColor: (_) =>
                         Theme.of(context).colorScheme.inverseSurface,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      var percentage =
-                          widget.bangumiItem.votesCount[groupIndex] /
-                              widget.bangumiItem.votes *
-                              100;
+                      final int safeIndex = groupIndex.clamp(0, voteCounts.length - 1);
+                      final double percentage =
+                          (voteCounts[safeIndex] / totalVotes) * 100;
                       return BarTooltipItem(
-                        '${percentage.toStringAsFixed(2)}% (${widget.bangumiItem.votesCount[groupIndex]}人)',
+                        '${percentage.toStringAsFixed(2)}% (${voteCounts[safeIndex]}人)',
                         TextStyle(
                             color:
                                 Theme.of(context).colorScheme.onInverseSurface),
@@ -73,22 +77,25 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                   ),
                 ),
                 barGroups: List<BarChartGroupData>.generate(
-                  10,
-                  (i) => BarChartGroupData(
-                    x: i + 1,
-                    barRods: [
-                      BarChartRodData(
-                        toY: widget.bangumiItem.votesCount[i].toDouble(),
-                        color: touchedIndex == i
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).disabledColor,
-                        width: 20,
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(5)),
-                      )
-                    ],
-                    // showingTooltipIndicators: [0],
-                  ),
+                  voteCounts.length,
+                  (i) {
+                    final double value = voteCounts[i].toDouble();
+                    return BarChartGroupData(
+                      x: i + 1,
+                      barRods: [
+                        BarChartRodData(
+                          toY: value,
+                          color: touchedIndex == i
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).disabledColor,
+                          width: 20,
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(5)),
+                        )
+                      ],
+                      // showingTooltipIndicators: [0],
+                    );
+                  },
                 ),
                 titlesData: FlTitlesData(
                   bottomTitles: AxisTitles(
@@ -112,6 +119,27 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
         ],
       ),
     );
+  }
+
+  List<int> _normalizedVoteCounts() {
+    const int bucketSize = 10;
+    final List<int> source = widget.bangumiItem.votesCount;
+    if (source.isEmpty) {
+      return List<int>.filled(bucketSize, 0);
+    }
+    final List<int> counts = List<int>.filled(bucketSize, 0);
+    for (var i = 0; i < bucketSize && i < source.length; i++) {
+      counts[i] = source[i];
+    }
+    return counts;
+  }
+
+  int _resolveTotalVotes(List<int> normalizedCounts) {
+    final int totalFromItem = widget.bangumiItem.votes;
+    if (totalFromItem > 0) {
+      return totalFromItem;
+    }
+    return normalizedCounts.fold<int>(0, (sum, value) => sum + value);
   }
 
   @override

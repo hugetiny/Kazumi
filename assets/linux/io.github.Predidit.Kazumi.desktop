@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Kazumi
 Comment=Watch Animes online with danmaku support.
-Comment[zh_CN]=一款好用的追番软件
+Comment[zh_CN]=原来人生可以一直快乐
 Exec=kazumi
 StartupWMClass=kazumi
 Icon=io.github.Predidit.Kazumi

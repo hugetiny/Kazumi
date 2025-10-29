@@ -33,22 +33,7 @@ class WebDavSettingsPage extends ConsumerWidget {
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('Github'),
-              tiles: [
-                SettingsTile.switchTile(
-                  onToggle: (value) async {
-                    await controller.toggleGitProxy(
-                      value ?? !state.enableGitProxy,
-                    );
-                  },
-                  title: const Text('Github镜像'),
-                  description: const Text('使用镜像访问规则托管仓库'),
-                  initialValue: state.enableGitProxy,
-                ),
-              ],
-            ),
-            SettingsSection(
-              title: const Text('WEBDAV'),
+              title: const Text('WebDAV'),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -59,7 +44,7 @@ class WebDavSettingsPage extends ConsumerWidget {
                       KazumiDialog.showToast(message: result.message);
                     }
                   },
-                  title: const Text('WEBDAV同步'),
+                  title: const Text('WebDAV 同步'),
                   initialValue: state.webDavEnable,
                 ),
                 SettingsTile.switchTile(
@@ -79,12 +64,12 @@ class WebDavSettingsPage extends ConsumerWidget {
                   onPressed: (_) {
                     context.push('/settings/webdav/editor');
                   },
-                  title: const Text('WEBDAV配置'),
+                  title: const Text('WebDAV 配置'),
                 ),
               ],
             ),
             SettingsSection(
-              bottomInfo: const Text('立即上传观看记录到WEBDAV'),
+              bottomInfo: const Text('立即将观看记录上传到 WebDAV。'),
               tiles: [
                 SettingsTile(
                   trailing: const Icon(Icons.cloud_upload_rounded),
@@ -92,7 +77,7 @@ class WebDavSettingsPage extends ConsumerWidget {
                     if (state.isBusy) {
                       return;
                     }
-                    KazumiDialog.showToast(message: '尝试上传到WebDav');
+                    KazumiDialog.showToast(message: '正在尝试上传到 WebDAV…');
                     final result = await controller.updateWebDav();
                     KazumiDialog.showToast(message: result.message);
                   },
@@ -101,7 +86,7 @@ class WebDavSettingsPage extends ConsumerWidget {
               ],
             ),
             SettingsSection(
-              bottomInfo: const Text('立即下载观看记录到本地'),
+              bottomInfo: const Text('立即将观看记录同步到本地。'),
               tiles: [
                 SettingsTile(
                   trailing: const Icon(Icons.cloud_download_rounded),
@@ -109,7 +94,7 @@ class WebDavSettingsPage extends ConsumerWidget {
                     if (state.isBusy) {
                       return;
                     }
-                    KazumiDialog.showToast(message: '尝试从WebDav同步');
+                    KazumiDialog.showToast(message: '正在尝试从 WebDAV 同步…');
                     final result = await controller.downloadWebDav();
                     KazumiDialog.showToast(message: result.message);
                   },

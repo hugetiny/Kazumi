@@ -5,13 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
-import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/pages/info/providers.dart';
 import 'package:kazumi/bean/card/bangumi_info_card.dart';
 import 'package:kazumi/pages/info/source_sheet.dart';
-import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
@@ -36,7 +34,6 @@ class _InfoPageState extends ConsumerState<InfoPage>
     with TickerProviderStateMixin {
   late final InfoController infoController;
   late final VideoPageController videoPageController;
-  late TabController sourceTabController;
   late TabController infoTabController;
 
   bool commentsIsLoading = false;
@@ -120,21 +117,24 @@ class _InfoPageState extends ConsumerState<InfoPage>
     super.initState();
     infoController = ref.read(infoControllerProvider.notifier);
     videoPageController = ref.read(videoControllerProvider.notifier);
-    if (widget.bangumi != null) {
-      infoController.bangumiItem = widget.bangumi!;
-    }
-  infoController.resetListsForNewBangumi();
-    videoPageController.currentEpisode = 1;
-    // Because the gap between different bangumi API response is too large, sometimes we need to query the bangumi info again
-    // We need the type parameter to determine whether to attach the new data to the old data
-    // We can't generally replace the old data with the new data, because the old data contains images url, update them will cause the image to reload and flicker
-    if (infoController.bangumiItem.summary == '' ||
-        infoController.bangumiItem.votesCount.isEmpty) {
-      queryBangumiInfoByID(infoController.bangumiItem.id, type: 'attach');
-    }
-  final pluginsController = ref.read(pluginsControllerProvider);
-  sourceTabController =
-    TabController(length: pluginsController.pluginList.length, vsync: this);
+    final BangumiItem? initialBangumi = widget.bangumi;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      if (initialBangumi != null) {
+        infoController.bangumiItem = initialBangumi;
+      }
+      infoController.resetListsForNewBangumi();
+      videoPageController.currentEpisode = 1;
+      // Because the gap between different bangumi API response is too large, sometimes we need to query the bangumi info again
+      // We need the type parameter to determine whether to attach the new data to the old data
+      // We can't generally replace the old data with the new data, because the old data contains images url, update them will cause the image to reload and flicker
+      if (infoController.bangumiItem.summary == '' ||
+          infoController.bangumiItem.votesCount.isEmpty) {
+        queryBangumiInfoByID(infoController.bangumiItem.id, type: 'attach');
+      }
+    });
     infoTabController = TabController(length: 5, vsync: this);
     infoTabController.addListener(() {
       int index = infoTabController.index;
@@ -156,9 +156,6 @@ class _InfoPageState extends ConsumerState<InfoPage>
 
   @override
   void dispose() {
-  infoController.resetListsForNewBangumi();
-    videoPageController.currentEpisode = 1;
-    sourceTabController.dispose();
     infoTabController.dispose();
     super.dispose();
   }
@@ -215,6 +212,27 @@ class _InfoPageState extends ConsumerState<InfoPage>
                       ),
                     ),
                     actions: [
+                      EmbeddedNativeControlArea(
+                        child: IconButton(
+                          tooltip: '刷新元数据',
+                          onPressed: state.metadataLoading
+                              ? null
+                              : () {
+                                  infoController.refreshMetadata(
+                                    forceRefresh: true,
+                                  );
+                                },
+                          icon: state.metadataLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                  ),
+                                )
+                              : const Icon(Icons.refresh_rounded),
+                        ),
+                      ),
                       if (innerBoxIsScrolled)
                         EmbeddedNativeControlArea(
                           child: CollectButton(
@@ -344,34 +362,23 @@ class _InfoPageState extends ConsumerState<InfoPage>
               characterList: state.characterList,
               staffList: state.staffList,
               isLoading: state.isLoading,
+              metadataRecord: state.metadataRecord,
+              metadataLoading: state.metadataLoading,
+              onRefreshMetadata: () {
+                infoController.refreshMetadata(forceRefresh: true);
+              },
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.play_arrow_rounded),
             label: Text('开始观看'),
-            onPressed: () async {
-              showModalBottomSheet(
-                isScrollControlled: true,
-                constraints: BoxConstraints(
-                  maxHeight: (MediaQuery.sizeOf(context).height >=
-                          LayoutBreakpoint.compact['height']!)
-                      ? MediaQuery.of(context).size.height * 3 / 4
-                      : MediaQuery.of(context).size.height,
-                  maxWidth: (MediaQuery.sizeOf(context).width >=
-                          LayoutBreakpoint.medium['width']!)
-                      ? MediaQuery.of(context).size.width * 9 / 16
-                      : MediaQuery.of(context).size.width,
-                ),
-                clipBehavior: Clip.antiAlias,
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                showDragHandle: true,
-                context: context,
-                builder: (context) {
-                  return SourceSheet(
-                    tabController: sourceTabController,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SourceSheet(
                     infoController: infoController,
-                  );
-                },
+                  ),
+                ),
               );
             },
           ),

@@ -1,7 +1,7 @@
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/anime_season.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class TimelineState {
   final List<List<BangumiItem>> bangumiCalendar;
@@ -37,8 +37,9 @@ class TimelineState {
       );
 }
 
-class TimelineController extends SafeStateNotifier<TimelineState> {
-  TimelineController() : super(TimelineState());
+class TimelineController extends Notifier<TimelineState> {
+  @override
+  TimelineState build() => TimelineState();
 
   Future<void> init() async {
     final now = DateTime.now();

@@ -44,7 +44,12 @@ class _PopularPageState extends ConsumerState<PopularPage>
     final state = ref.read(popularControllerProvider);
     popularController = ref.read(popularControllerProvider.notifier);
     if (state.trendList.isEmpty) {
-      popularController.queryBangumiByTrend();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) {
+          return;
+        }
+        popularController.queryBangumiByTrend();
+      });
     }
   }
 
@@ -276,7 +281,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
     actions.add(
       IconButton(
         tooltip: '历史记录',
-        onPressed: () => context.push('/settings/history'),
+  onPressed: () => context.push('/my/history'),
         icon: const Icon(Icons.history),
       ),
     );

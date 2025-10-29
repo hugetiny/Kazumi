@@ -24,15 +24,15 @@ import 'package:screen_brightness_platform_interface/screen_brightness_platform_
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:kazumi/pages/history/history_controller.dart';
 import 'package:kazumi/pages/history/providers.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:kazumi/pages/collect/providers.dart';
+import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/my/providers.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/request/damaku.dart';
 import 'package:kazumi/modules/danmaku/danmaku_search_response.dart';
 import 'package:kazumi/modules/danmaku/danmaku_episode_response.dart';
 import 'package:kazumi/pages/player/player_item_surface.dart';
-import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/setting/setting_controller.dart';
 
 class PlayerItem extends ConsumerStatefulWidget {
   const PlayerItem({
@@ -778,7 +778,7 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                     ),
-                    value: selectedSyncPlayEndPoint,
+                    initialValue: selectedSyncPlayEndPoint,
                     items: syncPlayEndPoints.map((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -994,8 +994,10 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     webDavEnable = setting.get(SettingBoxKey.webDavEnable, defaultValue: false);
     webDavEnableHistory =
         setting.get(SettingBoxKey.webDavEnableHistory, defaultValue: false);
-    playerController.danmakuOn =
-        setting.get(SettingBoxKey.danmakuEnabledByDefault, defaultValue: false);
+    final bool defaultDanmakuEnabled = setting.get(
+      SettingBoxKey.danmakuEnabledByDefault,
+      defaultValue: false,
+    );
     _border = setting.get(SettingBoxKey.danmakuBorder, defaultValue: true);
     _opacity = setting.get(SettingBoxKey.danmakuOpacity, defaultValue: 1.0);
     _duration = 8;
@@ -1020,7 +1022,15 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     haEnable = setting.get(SettingBoxKey.hAenable, defaultValue: true);
     playerTimer = getPlayerTimer();
     windowManager.addListener(this);
-    displayVideoController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      playerController.resetUiState(
+        danmakuEnabled: defaultDanmakuEnabled,
+      );
+      displayVideoController();
+    });
   }
 
   @override
@@ -1036,24 +1046,14 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     hideVolumeUITimer?.cancel();
     animationController?.dispose();
     animationController = null;
-  _fullscreenSubscription?.close();
-    // Reset player panel state
-    playerController.lockPanel = false;
-    playerController.showVideoController = true;
-    playerController.showSeekTime = false;
-    playerController.showBrightness = false;
-    playerController.showVolume = false;
-    playerController.showPlaySpeed = false;
-    playerController.brightnessSeeking = false;
-    playerController.volumeSeeking = false;
-    playerController.canHidePlayerPanel = true;
+    _fullscreenSubscription?.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(playerControllerProvider);
-    final videoState = ref.watch(videoControllerProvider);
+  final playerState = ref.watch(playerControllerProvider);
+  final videoState = ref.watch(videoControllerProvider);
     ref.watch(collectControllerProvider);
     collectType =
         collectController.getCollectType(videoPageController.bangumiItem);
