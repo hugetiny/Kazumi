@@ -1,0 +1,104 @@
+{
+  "@@locale": "zh-TW",
+  "app": {
+    "title": "Kazumi",
+    "loading": "載入中…",
+    "retry": "重試",
+    "confirm": "確認",
+    "cancel": "取消"
+  },
+  "metadata": {
+    "sectionTitle": "作品資訊",
+    "refresh": "重新整理中繼資料",
+    "source": {
+      "bangumi": "Bangumi",
+      "tmdb": "TMDb"
+    },
+    "lastSynced": "上次同步：{timestamp}"
+  },
+  "downloads": {
+    "sectionTitle": "下載佇列",
+    "aria2Offline": "aria2 未連線",
+    "queued": "排隊中",
+    "running": "下載中",
+    "completed": "已完成"
+  },
+  "torrent": {
+    "consent": {
+      "title": "BitTorrent 使用提示",
+      "description": "啟用 BT 下載前，請確認遵守所在地法律並瞭解使用風險。",
+      "agree": "我已知悉，繼續",
+      "decline": "暫不開啟"
+    },
+    "error": {
+      "submit": "無法提交磁力連結，稍後重試"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "metadata": "資訊來源設定",
+    "downloads": "下載設定",
+    "playback": "播放偏好",
+    "general": {
+      "title": "一般",
+      "appearance": "外觀設定",
+      "appearanceDesc": "設定應用程式主題和更新率",
+      "language": "應用程式語言",
+      "languageDesc": "選擇應用程式介面顯示語言",
+      "followSystem": "跟隨系統",
+      "exitBehavior": "關閉時",
+      "exitApp": "結束 Kazumi",
+      "minimizeToTray": "最小化至系統匣",
+      "askEveryTime": "每次都詢問"
+    },
+    "source": {
+      "title": "來源",
+      "ruleManagement": "規則管理",
+      "ruleManagementDesc": "管理番劇資源規則",
+      "githubProxy": "Github 映象",
+      "githubProxyDesc": "使用映象存取規則託管儲存庫"
+    },
+    "metadata": {
+      "title": "中繼資料",
+      "enableBangumi": "啟用 Bangumi 中繼資料",
+      "enableBangumiDesc": "從 Bangumi 拉取番劇資訊",
+      "enableTmdb": "啟用 TMDb 中繼資料",
+      "enableTmdbDesc": "從 TMDb 補充多語言資料",
+      "preferredLanguage": "優先語言",
+      "preferredLanguageDesc": "設定中繼資料同步時使用的語言",
+      "followSystemLanguage": "跟隨系統語言",
+      "simplifiedChinese": "簡體中文 (zh-CN)",
+      "traditionalChinese": "繁體中文 (zh-TW)",
+      "japanese": "日語 (ja-JP)",
+      "english": "英語 (en-US)",
+      "custom": "自訂"
+    },
+    "player": {
+      "title": "播放器設定",
+      "playerSettings": "播放設定",
+      "playerSettingsDesc": "設定播放器相關參數",
+      "danmakuSettings": "彈幕設定",
+      "danmakuSettingsDesc": "設定彈幕相關參數"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "設定同步參數"
+    },
+    "other": {
+      "title": "其他",
+      "about": "關於"
+    }
+  },
+  "exitDialog": {
+    "title": "結束確認",
+    "message": "您想要結束 Kazumi 嗎？",
+    "dontAskAgain": "下次不再詢問",
+    "exit": "結束 Kazumi",
+    "minimize": "最小化至系統匣",
+    "cancel": "取消"
+  },
+  "tray": {
+    "showWindow": "顯示視窗",
+    "exit": "結束 Kazumi"
+  }
+}

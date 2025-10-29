@@ -35,8 +35,70 @@
     }
   },
   "settings": {
+    "title": "Settings",
     "metadata": "Metadata Source Settings",
     "downloads": "Download Settings",
-    "playback": "Playback Preferences"
+    "playback": "Playback Preferences",
+    "general": {
+      "title": "General",
+      "appearance": "Appearance",
+      "appearanceDesc": "Configure app theme and refresh rate",
+      "language": "App Language",
+      "languageDesc": "Choose the display language for the app interface",
+      "followSystem": "Follow System",
+      "exitBehavior": "On Close",
+      "exitApp": "Exit Kazumi",
+      "minimizeToTray": "Minimize to Tray",
+      "askEveryTime": "Ask Every Time"
+    },
+    "source": {
+      "title": "Source",
+      "ruleManagement": "Rule Management",
+      "ruleManagementDesc": "Manage anime resource rules",
+      "githubProxy": "GitHub Proxy",
+      "githubProxyDesc": "Use proxy to access rule repository"
+    },
+    "metadata": {
+      "title": "Metadata",
+      "enableBangumi": "Enable Bangumi Metadata",
+      "enableBangumiDesc": "Fetch anime information from Bangumi",
+      "enableTmdb": "Enable TMDb Metadata",
+      "enableTmdbDesc": "Supplement multilingual data from TMDb",
+      "preferredLanguage": "Preferred Language",
+      "preferredLanguageDesc": "Set the language for metadata synchronization",
+      "followSystemLanguage": "Follow System Language",
+      "simplifiedChinese": "Simplified Chinese (zh-CN)",
+      "traditionalChinese": "Traditional Chinese (zh-TW)",
+      "japanese": "Japanese (ja-JP)",
+      "english": "English (en-US)",
+      "custom": "Custom"
+    },
+    "player": {
+      "title": "Player Settings",
+      "playerSettings": "Player Settings",
+      "playerSettingsDesc": "Configure player parameters",
+      "danmakuSettings": "Danmaku Settings",
+      "danmakuSettingsDesc": "Configure danmaku parameters"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "Configure sync parameters"
+    },
+    "other": {
+      "title": "Other",
+      "about": "About"
+    }
+  },
+  "exitDialog": {
+    "title": "Exit Confirmation",
+    "message": "Do you want to exit Kazumi?",
+    "dontAskAgain": "Don't ask again",
+    "exit": "Exit Kazumi",
+    "minimize": "Minimize to Tray",
+    "cancel": "Cancel"
+  },
+  "tray": {
+    "showWindow": "Show Window",
+    "exit": "Exit Kazumi"
   }
 }
