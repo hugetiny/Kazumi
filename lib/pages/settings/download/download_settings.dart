@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/utils/aria2_client.dart';
+import 'package:kazumi/utils/aria2_process_manager.dart';
 import 'package:kazumi/utils/storage.dart';
 
 class DownloadSettingsPage extends StatefulWidget {
@@ -20,12 +22,28 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
       TextEditingController();
 
   bool _isTestingConnection = false;
+  bool _isRestartingAria2 = false;
   String? _connectionStatus;
+  String? _aria2Status;
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _checkAria2Status();
+  }
+
+  void _checkAria2Status() {
+    if (Platform.isIOS) {
+      setState(() {
+        _aria2Status = 'iOS 不支持自动启动 aria2';
+      });
+    } else {
+      final isRunning = Aria2ProcessManager().isRunning;
+      setState(() {
+        _aria2Status = isRunning ? 'aria2 运行中' : 'aria2 未运行';
+      });
+    }
   }
 
   @override
@@ -124,6 +142,37 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
         _connectionStatus = '连接失败: $e';
         _isTestingConnection = false;
       });
+    }
+  }
+
+  Future<void> _restartAria2() async {
+    if (Platform.isIOS) {
+      KazumiDialog.showToast(message: 'iOS 不支持自动启动 aria2');
+      return;
+    }
+
+    setState(() {
+      _isRestartingAria2 = true;
+      _aria2Status = '正在重启 aria2...';
+    });
+
+    try {
+      final success = await Aria2ProcessManager().restart();
+      setState(() {
+        _isRestartingAria2 = false;
+        _aria2Status = success ? 'aria2 重启成功' : 'aria2 重启失败';
+      });
+      if (success) {
+        KazumiDialog.showToast(message: 'aria2 重启成功');
+      } else {
+        KazumiDialog.showToast(message: 'aria2 重启失败，请检查是否已安装 aria2');
+      }
+    } catch (e) {
+      setState(() {
+        _isRestartingAria2 = false;
+        _aria2Status = 'aria2 重启失败';
+      });
+      KazumiDialog.showToast(message: 'aria2 重启失败: $e');
     }
   }
 
@@ -237,6 +286,56 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
               ),
             ],
           ),
+          if (!Platform.isIOS)
+            SettingsSection(
+              title: const Text('进程管理'),
+              tiles: [
+                SettingsTile(
+                  title: const Text('aria2 状态'),
+                  description: _aria2Status != null
+                      ? Text(
+                          _aria2Status!,
+                          style: TextStyle(
+                            color: _aria2Status!.contains('运行中') || _aria2Status!.contains('成功')
+                                ? Colors.green
+                                : Colors.orange,
+                          ),
+                        )
+                      : const Text('检查 aria2 运行状态'),
+                  leading: const Icon(Icons.info_outline),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _checkAria2Status,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('检查'),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _isRestartingAria2 ? null : _restartAria2,
+                        icon: _isRestartingAria2
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.restart_alt, size: 16),
+                        label: const Text('重启'),
+                      ),
+                    ],
+                  ),
+                ),
+                SettingsTile(
+                  title: const Text('自动启动'),
+                  description: const Text(
+                    'Kazumi 会在启动时自动运行 aria2 进程\n'
+                    '退出应用时会自动停止 aria2 进程',
+                  ),
+                  leading: const Icon(Icons.play_circle_outline),
+                ),
+              ],
+            ),
           SettingsSection(
             title: const Text('使用说明'),
             tiles: [
@@ -244,11 +343,11 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
                 title: const Text('如何安装 aria2'),
                 description: const Text(
                   'aria2 是一个轻量级的多协议下载工具。\n\n'
-                  'Windows: 从 https://github.com/aria2/aria2/releases 下载并解压\n'
+                  'Windows: 从 https://github.com/aria2/aria2/releases 下载并解压到系统 PATH\n'
                   'macOS: brew install aria2\n'
-                  'Linux: sudo apt install aria2 或 sudo yum install aria2\n\n'
-                  '启动命令: aria2c --enable-rpc --rpc-listen-all\n'
-                  '若需密钥: 添加 --rpc-secret=你的密钥',
+                  'Linux: sudo apt install aria2 或 sudo yum install aria2\n'
+                  'Android: 通过 Termux 安装\n\n'
+                  '注意：Kazumi 会自动启动和停止 aria2，无需手动运行',
                 ),
               ),
             ],

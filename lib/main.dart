@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kazumi/request/request.dart';
 import 'package:flutter/services.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/utils/aria2_process_manager.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/pages/error/storage_error_page.dart';
@@ -71,6 +72,13 @@ void main() async {
   }
   Request();
   await Request.setCookie();
+  
+  // Start aria2 process for desktop and Android platforms (not iOS)
+  if (!Platform.isIOS) {
+    final aria2Manager = Aria2ProcessManager();
+    await aria2Manager.start();
+  }
+  
   runApp(
     const ProviderScope(
       child: AppWidget(),
