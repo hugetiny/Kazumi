@@ -394,5 +394,8 @@ class SettingBoxKey {
       aria2TimeoutSeconds = 'aria2TimeoutSeconds',
       aria2MaxConcurrentDownloads = 'aria2MaxConcurrentDownloads',
       torrentConsentAccepted = 'torrentConsentAccepted',
-      torrentConsentTimestamp = 'torrentConsentTimestamp';
+      torrentConsentTimestamp = 'torrentConsentTimestamp',
+      subtitleAutoMatchEnabled = 'subtitleAutoMatchEnabled',
+      subtitlePreferredLanguages = 'subtitlePreferredLanguages',
+      subtitlePreferredFormats = 'subtitlePreferredFormats';
 }
