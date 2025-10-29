@@ -1,0 +1,61 @@
+name: Generate Translations
+
+on:
+  pull_request:
+    paths:
+      - 'lib/l10n/*.i18n.json'
+      - 'slang.yaml'
+  workflow_dispatch:
+
+jobs:
+  generate-translations:
+    name: Generate Translation Files
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.16.0
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate translations
+        run: dart run slang
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git diff --exit-code lib/l10n/generated/translations.g.dart || echo "changed=true" >> $GITHUB_OUTPUT
+
+      - name: Commit changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lib/l10n/generated/translations.g.dart
+          git commit -m "🌐 Auto-generate translations [skip ci]"
+          git push
+
+      - name: Comment on PR
+        if: steps.check_changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '🌐 Translation files have been automatically regenerated.'
+            })
