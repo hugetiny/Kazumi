@@ -34,15 +34,21 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   @override
   void initState() {
-    LocaleSettings.setLocale(AppLocale.zhCn);
     trayManager.addListener(this);
     windowManager.addListener(this);
     setPreventClose();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeThemeFromStorage();
+      _initializeLocaleFromStorage();
     });
     super.initState();
+  }
+
+  void _initializeLocaleFromStorage() {
+    final localeNotifier = ref.read(localeSettingsProvider.notifier);
+    final savedLocale = ref.read(localeSettingsProvider).appLocale;
+    LocaleSettings.setLocale(savedLocale);
   }
 
   void _initializeThemeFromStorage() {
@@ -137,15 +143,16 @@ class _AppWidgetState extends ConsumerState<AppWidget>
         KazumiDialog.show(onDismiss: () {
           showingExitDialog = false;
         }, builder: (context) {
+          final t = context.t;
           bool saveExitBehavior = false; // 下次不再询问？
 
           return AlertDialog(
-            title: const Text('退出确认'),
+            title: Text(t.exitDialog.title),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('您想要退出 Kazumi 吗？'),
+                Text(t.exitDialog.message),
                 const SizedBox(height: 24),
                 StatefulBuilder(builder: (context, setState) {
                   onChanged(value) {
@@ -158,7 +165,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     spacing: 8,
                     children: [
                       Checkbox(value: saveExitBehavior, onChanged: onChanged),
-                      const Text('下次不再询问'),
+                      Text(t.exitDialog.dontAskAgain),
                     ],
                   );
                 }),
@@ -172,7 +179,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     }
                     exit(0);
                   },
-                  child: const Text('退出 Kazumi')),
+                  child: Text(t.exitDialog.exit)),
               TextButton(
                   onPressed: () async {
                     if (saveExitBehavior) {
@@ -181,9 +188,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     KazumiDialog.dismiss();
                     windowManager.hide();
                   },
-                  child: const Text('最小化至托盘')),
-              const TextButton(
-                  onPressed: KazumiDialog.dismiss, child: Text('取消')),
+                  child: Text(t.exitDialog.minimize)),
+              TextButton(
+                  onPressed: KazumiDialog.dismiss,
+                  child: Text(t.exitDialog.cancel)),
             ],
           );
         });
@@ -235,7 +243,8 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     }
   }
 
-  Future<void> _handleTray() async {
+  Future<void> _handleTray(BuildContext context) async {
+    final t = context.t;
     if (Platform.isWindows) {
       await trayManager.setIcon('assets/images/logo/logo_lanczos.ico');
     } else if (Platform.environment.containsKey('FLATPAK_ID') ||
@@ -250,9 +259,9 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     }
 
     Menu trayMenu = Menu(items: [
-      MenuItem(key: 'show_window', label: '显示窗口'),
+      MenuItem(key: 'show_window', label: t.tray.showWindow),
       MenuItem.separator(),
-      MenuItem(key: 'exit', label: '退出 Kazumi')
+      MenuItem(key: 'exit', label: t.tray.exit)
     ]);
     await trayManager.setContextMenu(trayMenu);
   }
@@ -317,7 +326,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     // post-frame callback to avoid modifying providers during build.
 
     if (Utils.isDesktop()) {
-      _handleTray();
+      _handleTray(context);
     }
     final ThemeData fallbackLightTheme = _buildLightTheme(null, seedColor);
     final ThemeData fallbackDarkTheme =

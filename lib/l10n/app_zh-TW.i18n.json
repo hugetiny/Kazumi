@@ -1,0 +1,151 @@
+{
+  "@@locale": "zh-TW",
+  "app": {
+    "title": "Kazumi",
+    "loading": "載入中…",
+    "retry": "重試",
+    "confirm": "確認",
+    "cancel": "取消"
+  },
+  "metadata": {
+    "sectionTitle": "作品資訊",
+    "refresh": "重新整理中繼資料",
+    "source": {
+      "bangumi": "Bangumi",
+      "tmdb": "TMDb"
+    },
+    "lastSynced": "上次同步：{timestamp}"
+  },
+  "downloads": {
+    "sectionTitle": "下載佇列",
+    "aria2Offline": "aria2 未連線",
+    "queued": "排隊中",
+    "running": "下載中",
+    "completed": "已完成"
+  },
+  "torrent": {
+    "consent": {
+      "title": "BitTorrent 使用提示",
+      "description": "啟用 BT 下載前，請確認遵守所在地法律並瞭解使用風險。",
+      "agree": "我已知悉，繼續",
+      "decline": "暫不開啟"
+    },
+    "error": {
+      "submit": "無法提交磁力連結，稍後重試"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "metadata": "資訊來源設定",
+    "downloads": "下載設定",
+    "playback": "播放偏好",
+    "general": {
+      "title": "一般",
+      "appearance": "外觀設定",
+      "appearanceDesc": "設定應用程式主題和更新率",
+      "language": "應用程式語言",
+      "languageDesc": "選擇應用程式介面顯示語言",
+      "followSystem": "跟隨系統",
+      "exitBehavior": "關閉時",
+      "exitApp": "結束 Kazumi",
+      "minimizeToTray": "最小化至系統匣",
+      "askEveryTime": "每次都詢問"
+    },
+    "source": {
+      "title": "來源",
+      "ruleManagement": "規則管理",
+      "ruleManagementDesc": "管理番劇資源規則",
+      "githubProxy": "Github 映象",
+      "githubProxyDesc": "使用映象存取規則託管儲存庫"
+    },
+    "metadata": {
+      "title": "中繼資料",
+      "enableBangumi": "啟用 Bangumi 中繼資料",
+      "enableBangumiDesc": "從 Bangumi 拉取番劇資訊",
+      "enableTmdb": "啟用 TMDb 中繼資料",
+      "enableTmdbDesc": "從 TMDb 補充多語言資料",
+      "preferredLanguage": "優先語言",
+      "preferredLanguageDesc": "設定中繼資料同步時使用的語言",
+      "followSystemLanguage": "跟隨系統語言",
+      "simplifiedChinese": "簡體中文 (zh-CN)",
+      "traditionalChinese": "繁體中文 (zh-TW)",
+      "japanese": "日語 (ja-JP)",
+      "english": "英語 (en-US)",
+      "custom": "自訂"
+    },
+    "player": {
+      "title": "播放器設定",
+      "playerSettings": "播放設定",
+      "playerSettingsDesc": "設定播放器相關參數",
+      "hardwareDecoding": "硬體解碼",
+      "hardwareDecoder": "硬體解碼器",
+      "hardwareDecoderDesc": "僅在硬體解碼啟用時生效",
+      "lowMemoryMode": "低記憶體模式",
+      "lowMemoryModeDesc": "停用進階快取以減少記憶體占用",
+      "lowLatencyAudio": "低延遲音訊",
+      "lowLatencyAudioDesc": "啟用 OpenSLES 音訊輸出以降低延遲",
+      "superResolution": "超解析度",
+      "autoJump": "自動跳轉",
+      "autoJumpDesc": "跳轉到上次播放位置",
+      "disableAnimations": "停用動畫",
+      "disableAnimationsDesc": "停用播放器內的過渡動畫",
+      "errorPrompt": "錯誤提示",
+      "errorPromptDesc": "顯示播放器內部錯誤提示",
+      "debugMode": "偵錯模式",
+      "debugModeDesc": "記錄播放器內部日誌",
+      "privateMode": "隱身模式",
+      "privateModeDesc": "不保留觀看記錄",
+      "defaultPlaySpeed": "預設播放速度",
+      "defaultVideoAspectRatio": "預設影片比例",
+      "danmakuSettings": "彈幕設定",
+      "danmakuSettingsDesc": "設定彈幕相關參數",
+      "danmaku": "彈幕",
+      "danmakuDefaultOn": "預設開啟",
+      "danmakuDefaultOnDesc": "預設是否隨影片播放彈幕",
+      "danmakuSource": "彈幕來源",
+      "danmakuCredentials": "憑證",
+      "danmakuDanDanCredentials": "DanDan API 憑證",
+      "danmakuDanDanCredentialsDesc": "自訂 DanDan 憑證",
+      "danmakuShield": "彈幕屏蔽",
+      "danmakuKeywordShield": "關鍵字屏蔽",
+      "danmakuShieldDescription": "以\"/\"開頭和結尾將視作正規表示式，如\"/\\\\d+/\"表示屏蔽所有數字",
+      "danmakuShieldCount": "已新增{count}個關鍵字",
+      "danmakuStyle": "彈幕樣式",
+      "danmakuDisplay": "彈幕顯示",
+      "danmakuArea": "彈幕區域",
+      "danmakuTopDisplay": "頂部彈幕",
+      "danmakuBottomDisplay": "底部彈幕",
+      "danmakuScrollDisplay": "滾動彈幕",
+      "danmakuMassiveDisplay": "海量彈幕",
+      "danmakuFontSize": "字型大小",
+      "danmakuOpacity": "彈幕不透明度",
+      "add": "新增",
+      "save": "儲存",
+      "restoreDefault": "恢復預設",
+      "superResolutionTitle": "超解析度",
+      "superResolutionDefaultBehavior": "預設行為",
+      "superResolutionClosePrompt": "關閉提示",
+      "superResolutionClosePromptDesc": "關閉每次啟用超解析度時的提示"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "設定同步參數"
+    },
+    "other": {
+      "title": "其他",
+      "about": "關於"
+    }
+  },
+  "exitDialog": {
+    "title": "結束確認",
+    "message": "您想要結束 Kazumi 嗎？",
+    "dontAskAgain": "下次不再詢問",
+    "exit": "結束 Kazumi",
+    "minimize": "最小化至系統匣",
+    "cancel": "取消"
+  },
+  "tray": {
+    "showWindow": "顯示視窗",
+    "exit": "結束 Kazumi"
+  }
+}

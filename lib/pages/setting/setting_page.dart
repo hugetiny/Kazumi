@@ -10,6 +10,7 @@ import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/pages/webdav_editor/providers.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class SettingPage extends ConsumerStatefulWidget {
   const SettingPage({super.key});
@@ -19,11 +20,11 @@ class SettingPage extends ConsumerStatefulWidget {
 }
 
 class _SettingPageState extends ConsumerState<SettingPage> {
-  final exitBehaviorTitles = <String>['退出 Kazumi', '最小化至托盘', '每次都询问'];
   late final Box setting;
   late int exitBehavior;
   final MenuController _exitMenuController = MenuController();
   final MenuController _metadataLocaleMenuController = MenuController();
+  final MenuController _appLocaleMenuController = MenuController();
 
   @override
   void initState() {
@@ -54,28 +55,89 @@ class _SettingPageState extends ConsumerState<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t; // Get translations
     final webDavState = ref.watch(webDavSettingsControllerProvider);
     final webDavController =
         ref.read(webDavSettingsControllerProvider.notifier);
     final metadataState = ref.watch(metadataSettingsProvider);
     final metadataController = ref.read(metadataSettingsProvider.notifier);
-    final List<_MetadataLocaleOption> localeOptions =
-        <_MetadataLocaleOption>[
-      const _MetadataLocaleOption(label: '跟随系统语言', tag: null),
-      const _MetadataLocaleOption(label: '简体中文 (zh-CN)', tag: 'zh-CN'),
-      const _MetadataLocaleOption(label: '繁體中文 (zh-TW)', tag: 'zh-TW'),
-      const _MetadataLocaleOption(label: '日语 (ja-JP)', tag: 'ja-JP'),
-      const _MetadataLocaleOption(label: '英语 (en-US)', tag: 'en-US'),
+    final localeState = ref.watch(localeSettingsProvider);
+    final localeController = ref.read(localeSettingsProvider.notifier);
+    
+    // Exit behavior options
+    final List<String> exitBehaviorTitles = [
+      t.settings.general.exitApp,
+      t.settings.general.minimizeToTray,
+      t.settings.general.askEveryTime,
     ];
-    final _MetadataLocaleOption matchedLocale = localeOptions.firstWhere(
+    
+    // App locale options
+    final List<_AppLocaleOption> appLocaleOptions = [
+      _AppLocaleOption(
+        label: t.settings.general.followSystem,
+        locale: null,
+      ),
+      _AppLocaleOption(
+        label: '简体中文 (zh-CN)',
+        locale: AppLocale.zhCn,
+      ),
+      _AppLocaleOption(
+        label: 'English (en-US)',
+        locale: AppLocale.enUs,
+      ),
+      _AppLocaleOption(
+        label: '日本語 (ja-JP)',
+        locale: AppLocale.jaJp,
+      ),
+      _AppLocaleOption(
+        label: '繁體中文 (zh-TW)',
+        locale: AppLocale.zhTw,
+      ),
+    ];
+    
+    // Metadata locale options
+    final List<_MetadataLocaleOption> metadataLocaleOptions =
+        <_MetadataLocaleOption>[
+      _MetadataLocaleOption(
+        label: t.settings.metadata.followSystemLanguage,
+        tag: null,
+      ),
+      _MetadataLocaleOption(
+        label: t.settings.metadata.simplifiedChinese,
+        tag: 'zh-CN',
+      ),
+      _MetadataLocaleOption(
+        label: t.settings.metadata.traditionalChinese,
+        tag: 'zh-TW',
+      ),
+      _MetadataLocaleOption(
+        label: t.settings.metadata.japanese,
+        tag: 'ja-JP',
+      ),
+      _MetadataLocaleOption(
+        label: t.settings.metadata.english,
+        tag: 'en-US',
+      ),
+    ];
+    
+    final _MetadataLocaleOption matchedMetadataLocale =
+        metadataLocaleOptions.firstWhere(
       (option) => option.tag == metadataState.manualLocaleTag,
-      orElse: () => const _MetadataLocaleOption(label: '', tag: null),
+      orElse: () => _MetadataLocaleOption(label: '', tag: null),
     );
-    final String localeLabel = metadataState.manualLocaleTag == null
-        ? localeOptions.first.label
-        : (matchedLocale.label.isNotEmpty
-            ? matchedLocale.label
-            : '自定义 (${metadataState.manualLocaleTag})');
+    final String metadataLocaleLabel = metadataState.manualLocaleTag == null
+        ? metadataLocaleOptions.first.label
+        : (matchedMetadataLocale.label.isNotEmpty
+            ? matchedMetadataLocale.label
+            : '${t.settings.metadata.custom} (${metadataState.manualLocaleTag})');
+    
+    final String appLocaleLabel = appLocaleOptions
+            .firstWhere(
+              (option) => option.locale == localeState.appLocale,
+              orElse: () => appLocaleOptions.first,
+            )
+            .label;
+    
     final isDesktop = Utils.isDesktop();
     return PopScope(
       canPop: false,
@@ -86,20 +148,70 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('设置'), needTopOffset: false),
+        appBar: SysAppBar(
+          title: Text(t.settings.title),
+          needTopOffset: false,
+        ),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('通用'),
+              title: Text(t.settings.general.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/theme');
                   },
                   leading: const Icon(Icons.palette_rounded),
-                  title: const Text('外观设置'),
-                  description: const Text('设置应用主题和刷新率'),
+                  title: Text(t.settings.general.appearance),
+                  description: Text(t.settings.general.appearanceDesc),
+                ),
+                SettingsTile.navigation(
+                  onPressed: (_) {
+                    if (_appLocaleMenuController.isOpen) {
+                      _appLocaleMenuController.close();
+                    } else {
+                      _appLocaleMenuController.open();
+                    }
+                  },
+                  leading: const Icon(Icons.language_rounded),
+                  title: Text(t.settings.general.language),
+                  description: Text(t.settings.general.languageDesc),
+                  value: MenuAnchor(
+                    consumeOutsideTap: true,
+                    controller: _appLocaleMenuController,
+                    builder: (_, __, ___) {
+                      return Text(appLocaleLabel);
+                    },
+                    menuChildren: [
+                      for (final _AppLocaleOption option in appLocaleOptions)
+                        MenuItemButton(
+                          requestFocusOnHover: false,
+                          onPressed: () async {
+                            if (option.locale == null) {
+                              await localeController.useSystemLocale();
+                            } else {
+                              await localeController.setLocale(option.locale!);
+                            }
+                            _appLocaleMenuController.close();
+                          },
+                          child: SizedBox(
+                            height: 48,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                option.label,
+                                style: TextStyle(
+                                  color: option.locale == localeState.appLocale
+                                      ? Theme.of(context).colorScheme.primary
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
                 if (isDesktop)
                   SettingsTile.navigation(
@@ -111,7 +223,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       }
                     },
                     leading: const Icon(Icons.logout_rounded),
-                    title: const Text('关闭时'),
+                    title: Text(t.settings.general.exitBehavior),
                     value: MenuAnchor(
                       consumeOutsideTap: true,
                       controller: _exitMenuController,
@@ -144,15 +256,15 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ],
             ),
             SettingsSection(
-              title: const Text('源'),
+              title: Text(t.settings.source.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/plugin');
                   },
                   leading: const Icon(Icons.extension),
-                  title: const Text('规则管理'),
-                  description: const Text('管理番剧资源规则'),
+                  title: Text(t.settings.source.ruleManagement),
+                  description: Text(t.settings.source.ruleManagementDesc),
                 ),
                 SettingsTile.switchTile(
                   enabled: webDavState.initialized,
@@ -164,14 +276,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       value ?? !webDavState.enableGitProxy,
                     );
                   },
-                  title: const Text('Github 镜像'),
-                  description: const Text('使用镜像访问规则托管仓库'),
+                  title: Text(t.settings.source.githubProxy),
+                  description: Text(t.settings.source.githubProxyDesc),
                   initialValue: webDavState.enableGitProxy,
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('元数据'),
+              title: Text(t.settings.metadata.title),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -179,8 +291,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       value ?? !metadataState.bangumiEnabled,
                     );
                   },
-                  title: const Text('启用 Bangumi 元数据'),
-                  description: const Text('从 Bangumi 拉取番剧信息'),
+                  title: Text(t.settings.metadata.enableBangumi),
+                  description: Text(t.settings.metadata.enableBangumiDesc),
                   initialValue: metadataState.bangumiEnabled,
                 ),
                 SettingsTile.switchTile(
@@ -189,8 +301,8 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       value ?? !metadataState.tmdbEnabled,
                     );
                   },
-                  title: const Text('启用 TMDb 元数据'),
-                  description: const Text('从 TMDb 补充多语言资料'),
+                  title: Text(t.settings.metadata.enableTmdb),
+                  description: Text(t.settings.metadata.enableTmdbDesc),
                   initialValue: metadataState.tmdbEnabled,
                 ),
                 SettingsTile.navigation(
@@ -201,22 +313,22 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                       _metadataLocaleMenuController.open();
                     }
                   },
-                  leading: const Icon(Icons.language_rounded),
-                  title: const Text('优先语言'),
-                  description: const Text('设置元数据同步时使用的语言'),
+                  leading: const Icon(Icons.translate_rounded),
+                  title: Text(t.settings.metadata.preferredLanguage),
+                  description: Text(t.settings.metadata.preferredLanguageDesc),
                   value: MenuAnchor(
                     consumeOutsideTap: true,
                     controller: _metadataLocaleMenuController,
                     builder: (_, __, ___) {
-                      return Text(localeLabel);
+                      return Text(metadataLocaleLabel);
                     },
                     menuChildren: [
-                      for (final _MetadataLocaleOption option in localeOptions)
+                      for (final _MetadataLocaleOption option
+                          in metadataLocaleOptions)
                         MenuItemButton(
                           requestFocusOnHover: false,
                           onPressed: () async {
-                            await metadataController
-                                .setManualLocale(option.tag);
+                            await metadataController.setManualLocale(option.tag);
                             _metadataLocaleMenuController.close();
                           },
                           child: SizedBox(
@@ -226,11 +338,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                               child: Text(
                                 option.label,
                                 style: TextStyle(
-                  color: option.tag ==
-                      metadataState.manualLocaleTag
-                                      ? Theme.of(context)
-                                          .colorScheme
-                                          .primary
+                                  color: option.tag ==
+                                          metadataState.manualLocaleTag
+                                      ? Theme.of(context).colorScheme.primary
                                       : null,
                                 ),
                               ),
@@ -243,48 +353,48 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ],
             ),
             SettingsSection(
-              title: const Text('播放器设置'),
+              title: Text(t.settings.player.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/player');
                   },
                   leading: const Icon(Icons.display_settings_rounded),
-                  title: const Text('播放设置'),
-                  description: const Text('设置播放器相关参数'),
+                  title: Text(t.settings.player.playerSettings),
+                  description: Text(t.settings.player.playerSettingsDesc),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/danmaku');
                   },
                   leading: const Icon(Icons.subtitles_rounded),
-                  title: const Text('弹幕设置'),
-                  description: const Text('设置弹幕相关参数'),
+                  title: Text(t.settings.player.danmakuSettings),
+                  description: Text(t.settings.player.danmakuSettingsDesc),
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('WebDAV'),
+              title: Text(t.settings.webdav.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/webdav');
                   },
                   leading: const Icon(Icons.cloud),
-                  title: const Text('WebDAV'),
-                  description: const Text('设置同步参数'),
+                  title: Text(t.settings.webdav.title),
+                  description: Text(t.settings.webdav.desc),
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('其他'),
+              title: Text(t.settings.other.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/about');
                   },
                   leading: const Icon(Icons.info_outline_rounded),
-                  title: const Text('关于'),
+                  title: Text(t.settings.other.about),
                 ),
               ],
             ),
@@ -293,6 +403,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       ),
     );
   }
+}
+
+class _AppLocaleOption {
+  const _AppLocaleOption({required this.label, required this.locale});
+
+  final String label;
+  final AppLocale? locale;
 }
 
 class _MetadataLocaleOption {

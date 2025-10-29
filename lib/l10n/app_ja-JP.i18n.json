@@ -1,0 +1,151 @@
+{
+  "@@locale": "ja-JP",
+  "app": {
+    "title": "Kazumi",
+    "loading": "読み込み中…",
+    "retry": "再試行",
+    "confirm": "確認",
+    "cancel": "キャンセル"
+  },
+  "metadata": {
+    "sectionTitle": "作品情報",
+    "refresh": "メタデータを更新",
+    "source": {
+      "bangumi": "Bangumi",
+      "tmdb": "TMDb"
+    },
+    "lastSynced": "最終同期: {timestamp}"
+  },
+  "downloads": {
+    "sectionTitle": "ダウンロードキュー",
+    "aria2Offline": "aria2未接続",
+    "queued": "待機中",
+    "running": "ダウンロード中",
+    "completed": "完了"
+  },
+  "torrent": {
+    "consent": {
+      "title": "BitTorrent使用に関する注意",
+      "description": "BTダウンロードを有効にする前に、現地の法律を遵守し、リスクを理解していることを確認してください。",
+      "agree": "理解しました、続行",
+      "decline": "今はしない"
+    },
+    "error": {
+      "submit": "マグネットリンクを送信できません。後でもう一度お試しください"
+    }
+  },
+  "settings": {
+    "title": "設定",
+    "metadata": "メタデータソース設定",
+    "downloads": "ダウンロード設定",
+    "playback": "再生設定",
+    "general": {
+      "title": "一般",
+      "appearance": "外観",
+      "appearanceDesc": "アプリのテーマとリフレッシュレートを設定",
+      "language": "アプリの言語",
+      "languageDesc": "アプリインターフェースの表示言語を選択",
+      "followSystem": "システムに従う",
+      "exitBehavior": "終了時",
+      "exitApp": "Kazumiを終了",
+      "minimizeToTray": "トレイに最小化",
+      "askEveryTime": "毎回確認する"
+    },
+    "source": {
+      "title": "ソース",
+      "ruleManagement": "ルール管理",
+      "ruleManagementDesc": "アニメリソースルールを管理",
+      "githubProxy": "GitHubプロキシ",
+      "githubProxyDesc": "プロキシを使用してルールリポジトリにアクセス"
+    },
+    "metadata": {
+      "title": "メタデータ",
+      "enableBangumi": "Bangumiメタデータを有効化",
+      "enableBangumiDesc": "Bangumiからアニメ情報を取得",
+      "enableTmdb": "TMDbメタデータを有効化",
+      "enableTmdbDesc": "TMDbから多言語データを補完",
+      "preferredLanguage": "優先言語",
+      "preferredLanguageDesc": "メタデータ同期に使用する言語を設定",
+      "followSystemLanguage": "システム言語に従う",
+      "simplifiedChinese": "簡体字中国語 (zh-CN)",
+      "traditionalChinese": "繁体字中国語 (zh-TW)",
+      "japanese": "日本語 (ja-JP)",
+      "english": "英語 (en-US)",
+      "custom": "カスタム"
+    },
+    "player": {
+      "title": "プレーヤー設定",
+      "playerSettings": "プレーヤー設定",
+      "playerSettingsDesc": "プレーヤーパラメータを設定",
+      "hardwareDecoding": "ハードウェアデコード",
+      "hardwareDecoder": "ハードウェアデコーダー",
+      "hardwareDecoderDesc": "ハードウェアデコードが有効な場合のみ有効",
+      "lowMemoryMode": "低メモリモード",
+      "lowMemoryModeDesc": "高度なキャッシュを無効にしてメモリ使用量を削減",
+      "lowLatencyAudio": "低遅延オーディオ",
+      "lowLatencyAudioDesc": "OpenSLESオーディオ出力を有効にして遅延を削減",
+      "superResolution": "超解像度",
+      "autoJump": "自動ジャンプ",
+      "autoJumpDesc": "前回の再生位置にジャンプ",
+      "disableAnimations": "アニメーションを無効化",
+      "disableAnimationsDesc": "プレーヤー内のトランジションアニメーションを無効化",
+      "errorPrompt": "エラープロンプト",
+      "errorPromptDesc": "プレーヤー内部エラープロンプトを表示",
+      "debugMode": "デバッグモード",
+      "debugModeDesc": "プレーヤー内部ログを記録",
+      "privateMode": "プライベートモード",
+      "privateModeDesc": "視聴履歴を保存しない",
+      "defaultPlaySpeed": "デフォルト再生速度",
+      "defaultVideoAspectRatio": "デフォルト動画アスペクト比",
+      "danmakuSettings": "弾幕設定",
+      "danmakuSettingsDesc": "弾幕パラメータを設定",
+      "danmaku": "弾幕",
+      "danmakuDefaultOn": "デフォルトでオン",
+      "danmakuDefaultOnDesc": "デフォルトで動画と一緒に弾幕を再生するか",
+      "danmakuSource": "弾幕ソース",
+      "danmakuCredentials": "認証情報",
+      "danmakuDanDanCredentials": "DanDan API認証情報",
+      "danmakuDanDanCredentialsDesc": "DanDan認証情報をカスタマイズ",
+      "danmakuShield": "弾幕シールド",
+      "danmakuKeywordShield": "キーワードシールド",
+      "danmakuShieldDescription": "\"/\"で始まり\"/\"で終わるテキストは正規表現として扱われます。例：\"/\\\\d+/\"はすべての数字をブロックします",
+      "danmakuShieldCount": "{count}個のキーワードを追加しました",
+      "danmakuStyle": "弾幕スタイル",
+      "danmakuDisplay": "弾幕表示",
+      "danmakuArea": "弾幕エリア",
+      "danmakuTopDisplay": "上部弾幕",
+      "danmakuBottomDisplay": "下部弾幕",
+      "danmakuScrollDisplay": "スクロール弾幕",
+      "danmakuMassiveDisplay": "大量弾幕",
+      "danmakuFontSize": "フォントサイズ",
+      "danmakuOpacity": "弾幕不透明度",
+      "add": "追加",
+      "save": "保存",
+      "restoreDefault": "デフォルトに戻す",
+      "superResolutionTitle": "超解像度",
+      "superResolutionDefaultBehavior": "デフォルト動作",
+      "superResolutionClosePrompt": "プロンプトを閉じる",
+      "superResolutionClosePromptDesc": "超解像度を有効にするたびにプロンプトを閉じる"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "同期パラメータを設定"
+    },
+    "other": {
+      "title": "その他",
+      "about": "について"
+    }
+  },
+  "exitDialog": {
+    "title": "終了確認",
+    "message": "Kazumiを終了しますか？",
+    "dontAskAgain": "次回から確認しない",
+    "exit": "Kazumiを終了",
+    "minimize": "トレイに最小化",
+    "cancel": "キャンセル"
+  },
+  "tray": {
+    "showWindow": "ウィンドウを表示",
+    "exit": "Kazumiを終了"
+  }
+}

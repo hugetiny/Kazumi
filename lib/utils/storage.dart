@@ -397,5 +397,6 @@ class SettingBoxKey {
       torrentConsentTimestamp = 'torrentConsentTimestamp',
       subtitleAutoMatchEnabled = 'subtitleAutoMatchEnabled',
       subtitlePreferredLanguages = 'subtitlePreferredLanguages',
-      subtitlePreferredFormats = 'subtitlePreferredFormats';
+      subtitlePreferredFormats = 'subtitlePreferredFormats',
+      appLocale = 'appLocale';
 }

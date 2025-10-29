@@ -35,8 +35,117 @@
     }
   },
   "settings": {
+    "title": "设置",
     "metadata": "信息源设置",
     "downloads": "下载设置",
-    "playback": "播放偏好"
+    "playback": "播放偏好",
+    "general": {
+      "title": "通用",
+      "appearance": "外观设置",
+      "appearanceDesc": "设置应用主题和刷新率",
+      "language": "应用语言",
+      "languageDesc": "选择应用界面显示语言",
+      "followSystem": "跟随系统",
+      "exitBehavior": "关闭时",
+      "exitApp": "退出 Kazumi",
+      "minimizeToTray": "最小化至托盘",
+      "askEveryTime": "每次都询问"
+    },
+    "source": {
+      "title": "源",
+      "ruleManagement": "规则管理",
+      "ruleManagementDesc": "管理番剧资源规则",
+      "githubProxy": "Github 镜像",
+      "githubProxyDesc": "使用镜像访问规则托管仓库"
+    },
+    "metadata": {
+      "title": "元数据",
+      "enableBangumi": "启用 Bangumi 元数据",
+      "enableBangumiDesc": "从 Bangumi 拉取番剧信息",
+      "enableTmdb": "启用 TMDb 元数据",
+      "enableTmdbDesc": "从 TMDb 补充多语言资料",
+      "preferredLanguage": "优先语言",
+      "preferredLanguageDesc": "设置元数据同步时使用的语言",
+      "followSystemLanguage": "跟随系统语言",
+      "simplifiedChinese": "简体中文 (zh-CN)",
+      "traditionalChinese": "繁體中文 (zh-TW)",
+      "japanese": "日语 (ja-JP)",
+      "english": "英语 (en-US)",
+      "custom": "自定义"
+    },
+    "player": {
+      "title": "播放器设置",
+      "playerSettings": "播放设置",
+      "playerSettingsDesc": "设置播放器相关参数",
+      "hardwareDecoding": "硬件解码",
+      "hardwareDecoder": "硬件解码器",
+      "hardwareDecoderDesc": "仅在硬件解码启用时生效",
+      "lowMemoryMode": "低内存模式",
+      "lowMemoryModeDesc": "禁用高级缓存以减少内存占用",
+      "lowLatencyAudio": "低延迟音频",
+      "lowLatencyAudioDesc": "启用 OpenSLES 音频输出以降低延时",
+      "superResolution": "超分辨率",
+      "autoJump": "自动跳转",
+      "autoJumpDesc": "跳转到上次播放位置",
+      "disableAnimations": "禁用动画",
+      "disableAnimationsDesc": "禁用播放器内的过渡动画",
+      "errorPrompt": "错误提示",
+      "errorPromptDesc": "显示播放器内部错误提示",
+      "debugMode": "调试模式",
+      "debugModeDesc": "记录播放器内部日志",
+      "privateMode": "隐身模式",
+      "privateModeDesc": "不保留观看记录",
+      "defaultPlaySpeed": "默认倍速",
+      "defaultVideoAspectRatio": "默认视频比例",
+      "danmakuSettings": "弹幕设置",
+      "danmakuSettingsDesc": "设置弹幕相关参数",
+      "danmaku": "弹幕",
+      "danmakuDefaultOn": "默认开启",
+      "danmakuDefaultOnDesc": "默认是否随视频播放弹幕",
+      "danmakuSource": "弹幕源",
+      "danmakuCredentials": "凭证",
+      "danmakuDanDanCredentials": "DanDan API 凭证",
+      "danmakuDanDanCredentialsDesc": "自定义 DanDan 凭证",
+      "danmakuShield": "弹幕屏蔽",
+      "danmakuKeywordShield": "关键词屏蔽",
+      "danmakuShieldDescription": "以\"/\"开头和结尾将视作正则表达式, 如\"/\\\\d+/\"表示屏蔽所有数字",
+      "danmakuShieldCount": "已添加{count}个关键词",
+      "danmakuStyle": "弹幕样式",
+      "danmakuDisplay": "弹幕显示",
+      "danmakuArea": "弹幕区域",
+      "danmakuTopDisplay": "顶部弹幕",
+      "danmakuBottomDisplay": "底部弹幕",
+      "danmakuScrollDisplay": "滚动弹幕",
+      "danmakuMassiveDisplay": "海量弹幕",
+      "danmakuFontSize": "字体大小",
+      "danmakuOpacity": "弹幕不透明度",
+      "add": "添加",
+      "save": "保存",
+      "restoreDefault": "恢复默认",
+      "superResolutionTitle": "超分辨率",
+      "superResolutionDefaultBehavior": "默认行为",
+      "superResolutionClosePrompt": "关闭提示",
+      "superResolutionClosePromptDesc": "关闭每次启用超分辨率时的提示"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "设置同步参数"
+    },
+    "other": {
+      "title": "其他",
+      "about": "关于"
+    }
+  },
+  "exitDialog": {
+    "title": "退出确认",
+    "message": "您想要退出 Kazumi 吗？",
+    "dontAskAgain": "下次不再询问",
+    "exit": "退出 Kazumi",
+    "minimize": "最小化至托盘",
+    "cancel": "取消"
+  },
+  "tray": {
+    "showWindow": "显示窗口",
+    "exit": "退出 Kazumi"
   }
 }

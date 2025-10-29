@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class ThemeState {
   final ThemeMode themeMode;
@@ -253,4 +254,63 @@ class MetadataSettingsNotifier extends Notifier<MetadataSettingsState> {
 final metadataSettingsProvider =
     NotifierProvider<MetadataSettingsNotifier, MetadataSettingsState>(
   MetadataSettingsNotifier.new,
+);
+
+// App Locale Settings Provider
+class LocaleSettingsState {
+  const LocaleSettingsState({
+    required this.appLocale,
+  });
+
+  final AppLocale appLocale;
+
+  LocaleSettingsState copyWith({
+    AppLocale? appLocale,
+  }) {
+    return LocaleSettingsState(
+      appLocale: appLocale ?? this.appLocale,
+    );
+  }
+}
+
+class LocaleSettingsNotifier extends Notifier<LocaleSettingsState> {
+  @override
+  LocaleSettingsState build() {
+    final String? savedLocale = GStorage.setting.get(
+      SettingBoxKey.appLocale,
+      defaultValue: '',
+    ) as String?;
+    
+    AppLocale initialLocale;
+    if (savedLocale == null || savedLocale.isEmpty) {
+      // Use system locale by default
+      initialLocale = AppLocale.zhCn; // Default to Chinese
+    } else {
+      initialLocale = AppLocaleUtils.findDeviceLocale().languageCode == savedLocale
+          ? AppLocaleUtils.findDeviceLocale()
+          : AppLocaleUtils.parse(savedLocale);
+    }
+    
+    return LocaleSettingsState(
+      appLocale: initialLocale,
+    );
+  }
+
+  Future<void> setLocale(AppLocale locale) async {
+    await GStorage.setting.put(SettingBoxKey.appLocale, locale.languageTag);
+    LocaleSettings.setLocale(locale);
+    state = state.copyWith(appLocale: locale);
+  }
+
+  Future<void> useSystemLocale() async {
+    await GStorage.setting.put(SettingBoxKey.appLocale, '');
+    final deviceLocale = AppLocaleUtils.findDeviceLocale();
+    LocaleSettings.setLocale(deviceLocale);
+    state = state.copyWith(appLocale: deviceLocale);
+  }
+}
+
+final localeSettingsProvider =
+    NotifierProvider<LocaleSettingsNotifier, LocaleSettingsState>(
+  LocaleSettingsNotifier.new,
 );

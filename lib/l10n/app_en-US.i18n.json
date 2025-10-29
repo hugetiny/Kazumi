@@ -35,8 +35,117 @@
     }
   },
   "settings": {
+    "title": "Settings",
     "metadata": "Metadata Source Settings",
     "downloads": "Download Settings",
-    "playback": "Playback Preferences"
+    "playback": "Playback Preferences",
+    "general": {
+      "title": "General",
+      "appearance": "Appearance",
+      "appearanceDesc": "Configure app theme and refresh rate",
+      "language": "App Language",
+      "languageDesc": "Choose the display language for the app interface",
+      "followSystem": "Follow System",
+      "exitBehavior": "On Close",
+      "exitApp": "Exit Kazumi",
+      "minimizeToTray": "Minimize to Tray",
+      "askEveryTime": "Ask Every Time"
+    },
+    "source": {
+      "title": "Source",
+      "ruleManagement": "Rule Management",
+      "ruleManagementDesc": "Manage anime resource rules",
+      "githubProxy": "GitHub Proxy",
+      "githubProxyDesc": "Use proxy to access rule repository"
+    },
+    "metadata": {
+      "title": "Metadata",
+      "enableBangumi": "Enable Bangumi Metadata",
+      "enableBangumiDesc": "Fetch anime information from Bangumi",
+      "enableTmdb": "Enable TMDb Metadata",
+      "enableTmdbDesc": "Supplement multilingual data from TMDb",
+      "preferredLanguage": "Preferred Language",
+      "preferredLanguageDesc": "Set the language for metadata synchronization",
+      "followSystemLanguage": "Follow System Language",
+      "simplifiedChinese": "Simplified Chinese (zh-CN)",
+      "traditionalChinese": "Traditional Chinese (zh-TW)",
+      "japanese": "Japanese (ja-JP)",
+      "english": "English (en-US)",
+      "custom": "Custom"
+    },
+    "player": {
+      "title": "Player Settings",
+      "playerSettings": "Player Settings",
+      "playerSettingsDesc": "Configure player parameters",
+      "hardwareDecoding": "Hardware Decoding",
+      "hardwareDecoder": "Hardware Decoder",
+      "hardwareDecoderDesc": "Only takes effect when hardware decoding is enabled",
+      "lowMemoryMode": "Low Memory Mode",
+      "lowMemoryModeDesc": "Disable advanced caching to reduce memory usage",
+      "lowLatencyAudio": "Low Latency Audio",
+      "lowLatencyAudioDesc": "Enable OpenSLES audio output to reduce latency",
+      "superResolution": "Super Resolution",
+      "autoJump": "Auto Jump",
+      "autoJumpDesc": "Jump to last playback position",
+      "disableAnimations": "Disable Animations",
+      "disableAnimationsDesc": "Disable transition animations in the player",
+      "errorPrompt": "Error Prompt",
+      "errorPromptDesc": "Show player internal error prompts",
+      "debugMode": "Debug Mode",
+      "debugModeDesc": "Log player internal logs",
+      "privateMode": "Private Mode",
+      "privateModeDesc": "Don't keep viewing history",
+      "defaultPlaySpeed": "Default Playback Speed",
+      "defaultVideoAspectRatio": "Default Video Aspect Ratio",
+      "danmakuSettings": "Danmaku Settings",
+      "danmakuSettingsDesc": "Configure danmaku parameters",
+      "danmaku": "Danmaku",
+      "danmakuDefaultOn": "Default On",
+      "danmakuDefaultOnDesc": "Whether to play danmaku with video by default",
+      "danmakuSource": "Danmaku Source",
+      "danmakuCredentials": "Credentials",
+      "danmakuDanDanCredentials": "DanDan API Credentials",
+      "danmakuDanDanCredentialsDesc": "Customize DanDan credentials",
+      "danmakuShield": "Danmaku Shield",
+      "danmakuKeywordShield": "Keyword Shield",
+      "danmakuShieldDescription": "Text starting and ending with \"/\" will be treated as regular expressions, e.g. \"/\\\\d+/\" blocks all numbers",
+      "danmakuShieldCount": "Added {count} keywords",
+      "danmakuStyle": "Danmaku Style",
+      "danmakuDisplay": "Danmaku Display",
+      "danmakuArea": "Danmaku Area",
+      "danmakuTopDisplay": "Top Danmaku",
+      "danmakuBottomDisplay": "Bottom Danmaku",
+      "danmakuScrollDisplay": "Scrolling Danmaku",
+      "danmakuMassiveDisplay": "Massive Danmaku",
+      "danmakuFontSize": "Font Size",
+      "danmakuOpacity": "Danmaku Opacity",
+      "add": "Add",
+      "save": "Save",
+      "restoreDefault": "Restore Default",
+      "superResolutionTitle": "Super Resolution",
+      "superResolutionDefaultBehavior": "Default Behavior",
+      "superResolutionClosePrompt": "Close Prompt",
+      "superResolutionClosePromptDesc": "Close the prompt when enabling super resolution"
+    },
+    "webdav": {
+      "title": "WebDAV",
+      "desc": "Configure sync parameters"
+    },
+    "other": {
+      "title": "Other",
+      "about": "About"
+    }
+  },
+  "exitDialog": {
+    "title": "Exit Confirmation",
+    "message": "Do you want to exit Kazumi?",
+    "dontAskAgain": "Don't ask again",
+    "exit": "Exit Kazumi",
+    "minimize": "Minimize to Tray",
+    "cancel": "Cancel"
+  },
+  "tray": {
+    "showWindow": "Show Window",
+    "exit": "Exit Kazumi"
   }
 }
