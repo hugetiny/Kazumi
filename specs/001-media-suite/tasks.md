@@ -21,8 +21,8 @@
 
 - [x] T001 Run `flutter pub get` from project root `.`
 - [x] T002 Execute `flutter pub run build_runner build --delete-conflicting-outputs` from `.`
-- [ ] T003 [P] Configure `slang.yaml` so Simplified Chinese is default and planned locales align with media suite scope
-- [ ] T004 [P] Update `specs/001-media-suite/quickstart.md` prerequisites to reflect Bangumi/TMDb credential setup and aria2 daemon instructions
+- [x] T003 [P] Configure `slang.yaml` so Simplified Chinese is default and planned locales align with media suite scope
+- [x] T004 [P] Update `specs/001-media-suite/quickstart.md` prerequisites to reflect Bangumi/TMDb credential setup and aria2 daemon instructions
 
 ---
 
@@ -75,13 +75,13 @@
 ### Tests for User Story 2 (Acceptance Evidence) ⚠️
 
 - [ ] T020 [P] [US2] Author playback smoke integration test in `test/integration/playback_smoke_test.dart`
-- [ ] T021 [P] [US2] Document platform playback checklist updates in `specs/001-media-suite/quickstart.md`
+- [x] T021 [P] [US2] Document platform playback checklist updates in `specs/001-media-suite/quickstart.md`
 
 ### Implementation for User Story 2
 
 - [ ] T022 [US2] Enhance playback state and controller in `lib/pages/player/player_state.dart` and `lib/pages/player/player_controller.dart`
 - [ ] T023 [US2] Update playback UI controls in `lib/pages/player/player_item.dart` and `lib/pages/player/player_providers.dart`
-- [ ] T024 [US2] Implement subtitle auto-match heuristics in `lib/modules/playback/subtitle_matcher.dart`
+- [x] T024 [US2] Implement subtitle auto-match heuristics in `lib/modules/playback/subtitle_matcher.dart`
 - [ ] T025 [US2] Expose danmaku/subtitle toggles in `lib/pages/settings/player_settings.dart` and `lib/pages/settings/providers.dart`
 - [ ] T026 [US2] Apply shader and danmaku platform guards in `lib/utils/platform_guard.dart` and `lib/pages/player/player_controller.dart`
 - [ ] T027 [US2] Surface DanDan credential overrides in `lib/pages/settings/danmaku/danmaku_settings.dart`, `lib/utils/storage.dart`, and `lib/request/interceptor.dart`

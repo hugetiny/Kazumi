@@ -1,0 +1,42 @@
+{
+  "@@locale": "en-US",
+  "app": {
+    "title": "Kazumi",
+    "loading": "Loading…",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "metadata": {
+    "sectionTitle": "Media Information",
+    "refresh": "Refresh Metadata",
+    "source": {
+      "bangumi": "Bangumi",
+      "tmdb": "TMDb"
+    },
+    "lastSynced": "Last synced: {timestamp}"
+  },
+  "downloads": {
+    "sectionTitle": "Download Queue",
+    "aria2Offline": "aria2 not connected",
+    "queued": "Queued",
+    "running": "Downloading",
+    "completed": "Completed"
+  },
+  "torrent": {
+    "consent": {
+      "title": "BitTorrent Usage Notice",
+      "description": "Before enabling BT downloads, please confirm compliance with local laws and understand the risks involved.",
+      "agree": "I understand, continue",
+      "decline": "Not now"
+    },
+    "error": {
+      "submit": "Unable to submit magnet link, please try again later"
+    }
+  },
+  "settings": {
+    "metadata": "Metadata Source Settings",
+    "downloads": "Download Settings",
+    "playback": "Playback Preferences"
+  }
+}
