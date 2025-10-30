@@ -6,6 +6,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/utils/aria2_process_manager.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:logger/logger.dart';
@@ -93,6 +94,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     trayManager.removeListener(this);
     windowManager.removeListener(this);
     WidgetsBinding.instance.removeObserver(this);
+    // Stop aria2 process when app is disposed
+    if (!Platform.isIOS) {
+      Aria2ProcessManager().stop();
+    }
     super.dispose();
   }
 
@@ -112,6 +117,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
       case 'show_window':
         windowManager.show();
       case 'exit':
+        // Stop aria2 before exit
+        if (!Platform.isIOS) {
+          Aria2ProcessManager().stop();
+        }
         exit(0);
     }
   }
@@ -126,6 +135,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
     switch (exitBehavior) {
       case 0:
+        // Stop aria2 before exit
+        if (!Platform.isIOS) {
+          Aria2ProcessManager().stop();
+        }
         exit(0);
       case 1:
         KazumiDialog.dismiss();
@@ -169,6 +182,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                   onPressed: () async {
                     if (saveExitBehavior) {
                       await setting.put(SettingBoxKey.exitBehavior, 0);
+                    }
+                    // Stop aria2 before exit
+                    if (!Platform.isIOS) {
+                      await Aria2ProcessManager().stop();
                     }
                     exit(0);
                   },

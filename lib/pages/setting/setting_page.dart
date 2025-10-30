@@ -10,6 +10,7 @@ import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/pages/webdav_editor/providers.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/utils/aria2_feature_manager.dart';
 
 class SettingPage extends ConsumerStatefulWidget {
   const SettingPage({super.key});
@@ -276,6 +277,21 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 ),
               ],
             ),
+            // Conditionally show download section if aria2 is available
+            if (Aria2FeatureManager().isAvailable)
+              SettingsSection(
+                title: const Text('下载'),
+                tiles: [
+                  SettingsTile.navigation(
+                    onPressed: (_) {
+                      context.push('/settings/download');
+                    },
+                    leading: const Icon(Icons.download),
+                    title: const Text('下载设置'),
+                    description: const Text('配置 aria2 下载参数'),
+                  ),
+                ],
+              ),
             SettingsSection(
               title: const Text('其他'),
               tiles: [

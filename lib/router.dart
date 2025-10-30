@@ -17,6 +17,7 @@ import 'package:kazumi/pages/settings/super_resolution_settings.dart';
 import 'package:kazumi/pages/settings/theme_settings_page.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_settings.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_shield_settings.dart';
+import 'package:kazumi/pages/settings/download/download_settings.dart';
 import 'package:kazumi/pages/timeline/timeline_page.dart';
 import 'package:kazumi/pages/video/video_page.dart';
 import 'package:kazumi/pages/plugin_editor/plugin_view_page.dart';
@@ -26,6 +27,7 @@ import 'package:kazumi/pages/webdav_editor/webdav_editor_page.dart';
 import 'package:kazumi/pages/webdav_editor/webdav_setting.dart';
 import 'package:kazumi/pages/logs/logs_page.dart';
 import 'package:kazumi/pages/history/history_page.dart';
+import 'package:kazumi/pages/download/download_page.dart';
 import 'package:kazumi/request/api.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
@@ -65,6 +67,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/my/history',
       builder: (context, state) => const HistoryPage(),
+    ),
+    GoRoute(
+      path: '/my/download',
+      builder: (context, state) => const DownloadPage(),
     ),
     GoRoute(
       path: '/video',
@@ -165,6 +171,10 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const PluginShopPage(),
             ),
           ],
+        ),
+        GoRoute(
+          path: 'download',
+          builder: (context, state) => const DownloadSettingsPage(),
         ),
         // TODO: Add other settings routes
       ],
