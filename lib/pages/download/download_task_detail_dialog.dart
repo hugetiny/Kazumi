@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kazumi/modules/download/download_task.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:open_filex/open_filex.dart';
 
-class DownloadTaskDetailDialog extends StatelessWidget {
+class DownloadTaskDetailDialog extends StatefulWidget {
   final DownloadTask task;
   final VoidCallback? onRetry;
   final VoidCallback? onOpenFile;
@@ -14,6 +16,66 @@ class DownloadTaskDetailDialog extends StatelessWidget {
     this.onRetry,
     this.onOpenFile,
   });
+
+  @override
+  State<DownloadTaskDetailDialog> createState() => _DownloadTaskDetailDialogState();
+}
+
+class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
+  bool _fileExists = false;
+  bool _checkingFile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFileExists();
+  }
+
+  Future<void> _checkFileExists() async {
+    if (widget.task.isComplete && widget.task.filePath.isNotEmpty) {
+      try {
+        final file = File(widget.task.filePath);
+        final exists = await file.exists();
+        if (mounted) {
+          setState(() {
+            _fileExists = exists;
+            _checkingFile = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _fileExists = false;
+            _checkingFile = false;
+          });
+        }
+      }
+    } else {
+      setState(() {
+        _checkingFile = false;
+      });
+    }
+  }
+
+  Future<void> _openFile() async {
+    if (!_fileExists || widget.task.filePath.isEmpty) {
+      KazumiDialog.showToast(message: '文件不存在或路径无效');
+      return;
+    }
+
+    try {
+      final result = await OpenFilex.open(widget.task.filePath);
+      if (result.type != ResultType.done) {
+        KazumiDialog.showToast(message: '无法打开文件: ${result.message}');
+      }
+    } on PlatformException catch (e) {
+      KazumiDialog.showToast(message: '打开文件失败: ${e.message}');
+    } catch (e) {
+      KazumiDialog.showToast(message: '打开文件时发生错误');
+    }
+  }
+
+  DownloadTask get task => widget.task;
 
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -68,6 +130,25 @@ class DownloadTaskDetailDialog extends StatelessWidget {
       default:
         return Colors.grey;
     }
+  }
+
+  String _shortenPath(String path) {
+    // Shorten very long paths for display
+    if (path.length <= 50) return path;
+    
+    // Try to show filename and parent directory
+    final parts = path.split(Platform.pathSeparator);
+    if (parts.length > 2) {
+      return '...${Platform.pathSeparator}${parts[parts.length - 2]}${Platform.pathSeparator}${parts.last}';
+    }
+    
+    // Fallback: show start and end
+    return '${path.substring(0, 20)}...${path.substring(path.length - 20)}';
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -163,6 +244,23 @@ class DownloadTaskDetailDialog extends StatelessWidget {
                       const SizedBox(height: 16),
                     ],
 
+                    // File path (for completed tasks)
+                    if (task.isComplete && task.filePath.isNotEmpty) ...[
+                      _buildSection(
+                        '文件路径',
+                        _shortenPath(task.filePath),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.copy, size: 18),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: task.filePath));
+                            KazumiDialog.showToast(message: '已复制路径');
+                          },
+                          tooltip: '复制路径',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     // URL
                     _buildSection(
                       'URL',
@@ -171,7 +269,7 @@ class DownloadTaskDetailDialog extends StatelessWidget {
                         icon: const Icon(Icons.copy, size: 18),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: task.url));
-                          KazumiDialog.showToast(message: '已复制到剪贴板');
+                          KazumiDialog.showToast(message: '已复制链接');
                         },
                         tooltip: '复制链接',
                       ),
@@ -236,24 +334,24 @@ class DownloadTaskDetailDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (task.isError && onRetry != null) ...[
+                  if (task.isError && widget.onRetry != null) ...[
                     FilledButton.icon(
                       icon: const Icon(Icons.refresh),
                       label: const Text('重试'),
                       onPressed: () {
                         Navigator.of(context).pop();
-                        onRetry?.call();
+                        widget.onRetry?.call();
                       },
                     ),
                     const SizedBox(width: 8),
                   ],
-                  if (task.isComplete && onOpenFile != null) ...[
+                  if (task.isComplete && !_checkingFile && _fileExists) ...[
                     FilledButton.icon(
                       icon: const Icon(Icons.folder_open),
                       label: const Text('打开文件'),
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.of(context).pop();
-                        onOpenFile?.call();
+                        await _openFile();
                       },
                     ),
                     const SizedBox(width: 8),
