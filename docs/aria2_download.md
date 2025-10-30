@@ -40,7 +40,7 @@ Kazumi 现已集成 aria2 下载管理功能，**自动管理 aria2 进程**，�
 
 ## 安装 aria2
 
-**重要**: Kazumi 会自动启动 aria2，您只需要安装 aria2 到系统即可。
+**重要**: Kazumi 会自动启动 aria2。
 
 ### Windows
 1. 从 [aria2 releases](https://github.com/aria2/aria2/releases) 下载最新版本
@@ -62,16 +62,21 @@ sudo yum install aria2
 ```
 
 ### Android
-通过 Termux 安装：
-```bash
-pkg install aria2
-```
+**无需安装！** Kazumi 已内置 aria2 二进制文件。
+
+**技术详情**:
+- Kazumi 将 aria2 二进制文件打包在应用中
+- 使用 Platform Channel 调用原生代码执行
+- 基于 aria2 1.37.0 官方构建 (aarch64-linux-android)
+- 包含静态链接的 OpenSSL、c-ares、libssh2 等库
 
 ## 使用方法
 
 ### 首次使用
 
-1. **安装 aria2**（参考上面的安装说明）
+1. **安装 aria2**
+   - **Android**: 无需安装，已内置 ✨
+   - **Desktop**: 参考上面的安装说明
 
 2. **启动 Kazumi**
    - Kazumi 会自动启动 aria2 进程
@@ -115,7 +120,9 @@ pkg install aria2
 ## 常见问题
 
 ### Q: 需要手动启动 aria2 吗？
-A: 不需要。Kazumi 会在启动时自动运行 aria2，退出时自动停止。您只需要确保 aria2 已安装在系统中。
+A: 不需要。Kazumi 会在启动时自动运行 aria2，退出时自动停止。
+- **Android**: 无需安装，内置二进制文件自动运行
+- **Desktop**: 需要安装 aria2 到系统
 
 ### Q: iOS 为什么不支持？
 A: iOS 系统限制不允许应用运行子进程，因此无法自动启动 aria2。
@@ -123,11 +130,13 @@ A: iOS 系统限制不允许应用运行子进程，因此无法自动启动 ari
 ### Q: 如何确认 aria2 正在运行？
 A: 在"设置 → 下载设置 → 进程管理"中点击"检查"按钮查看状态。
 
-### Q: aria2 找不到怎么办？
+### Q: Android 版本需要安装 aria2 吗？
+A: **不需要！** Android 版本已将 aria2 二进制文件打包在应用中，无需额外安装。应用会自动通过 Platform Channel 调用原生代码执行。
+
+### Q: Desktop 版本 aria2 找不到怎么办？
 A: 确保 aria2 已正确安装：
 - Windows: 将 aria2c.exe 所在目录添加到系统 PATH
 - macOS/Linux: 使用包管理器安装会自动配置 PATH
-- Android: 通过 Termux 安装
 
 ### Q: 为什么选择独立 aria2 而不是 libaria2？
 A: 独立 aria2 进程具有以下优势：
@@ -140,9 +149,10 @@ A: 独立 aria2 进程具有以下优势：
 A: 检查以下项目：
 1. 在设置中点击"检查"确认 aria2 是否运行
 2. 如果未运行，点击"重启"按钮
-3. 确认 aria2 已正确安装在系统中
-4. 端点地址是否正确（默认通常无需修改）
-5. 密钥配置是否正确
+3. **Desktop**: 确认 aria2 已正确安装在系统中
+4. **Android**: 确保应用有存储权限
+5. 端点地址是否正确（默认通常无需修改）
+6. 密钥配置是否正确
 
 ### Q: 应用重启后下载任务还在吗？
 A: 是的，所有下载任务都会保存在本地数据库中。应用重启后，Kazumi 会自动启动 aria2 并恢复任务状态。

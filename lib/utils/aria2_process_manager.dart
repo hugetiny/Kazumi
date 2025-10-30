@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/utils/aria2_android_channel.dart';
 import 'package:logger/logger.dart';
 
 /// Manages the aria2 process lifecycle for desktop and Android platforms.
 /// iOS is not supported as it cannot run subprocesses.
+/// On Android, uses bundled binary via platform channel.
 class Aria2ProcessManager {
   static final Aria2ProcessManager _instance = Aria2ProcessManager._internal();
   factory Aria2ProcessManager() => _instance;
@@ -19,15 +21,24 @@ class Aria2ProcessManager {
   bool get isRunning => _isRunning;
 
   /// Starts the aria2 process if it's not already running.
-  /// Only works on desktop (Windows, macOS, Linux) and Android platforms.
-  /// iOS is explicitly not supported.
+  /// On Android: Uses bundled binary via platform channel
+  /// On Desktop: Launches system aria2c binary
+  /// iOS: Not supported
   Future<bool> start() async {
     if (Platform.isIOS) {
       _logger.log(Level.warning, '[Aria2ProcessManager] iOS does not support subprocess execution');
       return false;
     }
 
-    if (_isRunning && _aria2Process != null) {
+    // Check if already running
+    if (Platform.isAndroid) {
+      final isRunning = await Aria2AndroidChannel.isAria2Running();
+      if (isRunning) {
+        _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running on Android');
+        _isRunning = true;
+        return true;
+      }
+    } else if (_isRunning && _aria2Process != null) {
       _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running');
       return true;
     }
@@ -61,6 +72,26 @@ class Aria2ProcessManager {
         args.add('--rpc-secret=$secret');
       }
 
+      // Android: Use platform channel with bundled binary
+      if (Platform.isAndroid) {
+        // Add Android-specific DNS configuration
+        args.add('--async-dns');
+        // Note: DNS servers will be configured dynamically by the native code if needed
+        
+        _logger.log(Level.info, '[Aria2ProcessManager] Starting aria2 on Android via platform channel');
+        _logger.log(Level.info, '[Aria2ProcessManager] Download directory: ${downloadsDir.path}');
+        
+        final success = await Aria2AndroidChannel.startAria2(args);
+        if (success) {
+          _isRunning = true;
+          _logger.log(Level.info, '[Aria2ProcessManager] aria2 started successfully on Android');
+        } else {
+          _logger.log(Level.error, '[Aria2ProcessManager] Failed to start aria2 on Android');
+        }
+        return success;
+      }
+
+      // Desktop: Use system aria2c binary
       // Try to find aria2c in PATH or common locations
       String? aria2Path = await _findAria2Binary();
       
@@ -109,7 +140,11 @@ class Aria2ProcessManager {
 
   /// Stops the aria2 process if it's running.
   Future<void> stop() async {
-    if (_aria2Process != null) {
+    if (Platform.isAndroid) {
+      _logger.log(Level.info, '[Aria2ProcessManager] Stopping aria2 on Android');
+      await Aria2AndroidChannel.stopAria2();
+      _isRunning = false;
+    } else if (_aria2Process != null) {
       _logger.log(Level.info, '[Aria2ProcessManager] Stopping aria2 process');
       _aria2Process!.kill();
       _aria2Process = null;
