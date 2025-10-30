@@ -4,11 +4,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/aria2_android_channel.dart';
+import 'package:kazumi/utils/aria2_ios_channel.dart';
+import 'package:kazumi/utils/aria2_feature_manager.dart';
 import 'package:logger/logger.dart';
 
-/// Manages the aria2 process lifecycle for desktop and Android platforms.
-/// iOS is not supported as it cannot run subprocesses.
-/// On Android, uses bundled binary via platform channel.
+/// Manages the aria2 process lifecycle for desktop, Android, and iOS platforms.
+/// On Android and iOS: Uses bundled binary via platform channel
+/// On Desktop: Launches system aria2c binary
 class Aria2ProcessManager {
   static final Aria2ProcessManager _instance = Aria2ProcessManager._internal();
   factory Aria2ProcessManager() => _instance;
@@ -22,23 +24,38 @@ class Aria2ProcessManager {
 
   /// Starts the aria2 process if it's not already running.
   /// On Android: Uses bundled binary via platform channel
+  /// On iOS: Uses bundled binary via platform channel (self-signed builds only)
   /// On Desktop: Launches system aria2c binary
-  /// iOS: Not supported
   Future<bool> start() async {
-    if (Platform.isIOS) {
-      _logger.log(Level.warning, '[Aria2ProcessManager] iOS does not support subprocess execution');
+    // Check if aria2 is available on this platform
+    final isAvailable = await Aria2FeatureManager().initialize();
+    if (!isAvailable) {
+      _logger.log(Level.warning, '[Aria2ProcessManager] aria2 is not available on this platform/build');
       return false;
     }
 
-    // Check if already running
-    if (Platform.isAndroid) {
+    // iOS: Use platform channel
+    if (Platform.isIOS) {
+      final isRunning = await Aria2IOSChannel.isAria2Running();
+      if (isRunning) {
+        _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running on iOS');
+        _isRunning = true;
+        return true;
+      }
+    }
+    
+    // Android: Use platform channel
+    else if (Platform.isAndroid) {
       final isRunning = await Aria2AndroidChannel.isAria2Running();
       if (isRunning) {
         _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running on Android');
         _isRunning = true;
         return true;
       }
-    } else if (_isRunning && _aria2Process != null) {
+    } 
+    
+    // Desktop: Check process
+    else if (_isRunning && _aria2Process != null) {
       _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running');
       return true;
     }
@@ -70,6 +87,21 @@ class Aria2ProcessManager {
 
       if (secret.isNotEmpty) {
         args.add('--rpc-secret=$secret');
+      }
+
+      // iOS: Use platform channel with bundled binary (self-signed builds only)
+      if (Platform.isIOS) {
+        _logger.log(Level.info, '[Aria2ProcessManager] Starting aria2 on iOS via platform channel');
+        _logger.log(Level.info, '[Aria2ProcessManager] Download directory: ${downloadsDir.path}');
+        
+        final success = await Aria2IOSChannel.startAria2(args);
+        if (success) {
+          _isRunning = true;
+          _logger.log(Level.info, '[Aria2ProcessManager] aria2 started successfully on iOS');
+        } else {
+          _logger.log(Level.error, '[Aria2ProcessManager] Failed to start aria2 on iOS');
+        }
+        return success;
       }
 
       // Android: Use platform channel with bundled binary
@@ -140,7 +172,11 @@ class Aria2ProcessManager {
 
   /// Stops the aria2 process if it's running.
   Future<void> stop() async {
-    if (Platform.isAndroid) {
+    if (Platform.isIOS) {
+      _logger.log(Level.info, '[Aria2ProcessManager] Stopping aria2 on iOS');
+      await Aria2IOSChannel.stopAria2();
+      _isRunning = false;
+    } else if (Platform.isAndroid) {
       _logger.log(Level.info, '[Aria2ProcessManager] Stopping aria2 on Android');
       await Aria2AndroidChannel.stopAria2();
       _isRunning = false;

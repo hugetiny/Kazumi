@@ -6,6 +6,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/utils/aria2_client.dart';
 import 'package:kazumi/utils/aria2_process_manager.dart';
 import 'package:kazumi/utils/aria2_updater.dart';
+import 'package:kazumi/utils/aria2_feature_manager.dart';
 import 'package:kazumi/utils/storage.dart';
 
 class DownloadSettingsPage extends StatefulWidget {
@@ -40,8 +41,14 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
 
   void _checkAria2Status() {
     if (Platform.isIOS) {
+      final isAvailable = Aria2FeatureManager().isAvailable;
       setState(() {
-        _aria2Status = 'iOS 不支持自动启动 aria2';
+        if (isAvailable) {
+          final isRunning = Aria2ProcessManager().isRunning;
+          _aria2Status = isRunning ? 'aria2 运行中（自签名版本）' : 'aria2 未运行（自签名版本）';
+        } else {
+          _aria2Status = 'iOS App Store 版本不支持 aria2\n请使用自签名 IPA 版本';
+        }
       });
     } else {
       final isRunning = Aria2ProcessManager().isRunning;
@@ -284,8 +291,8 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
   }
 
   Future<void> _restartAria2() async {
-    if (Platform.isIOS) {
-      KazumiDialog.showToast(message: 'iOS 不支持自动启动 aria2');
+    if (!Aria2FeatureManager().isAvailable) {
+      KazumiDialog.showToast(message: Aria2FeatureManager().getAvailabilityMessage());
       return;
     }
 
@@ -528,13 +535,19 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
             tiles: [
               SettingsTile(
                 title: const Text('如何安装 aria2'),
-                description: const Text(
-                  'aria2 是一个轻量级的多协议下载工具。\n\n'
-                  'Windows: 从 https://github.com/aria2/aria2/releases 下载并解压到系统 PATH\n'
-                  'macOS: brew install aria2\n'
-                  'Linux: sudo apt install aria2 或 sudo yum install aria2\n'
-                  'Android: 通过 Termux 安装\n\n'
-                  '注意：Kazumi 会自动启动和停止 aria2，无需手动运行',
+                description: Text(
+                  Platform.isIOS
+                      ? 'iOS 平台说明：\n\n'
+                        '• App Store 版本：不支持 aria2 功能\n'
+                        '• 自签名 IPA 版本：支持 aria2 功能（需要内置二进制文件）\n\n'
+                        '开发者注意：iOS 版本需要编译 aria2 并添加到应用包中。\n'
+                        '详见 docs/aria2_ios_setup.md'
+                      : 'aria2 是一个轻量级的多协议下载工具。\n\n'
+                        'Windows: 从 https://github.com/aria2/aria2/releases 下载并解压到系统 PATH\n'
+                        'macOS: brew install aria2\n'
+                        'Linux: sudo apt install aria2 或 sudo yum install aria2\n'
+                        'Android: 已内置二进制文件，无需安装\n\n'
+                        '注意：Kazumi 会自动启动和停止 aria2，无需手动运行',
                 ),
               ),
             ],
