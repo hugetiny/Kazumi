@@ -5,6 +5,7 @@ import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/utils/aria2_client.dart';
 import 'package:kazumi/utils/aria2_process_manager.dart';
+import 'package:kazumi/utils/aria2_updater.dart';
 import 'package:kazumi/utils/storage.dart';
 
 class DownloadSettingsPage extends StatefulWidget {
@@ -23,8 +24,12 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
 
   bool _isTestingConnection = false;
   bool _isRestartingAria2 = false;
+  bool _isCheckingUpdate = false;
+  bool _isDownloadingUpdate = false;
+  double _updateDownloadProgress = 0.0;
   String? _connectionStatus;
   String? _aria2Status;
+  Aria2UpdateInfo? _updateInfo;
 
   @override
   void initState() {
@@ -143,6 +148,139 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
         _isTestingConnection = false;
       });
     }
+  }
+
+  Future<void> _checkForUpdates() async {
+    if (!Platform.isAndroid) {
+      KazumiDialog.showToast(message: '自动更新仅支持 Android 平台');
+      return;
+    }
+
+    setState(() {
+      _isCheckingUpdate = true;
+      _updateInfo = null;
+    });
+
+    try {
+      final updateInfo = await Aria2Updater().checkForUpdates();
+      setState(() {
+        _isCheckingUpdate = false;
+        _updateInfo = updateInfo;
+      });
+
+      if (updateInfo == null) {
+        KazumiDialog.showToast(message: '检查更新失败');
+      } else if (!updateInfo.hasUpdate) {
+        KazumiDialog.showToast(message: '已是最新版本 ${updateInfo.currentVersion}');
+      } else {
+        _showUpdateDialog(updateInfo);
+      }
+    } catch (e) {
+      setState(() {
+        _isCheckingUpdate = false;
+      });
+      KazumiDialog.showToast(message: '检查更新失败: $e');
+    }
+  }
+
+  void _showUpdateDialog(Aria2UpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('发现新版本'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('当前版本: ${updateInfo.currentVersion}'),
+            Text('最新版本: ${updateInfo.latestVersion}'),
+            if (updateInfo.releaseNotes != null) ...[
+              const SizedBox(height: 16),
+              const Text('更新说明:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: SingleChildScrollView(
+                  child: Text(updateInfo.releaseNotes!),
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _installUpdate(updateInfo);
+            },
+            child: const Text('立即更新'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _installUpdate(Aria2UpdateInfo updateInfo) async {
+    setState(() {
+      _isDownloadingUpdate = true;
+      _updateDownloadProgress = 0.0;
+    });
+
+    try {
+      final success = await Aria2Updater().downloadAndInstall(
+        updateInfo.downloadUrl,
+        onProgress: (progress) {
+          setState(() {
+            _updateDownloadProgress = progress;
+          });
+        },
+      );
+
+      setState(() {
+        _isDownloadingUpdate = false;
+      });
+
+      if (success) {
+        _showRestartDialog();
+      } else {
+        KazumiDialog.showToast(message: '更新下载失败');
+      }
+    } catch (e) {
+      setState(() {
+        _isDownloadingUpdate = false;
+      });
+      KazumiDialog.showToast(message: '更新安装失败: $e');
+    }
+  }
+
+  void _showRestartDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('更新成功'),
+        content: const Text('aria2 已更新，需要重启应用才能生效。'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('稍后重启'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // Restart the app
+              exit(0);
+            },
+            child: const Text('立即重启'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _restartAria2() async {
@@ -333,6 +471,55 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
                     '退出应用时会自动停止 aria2 进程',
                   ),
                   leading: const Icon(Icons.play_circle_outline),
+                ),
+              ],
+            ),
+          if (Platform.isAndroid)
+            SettingsSection(
+              title: const Text('aria2 更新'),
+              tiles: [
+                SettingsTile(
+                  title: const Text('检查更新'),
+                  description: _updateInfo != null
+                      ? Text(_updateInfo!.hasUpdate
+                          ? '发现新版本: ${_updateInfo!.latestVersion}'
+                          : '当前版本: ${_updateInfo!.currentVersion} (最新)')
+                      : const Text('检查 aria2 是否有新版本可用'),
+                  leading: const Icon(Icons.system_update),
+                  trailing: _isCheckingUpdate
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : ElevatedButton.icon(
+                          onPressed: _checkForUpdates,
+                          icon: const Icon(Icons.refresh, size: 16),
+                          label: const Text('检查更新'),
+                        ),
+                ),
+                if (_isDownloadingUpdate)
+                  SettingsTile(
+                    title: const Text('下载更新'),
+                    description: Text(
+                      '下载进度: ${(_updateDownloadProgress * 100).toStringAsFixed(1)}%',
+                    ),
+                    leading: const Icon(Icons.download),
+                    trailing: SizedBox(
+                      width: 200,
+                      child: LinearProgressIndicator(
+                        value: _updateDownloadProgress,
+                      ),
+                    ),
+                  ),
+                SettingsTile(
+                  title: const Text('自动更新说明'),
+                  description: const Text(
+                    'Android 版本支持自动更新内置的 aria2 二进制文件\n'
+                    '更新会从 GitHub releases 下载最新版本\n'
+                    '支持使用 GitHub 镜像加速下载',
+                  ),
+                  leading: const Icon(Icons.info_outline),
                 ),
               ],
             ),

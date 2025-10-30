@@ -17,6 +17,8 @@ class DownloadPage extends ConsumerStatefulWidget {
 class _DownloadPageState extends ConsumerState<DownloadPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _isSelectionMode = false;
+  final Set<String> _selectedGids = {};
 
   @override
   void initState() {
@@ -28,6 +30,38 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _toggleSelectionMode() {
+    setState(() {
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedGids.clear();
+      }
+    });
+  }
+
+  void _toggleSelection(String gid) {
+    setState(() {
+      if (_selectedGids.contains(gid)) {
+        _selectedGids.remove(gid);
+      } else {
+        _selectedGids.add(gid);
+      }
+    });
+  }
+
+  void _selectAll(List<DownloadTask> tasks) {
+    setState(() {
+      _selectedGids.clear();
+      _selectedGids.addAll(tasks.map((t) => t.gid));
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedGids.clear();
+    });
   }
 
   void _onBackPressed(BuildContext context) {
@@ -52,6 +86,32 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     return '${_formatFileSize(bytesPerSecond)}/s';
   }
 
+  void _showDeleteConfirmDialog(BuildContext context, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('确认删除'),
+        content: const Text('确定要删除选中的下载任务吗？此操作不可撤销。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onConfirm();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final downloadState = ref.watch(downloadControllerProvider);
@@ -67,24 +127,151 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
       },
       child: Scaffold(
         appBar: SysAppBar(
-          title: const Text('下载管理'),
+          title: _isSelectionMode
+              ? Text('已选择 ${_selectedGids.length} 项')
+              : const Text('下载管理'),
           needTopOffset: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () {
-                context.push('/settings/download');
-              },
-              tooltip: '下载设置',
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () {
-                downloadController.refreshDownloads();
-              },
-              tooltip: '刷新',
-            ),
-          ],
+          leading: _isSelectionMode
+              ? IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: _toggleSelectionMode,
+                )
+              : null,
+          actions: _isSelectionMode
+              ? [
+                  IconButton(
+                    icon: const Icon(Icons.select_all),
+                    onPressed: () {
+                      final allTasks = [
+                        ...downloadState.activeTasks,
+                        ...downloadState.waitingTasks,
+                        ...downloadState.completedTasks,
+                      ];
+                      _selectAll(allTasks);
+                    },
+                    tooltip: '全选',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.play_arrow),
+                    onPressed: _selectedGids.isEmpty
+                        ? null
+                        : () {
+                            downloadController.resumeSelected(_selectedGids.toList());
+                            _toggleSelectionMode();
+                          },
+                    tooltip: '继续',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.pause),
+                    onPressed: _selectedGids.isEmpty
+                        ? null
+                        : () {
+                            downloadController.pauseSelected(_selectedGids.toList());
+                            _toggleSelectionMode();
+                          },
+                    tooltip: '暂停',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: _selectedGids.isEmpty
+                        ? null
+                        : () {
+                            _showDeleteConfirmDialog(
+                              context,
+                              () {
+                                downloadController.deleteSelected(_selectedGids.toList());
+                                _toggleSelectionMode();
+                              },
+                            );
+                          },
+                    tooltip: '删除',
+                  ),
+                ]
+              : [
+                  IconButton(
+                    icon: const Icon(Icons.checklist),
+                    onPressed: _toggleSelectionMode,
+                    tooltip: '批量管理',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    onPressed: () {
+                      context.push('/settings/download');
+                    },
+                    tooltip: '下载设置',
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      downloadController.refreshDownloads();
+                    },
+                    tooltip: '刷新',
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert),
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'pause_all':
+                          downloadController.pauseAll();
+                          break;
+                        case 'resume_all':
+                          downloadController.resumeAll();
+                          break;
+                        case 'clear_completed':
+                          downloadController.clearCompleted();
+                          break;
+                        case 'delete_all':
+                          _showDeleteConfirmDialog(
+                            context,
+                            () => downloadController.deleteAll(),
+                          );
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'pause_all',
+                        child: Row(
+                          children: [
+                            Icon(Icons.pause),
+                            SizedBox(width: 8),
+                            Text('暂停全部'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'resume_all',
+                        child: Row(
+                          children: [
+                            Icon(Icons.play_arrow),
+                            SizedBox(width: 8),
+                            Text('继续全部'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'clear_completed',
+                        child: Row(
+                          children: [
+                            Icon(Icons.clear_all),
+                            SizedBox(width: 8),
+                            Text('清除已完成'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete_all',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_forever, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('删除全部', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
           bottom: TabBar(
             controller: _tabController,
             tabs: [
@@ -305,26 +492,48 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadController controller, {
     required bool isActive,
   }) {
+    final isSelected = _selectedGids.contains(task.gid);
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    task.title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+      color: isSelected 
+          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+          : null,
+      child: InkWell(
+        onTap: _isSelectionMode
+            ? () => _toggleSelection(task.gid)
+            : null,
+        onLongPress: !_isSelectionMode
+            ? () {
+                _toggleSelectionMode();
+                _toggleSelection(task.gid);
+              }
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  if (_isSelectionMode) ...[
+                    Checkbox(
+                      value: isSelected,
+                      onChanged: (value) => _toggleSelection(task.gid),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                _buildStatusChip(context, task),
-              ],
-            ),
+                  _buildStatusChip(context, task),
+                ],
+              ),
             if (task.fileName != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -372,39 +581,41 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (task.isActive)
+            if (!_isSelectionMode) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (task.isActive)
+                    TextButton.icon(
+                      onPressed: () => controller.pauseDownload(task.gid),
+                      icon: const Icon(Icons.pause),
+                      label: const Text('暂停'),
+                    ),
+                  if (task.isPaused)
+                    TextButton.icon(
+                      onPressed: () => controller.resumeDownload(task.gid),
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text('继续'),
+                    ),
+                  if (task.isError)
+                    TextButton.icon(
+                      onPressed: () => controller.resumeDownload(task.gid),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('重试'),
+                    ),
                   TextButton.icon(
-                    onPressed: () => controller.pauseDownload(task.gid),
-                    icon: const Icon(Icons.pause),
-                    label: const Text('暂停'),
+                    onPressed: () =>
+                        controller.removeDownload(task.gid, force: true),
+                    icon: const Icon(Icons.delete),
+                    label: const Text('删除'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                if (task.isPaused)
-                  TextButton.icon(
-                    onPressed: () => controller.resumeDownload(task.gid),
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('继续'),
-                  ),
-                if (task.isError)
-                  TextButton.icon(
-                    onPressed: () => controller.resumeDownload(task.gid),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('重试'),
-                  ),
-                TextButton.icon(
-                  onPressed: () =>
-                      controller.removeDownload(task.gid, force: true),
-                  icon: const Icon(Icons.delete),
-                  label: const Text('删除'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

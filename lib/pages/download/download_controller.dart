@@ -282,6 +282,117 @@ class DownloadController extends StateNotifier<DownloadState> {
     }
   }
 
+  /// Pause all active downloads
+  Future<void> pauseAll() async {
+    if (_aria2Client == null) return;
+
+    try {
+      await _aria2Client!.pauseAll();
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Pause all failed: $e');
+      state = state.copyWith(errorMessage: '全部暂停失败');
+    }
+  }
+
+  /// Resume all paused downloads
+  Future<void> resumeAll() async {
+    if (_aria2Client == null) return;
+
+    try {
+      await _aria2Client!.resumeAll();
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Resume all failed: $e');
+      state = state.copyWith(errorMessage: '全部恢复失败');
+    }
+  }
+
+  /// Delete all tasks (both active and completed)
+  Future<void> deleteAll({bool force = true}) async {
+    if (_aria2Client == null) return;
+
+    try {
+      // Remove all active downloads
+      for (var task in [...state.activeTasks, ...state.waitingTasks]) {
+        try {
+          await _aria2Client!.remove(task.gid, force: force);
+        } catch (e) {
+          _logger.log(Level.warning, '[DownloadController] Failed to remove ${task.gid}: $e');
+        }
+      }
+
+      // Purge completed
+      await _aria2Client!.purgeCompleted();
+
+      // Clear storage
+      await GStorage.downloadTasks.clear();
+
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Delete all failed: $e');
+      state = state.copyWith(errorMessage: '全部删除失败');
+    }
+  }
+
+  /// Pause selected downloads
+  Future<void> pauseSelected(List<String> gids) async {
+    if (_aria2Client == null) return;
+
+    try {
+      for (var gid in gids) {
+        try {
+          await _aria2Client!.pause(gid);
+        } catch (e) {
+          _logger.log(Level.warning, '[DownloadController] Failed to pause $gid: $e');
+        }
+      }
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Pause selected failed: $e');
+      state = state.copyWith(errorMessage: '批量暂停失败');
+    }
+  }
+
+  /// Resume selected downloads
+  Future<void> resumeSelected(List<String> gids) async {
+    if (_aria2Client == null) return;
+
+    try {
+      for (var gid in gids) {
+        try {
+          await _aria2Client!.resume(gid);
+        } catch (e) {
+          _logger.log(Level.warning, '[DownloadController] Failed to resume $gid: $e');
+        }
+      }
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Resume selected failed: $e');
+      state = state.copyWith(errorMessage: '批量恢复失败');
+    }
+  }
+
+  /// Delete selected downloads
+  Future<void> deleteSelected(List<String> gids, {bool force = true}) async {
+    if (_aria2Client == null) return;
+
+    try {
+      for (var gid in gids) {
+        try {
+          await _aria2Client!.remove(gid, force: force);
+          await GStorage.downloadTasks.delete(gid);
+        } catch (e) {
+          _logger.log(Level.warning, '[DownloadController] Failed to delete $gid: $e');
+        }
+      }
+      await refreshDownloads();
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Delete selected failed: $e');
+      state = state.copyWith(errorMessage: '批量删除失败');
+    }
+  }
+
   @override
   void dispose() {
     _syncTimer?.cancel();
