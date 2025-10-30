@@ -6,6 +6,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
 import 'package:kazumi/pages/download/providers.dart';
 import 'package:kazumi/modules/download/download_task.dart';
+import 'package:kazumi/pages/download/download_task_detail_dialog.dart';
 
 class DownloadPage extends ConsumerStatefulWidget {
   const DownloadPage({super.key});
@@ -19,6 +20,10 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
   late TabController _tabController;
   bool _isSelectionMode = false;
   final Set<String> _selectedGids = {};
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _sortBy = 'created'; // created, name, size, speed, progress
+  bool _sortAscending = false;
 
   @override
   void initState() {
@@ -29,6 +34,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -312,6 +318,11 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
                   ],
                 ),
               ),
+            // Statistics banner (only show when downloading)
+            if (downloadState.isConnected && downloadState.totalDownloading > 0)
+              _buildStatisticsBanner(context, downloadState),
+            // Search and sort options
+            _buildSearchAndSort(context, downloadController),
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -343,12 +354,174 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     );
   }
 
+  Widget _buildStatisticsBanner(BuildContext context, DownloadState state) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.speed,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '总速度: ${_formatSpeed(state.totalDownloadSpeed)}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSecondaryContainer,
+                      ),
+                ),
+                if (state.estimatedRemainingSeconds > 0)
+                  Text(
+                    '预计剩余: ${_formatDuration(state.estimatedRemainingSeconds)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSecondaryContainer,
+                        ),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            '${state.totalDownloading} 个任务',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndSort(BuildContext context, DownloadController controller) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: '搜索任务名称...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchController.clear();
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.sort),
+            tooltip: '排序',
+            onSelected: (value) {
+              setState(() {
+                if (_sortBy == value) {
+                  _sortAscending = !_sortAscending;
+                } else {
+                  _sortBy = value;
+                  _sortAscending = false;
+                }
+              });
+            },
+            itemBuilder: (context) => [
+              _buildSortMenuItem(context, 'created', '创建时间'),
+              _buildSortMenuItem(context, 'name', '名称'),
+              _buildSortMenuItem(context, 'size', '文件大小'),
+              _buildSortMenuItem(context, 'speed', '下载速度'),
+              _buildSortMenuItem(context, 'progress', '进度'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildSortMenuItem(
+    BuildContext context,
+    String value,
+    String label,
+  ) {
+    final isSelected = _sortBy == value;
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          if (isSelected)
+            Icon(
+              _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 16,
+            ),
+          if (isSelected) const SizedBox(width: 4),
+          Text(
+            label,
+            style: isSelected
+                ? TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  )
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds < 60) return '$seconds 秒';
+    if (seconds < 3600) return '${seconds ~/ 60} 分钟';
+    final hours = seconds ~/ 3600;
+    final mins = (seconds % 3600) ~/ 60;
+    if (mins == 0) return '$hours 小时';
+    return '$hours 小时 $mins 分钟';
+  }
+
   Widget _buildDownloadingList(
     BuildContext context,
     DownloadState state,
     DownloadController controller,
   ) {
-    final tasks = [...state.activeTasks, ...state.waitingTasks];
+    var tasks = [...state.activeTasks, ...state.waitingTasks];
+    
+    // Apply search
+    if (_searchQuery.isNotEmpty) {
+      tasks = controller.searchTasks(_searchQuery)
+          .where((t) => t.isDownloading)
+          .toList();
+    }
+    
+    // Apply sort
+    tasks = controller.sortTasks(tasks, _sortBy, ascending: _sortAscending);
 
     if (tasks.isEmpty) {
       return Center(
@@ -362,7 +535,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无下载任务',
+              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无下载任务',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -386,7 +559,19 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadState state,
     DownloadController controller,
   ) {
-    if (state.completedTasks.isEmpty) {
+    var tasks = List<DownloadTask>.from(state.completedTasks);
+    
+    // Apply search
+    if (_searchQuery.isNotEmpty) {
+      tasks = controller.searchTasks(_searchQuery)
+          .where((t) => t.isComplete || t.isError)
+          .toList();
+    }
+    
+    // Apply sort
+    tasks = controller.sortTasks(tasks, _sortBy, ascending: _sortAscending);
+    
+    if (tasks.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -398,7 +583,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无已完成任务',
+              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无已完成任务',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -427,9 +612,9 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: state.completedTasks.length,
+            itemCount: tasks.length,
             itemBuilder: (context, index) {
-              final task = state.completedTasks[index];
+              final task = tasks[index];
               return _buildDownloadItem(context, task, controller,
                   isActive: false);
             },
@@ -444,11 +629,19 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadState state,
     DownloadController controller,
   ) {
-    final allTasks = [
+    var allTasks = [
       ...state.activeTasks,
       ...state.waitingTasks,
       ...state.completedTasks,
     ];
+    
+    // Apply search
+    if (_searchQuery.isNotEmpty) {
+      allTasks = controller.searchTasks(_searchQuery);
+    }
+    
+    // Apply sort
+    allTasks = controller.sortTasks(allTasks, _sortBy, ascending: _sortAscending);
 
     if (allTasks.isEmpty) {
       return Center(
@@ -462,7 +655,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
             ),
             const SizedBox(height: 16),
             Text(
-              '暂无任务',
+              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无任务',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -502,7 +695,24 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
       child: InkWell(
         onTap: _isSelectionMode
             ? () => _toggleSelection(task.gid)
-            : null,
+            : () {
+                // Show detail dialog when not in selection mode
+                showDialog(
+                  context: context,
+                  builder: (context) => DownloadTaskDetailDialog(
+                    task: task,
+                    onRetry: task.isError ? () async {
+                      await controller.retryDownload(task);
+                      if (context.mounted) {
+                        KazumiDialog.showToast(message: '已重新添加到下载队列');
+                      }
+                    } : null,
+                    onOpenFile: task.isComplete && task.fileName != null ? () {
+                      KazumiDialog.showToast(message: '文件位置: ${task.fileName}');
+                    } : null,
+                  ),
+                );
+              },
         onLongPress: !_isSelectionMode
             ? () {
                 _toggleSelectionMode();

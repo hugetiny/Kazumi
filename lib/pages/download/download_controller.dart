@@ -43,6 +43,25 @@ class DownloadState {
 
   int get totalDownloading => activeTasks.length + waitingTasks.length;
   int get totalCompleted => completedTasks.length;
+  int get totalFailed => completedTasks.where((t) => t.isError).length;
+  
+  // Calculate total download speed
+  int get totalDownloadSpeed {
+    return activeTasks.fold(0, (sum, task) => sum + task.downloadSpeed);
+  }
+  
+  // Calculate total remaining bytes
+  int get totalRemainingBytes {
+    return activeTasks.fold(0, (sum, task) {
+      return sum + (task.totalLength - task.completedLength);
+    });
+  }
+  
+  // Estimate total remaining time in seconds
+  int get estimatedRemainingSeconds {
+    if (totalDownloadSpeed == 0) return 0;
+    return totalRemainingBytes ~/ totalDownloadSpeed;
+  }
 }
 
 class DownloadController extends StateNotifier<DownloadState> {
@@ -391,6 +410,95 @@ class DownloadController extends StateNotifier<DownloadState> {
       _logger.log(Level.error, '[DownloadController] Delete selected failed: $e');
       state = state.copyWith(errorMessage: '批量删除失败');
     }
+  }
+
+  /// Retry a failed download
+  Future<void> retryDownload(DownloadTask task) async {
+    if (_aria2Client == null) return;
+
+    try {
+      // First remove the failed task
+      try {
+        await _aria2Client!.remove(task.gid, force: true);
+      } catch (e) {
+        // Ignore removal errors, task might already be removed
+        _logger.log(Level.info, '[DownloadController] Failed to remove before retry: $e');
+      }
+
+      // Re-add the download
+      await addDownload(
+        task.url,
+        title: task.title,
+        bangumiId: task.bangumiId,
+        episodeNumber: task.episodeNumber,
+      );
+
+      // Delete old task from storage
+      await GStorage.downloadTasks.delete(task.gid);
+
+      _logger.log(Level.info, '[DownloadController] Retrying download: ${task.title}');
+    } catch (e) {
+      _logger.log(Level.error, '[DownloadController] Retry failed: $e');
+      state = state.copyWith(errorMessage: '重试失败: $e');
+    }
+  }
+
+  /// Get all tasks (for search/filter purposes)
+  List<DownloadTask> getAllTasks() {
+    return [
+      ...state.activeTasks,
+      ...state.waitingTasks,
+      ...state.completedTasks,
+    ];
+  }
+
+  /// Filter tasks by status
+  List<DownloadTask> filterByStatus(String status) {
+    return getAllTasks().where((t) => t.status == status).toList();
+  }
+
+  /// Search tasks by title
+  List<DownloadTask> searchTasks(String query) {
+    if (query.isEmpty) return getAllTasks();
+    final lowerQuery = query.toLowerCase();
+    return getAllTasks()
+        .where((t) => t.title.toLowerCase().contains(lowerQuery))
+        .toList();
+  }
+
+  /// Sort tasks by various criteria
+  List<DownloadTask> sortTasks(
+    List<DownloadTask> tasks,
+    String sortBy, {
+    bool ascending = true,
+  }) {
+    final sorted = List<DownloadTask>.from(tasks);
+
+    switch (sortBy) {
+      case 'name':
+        sorted.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case 'size':
+        sorted.sort((a, b) => a.totalLength.compareTo(b.totalLength));
+        break;
+      case 'speed':
+        sorted.sort((a, b) => a.downloadSpeed.compareTo(b.downloadSpeed));
+        break;
+      case 'progress':
+        sorted.sort((a, b) => a.progress.compareTo(b.progress));
+        break;
+      case 'created':
+        sorted.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        break;
+      case 'updated':
+        sorted.sort((a, b) => a.updatedAt.compareTo(b.updatedAt));
+        break;
+      default:
+        // Default: sort by creation time (newest first)
+        sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    }
+
+    return ascending ? sorted : sorted.reversed.toList();
   }
 
   @override
