@@ -240,6 +240,7 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
     try {
       final success = await Aria2Updater().downloadAndInstall(
         updateInfo.downloadUrl,
+        updateInfo.archiveType,
         onProgress: (progress) {
           setState(() {
             _updateDownloadProgress = progress;

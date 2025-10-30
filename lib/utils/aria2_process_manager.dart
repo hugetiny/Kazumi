@@ -196,7 +196,19 @@ class Aria2ProcessManager {
   }
 
   /// Finds the aria2c binary in PATH or common locations.
+  /// First checks for updated binary, then falls back to system binary.
   Future<String?> _findAria2Binary() async {
+    // First check if there's an updated binary available
+    try {
+      final updatedPath = await _getUpdatedBinaryPath();
+      if (updatedPath != null) {
+        _logger.log(Level.info, '[Aria2ProcessManager] Using updated binary: $updatedPath');
+        return updatedPath;
+      }
+    } catch (e) {
+      _logger.log(Level.warning, '[Aria2ProcessManager] Could not check for updated binary: $e');
+    }
+
     // Try to run aria2c directly (will work if it's in PATH)
     try {
       if (Platform.isWindows) {
@@ -232,6 +244,34 @@ class Aria2ProcessManager {
       }
     }
 
+    return null;
+  }
+
+  /// Gets the updated binary path if available (from Aria2Updater).
+  Future<String?> _getUpdatedBinaryPath() async {
+    try {
+      String updateDirPath;
+      if (Platform.isWindows) {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}\\aria2_update';
+      } else {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      }
+      
+      final binaryName = Platform.isWindows ? 'aria2c.exe' : 'aria2c';
+      final binaryPath = Platform.isWindows
+          ? '$updateDirPath\\$binaryName'
+          : '$updateDirPath/$binaryName';
+      final binaryFile = File(binaryPath);
+      
+      if (await binaryFile.exists()) {
+        return binaryPath;
+      }
+    } catch (e) {
+      _logger.log(Level.debug, '[Aria2ProcessManager] No updated binary found: $e');
+    }
+    
     return null;
   }
 

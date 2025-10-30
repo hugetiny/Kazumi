@@ -7,7 +7,8 @@ import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 
-/// Manages aria2 binary updates for Android platform
+/// Manages aria2 binary updates for all platforms (except iOS)
+/// Supports: Android (ZIP), Windows (ZIP), macOS (TAR.BZ2/TAR.GZ), Linux (TAR.BZ2/TAR.GZ)
 class Aria2Updater {
   static final Aria2Updater _instance = Aria2Updater._internal();
   factory Aria2Updater() => _instance;
@@ -24,8 +25,9 @@ class Aria2Updater {
 
   /// Check for aria2 updates
   Future<Aria2UpdateInfo?> checkForUpdates() async {
-    if (!Platform.isAndroid) {
-      _logger.log(Level.info, '[Aria2Updater] Update check only supported on Android');
+    // iOS not supported (subprocess restrictions)
+    if (Platform.isIOS) {
+      _logger.log(Level.info, '[Aria2Updater] Update check not supported on iOS');
       return null;
     }
 
@@ -52,20 +54,47 @@ class Aria2Updater {
         final data = response.data;
         final latestVersion = (data['tag_name'] as String).replaceAll('release-', '');
         
-        // Find Android ARM64 asset
+        // Find platform-specific asset
         final assets = data['assets'] as List;
         String? downloadUrl;
+        String archiveType = 'zip';
         
         for (var asset in assets) {
           final name = asset['name'] as String;
-          if (name.contains('aarch64-linux-android') && name.endsWith('.zip')) {
-            downloadUrl = asset['browser_download_url'] as String;
-            break;
+          
+          if (Platform.isAndroid) {
+            // Android: aarch64-linux-android.zip
+            if (name.contains('aarch64-linux-android') && name.endsWith('.zip')) {
+              downloadUrl = asset['browser_download_url'] as String;
+              archiveType = 'zip';
+              break;
+            }
+          } else if (Platform.isWindows) {
+            // Windows: win-64bit-build.zip
+            if (name.contains('win-64bit') && name.endsWith('.zip')) {
+              downloadUrl = asset['browser_download_url'] as String;
+              archiveType = 'zip';
+              break;
+            }
+          } else if (Platform.isMacOS) {
+            // macOS: osx-darwin.tar.bz2
+            if (name.contains('osx-darwin') && (name.endsWith('.tar.bz2') || name.endsWith('.tar.gz'))) {
+              downloadUrl = asset['browser_download_url'] as String;
+              archiveType = name.endsWith('.tar.bz2') ? 'tar.bz2' : 'tar.gz';
+              break;
+            }
+          } else if (Platform.isLinux) {
+            // Linux: linux-gnu-64bit.tar.bz2
+            if (name.contains('linux-gnu-64bit') && (name.endsWith('.tar.bz2') || name.endsWith('.tar.gz'))) {
+              downloadUrl = asset['browser_download_url'] as String;
+              archiveType = name.endsWith('.tar.bz2') ? 'tar.bz2' : 'tar.gz';
+              break;
+            }
           }
         }
 
         if (downloadUrl == null) {
-          _logger.log(Level.warning, '[Aria2Updater] No Android ARM64 asset found');
+          _logger.log(Level.warning, '[Aria2Updater] No compatible asset found for current platform');
           return null;
         }
 
@@ -83,6 +112,7 @@ class Aria2Updater {
           latestVersion: latestVersion,
           hasUpdate: hasUpdate,
           downloadUrl: downloadUrl,
+          archiveType: archiveType,
           releaseNotes: data['body'] as String?,
         );
       }
@@ -95,11 +125,11 @@ class Aria2Updater {
   }
 
   /// Download and install aria2 update
-  Future<bool> downloadAndInstall(String downloadUrl, {
+  Future<bool> downloadAndInstall(String downloadUrl, String archiveType, {
     Function(double progress)? onProgress,
   }) async {
-    if (!Platform.isAndroid) {
-      _logger.log(Level.warning, '[Aria2Updater] Update only supported on Android');
+    if (Platform.isIOS) {
+      _logger.log(Level.warning, '[Aria2Updater] Update not supported on iOS');
       return false;
     }
 
@@ -108,11 +138,13 @@ class Aria2Updater {
 
       // Download to temporary location
       final tempDir = await getTemporaryDirectory();
-      final zipPath = '${tempDir.path}/aria2_update.zip';
+      final extension = archiveType == 'tar.bz2' ? '.tar.bz2' : 
+                       archiveType == 'tar.gz' ? '.tar.gz' : '.zip';
+      final archivePath = '${tempDir.path}/aria2_update$extension';
       
       await _dio.download(
         downloadUrl,
-        zipPath,
+        archivePath,
         onReceiveProgress: (received, total) {
           if (total != -1 && onProgress != null) {
             onProgress(received / total);
@@ -125,50 +157,100 @@ class Aria2Updater {
 
       _logger.log(Level.info, '[Aria2Updater] Download complete, extracting...');
 
-      // Extract zip
-      final bytes = File(zipPath).readAsBytesSync();
-      final archive = ZipDecoder().decodeBytes(bytes);
+      // Extract archive based on type
+      List<int>? binaryData;
+      
+      if (archiveType == 'zip') {
+        // Extract ZIP (Android, Windows)
+        final bytes = File(archivePath).readAsBytesSync();
+        final archive = ZipDecoder().decodeBytes(bytes);
 
-      // Find aria2c binary in archive
-      ArchiveFile? aria2cFile;
-      for (final file in archive) {
-        if (file.name.endsWith('aria2c') && !file.isDirectory) {
-          aria2cFile = file;
-          break;
+        // Find aria2c binary in archive
+        for (final file in archive) {
+          final fileName = file.name.toLowerCase();
+          if ((fileName.endsWith('aria2c') || fileName.endsWith('aria2c.exe')) && !file.isDirectory) {
+            binaryData = file.content as List<int>;
+            break;
+          }
+        }
+      } else if (archiveType == 'tar.bz2' || archiveType == 'tar.gz') {
+        // Extract TAR (macOS, Linux)
+        final bytes = File(archivePath).readAsBytesSync();
+        
+        // First decompress
+        List<int> decompressed;
+        if (archiveType == 'tar.bz2') {
+          decompressed = BZip2Decoder().decodeBytes(bytes);
+        } else {
+          decompressed = GZipDecoder().decodeBytes(bytes);
+        }
+        
+        // Then extract tar
+        final archive = TarDecoder().decodeBytes(decompressed);
+        
+        // Find aria2c binary in archive
+        for (final file in archive) {
+          final fileName = file.name.toLowerCase();
+          if (fileName.endsWith('aria2c') && !file.isDirectory) {
+            binaryData = file.content as List<int>;
+            break;
+          }
         }
       }
 
-      if (aria2cFile == null) {
+      if (binaryData == null) {
         _logger.log(Level.error, '[Aria2Updater] aria2c binary not found in archive');
         return false;
       }
 
-      // Write to assets location (this will be used on next app start)
-      // For Android, we can't update the APK assets, so we store it in a location
-      // that the app will check on startup
-      final appDir = await getApplicationDocumentsDirectory();
-      final updateDir = Directory('${appDir.path}/aria2_update');
+      // Determine storage location based on platform
+      String updateDirPath;
+      if (Platform.isAndroid) {
+        // Android: app documents directory
+        final appDir = await getApplicationDocumentsDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      } else if (Platform.isWindows) {
+        // Windows: app data directory
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}\\aria2_update';
+      } else {
+        // macOS/Linux: app support directory
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      }
+
+      final updateDir = Directory(updateDirPath);
       if (!await updateDir.exists()) {
         await updateDir.create(recursive: true);
       }
 
-      final newBinaryPath = '${updateDir.path}/aria2c';
-      final newBinaryFile = File(newBinaryPath);
-      await newBinaryFile.writeAsBytes(aria2cFile.content as List<int>);
+      // Determine binary name based on platform
+      final binaryName = Platform.isWindows ? 'aria2c.exe' : 'aria2c';
+      final newBinaryPath = Platform.isWindows 
+          ? '$updateDirPath\\$binaryName'
+          : '$updateDirPath/$binaryName';
       
-      // Set executable permission
-      await Process.run('chmod', ['755', newBinaryPath]);
+      final newBinaryFile = File(newBinaryPath);
+      await newBinaryFile.writeAsBytes(binaryData);
+      
+      // Set executable permission (Unix-like systems)
+      if (!Platform.isWindows) {
+        await Process.run('chmod', ['755', newBinaryPath]);
+      }
 
       // Save version info
-      final versionFile = File('${updateDir.path}/version.txt');
+      final versionFilePath = Platform.isWindows
+          ? '$updateDirPath\\version.txt'
+          : '$updateDirPath/version.txt';
+      final versionFile = File(versionFilePath);
       await versionFile.writeAsString((downloadUrl.contains('release-') 
           ? downloadUrl.split('release-')[1].split('/')[0]
           : 'updated'));
 
-      _logger.log(Level.info, '[Aria2Updater] Update installed successfully');
+      _logger.log(Level.info, '[Aria2Updater] Update installed successfully to: $newBinaryPath');
 
       // Clean up
-      await File(zipPath).delete();
+      await File(archivePath).delete();
 
       return true;
     } catch (e, stackTrace) {
@@ -213,9 +295,22 @@ class Aria2Updater {
   /// Check if there's a pending update that needs app restart
   Future<bool> hasPendingUpdate() async {
     try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final updateDir = Directory('${appDir.path}/aria2_update');
-      final versionFile = File('${updateDir.path}/version.txt');
+      String updateDirPath;
+      if (Platform.isAndroid) {
+        final appDir = await getApplicationDocumentsDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      } else if (Platform.isWindows) {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}\\aria2_update';
+      } else {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      }
+      
+      final versionFilePath = Platform.isWindows
+          ? '$updateDirPath\\version.txt'
+          : '$updateDirPath/version.txt';
+      final versionFile = File(versionFilePath);
       
       return await versionFile.exists();
     } catch (e) {
@@ -226,8 +321,22 @@ class Aria2Updater {
   /// Get the updated binary path if available
   Future<String?> getUpdatedBinaryPath() async {
     try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final binaryPath = '${appDir.path}/aria2_update/aria2c';
+      String updateDirPath;
+      if (Platform.isAndroid) {
+        final appDir = await getApplicationDocumentsDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      } else if (Platform.isWindows) {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}\\aria2_update';
+      } else {
+        final appDir = await getApplicationSupportDirectory();
+        updateDirPath = '${appDir.path}/aria2_update';
+      }
+      
+      final binaryName = Platform.isWindows ? 'aria2c.exe' : 'aria2c';
+      final binaryPath = Platform.isWindows
+          ? '$updateDirPath\\$binaryName'
+          : '$updateDirPath/$binaryName';
       final binaryFile = File(binaryPath);
       
       if (await binaryFile.exists()) {
@@ -247,6 +356,7 @@ class Aria2UpdateInfo {
   final String latestVersion;
   final bool hasUpdate;
   final String downloadUrl;
+  final String archiveType; // 'zip', 'tar.gz', or 'tar.bz2'
   final String? releaseNotes;
 
   Aria2UpdateInfo({
@@ -254,6 +364,7 @@ class Aria2UpdateInfo {
     required this.latestVersion,
     required this.hasUpdate,
     required this.downloadUrl,
+    required this.archiveType,
     this.releaseNotes,
   });
 }
