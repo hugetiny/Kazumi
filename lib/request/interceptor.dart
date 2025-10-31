@@ -5,8 +5,8 @@ import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:kazumi/utils/utils.dart';
-import 'package:kazumi/utils/mortis.dart';
 import 'package:kazumi/utils/constants.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class ApiInterceptor extends Interceptor {
   static Box setting = GStorage.setting;
@@ -22,16 +22,19 @@ class ApiInterceptor extends Interceptor {
     }
     if (options.path.contains(Api.dandanAPIDomain)) {
       var timestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      final String appId = GStorage.readDanDanAppId();
       options.headers = {
         'user-agent': Utils.getRandomUA(),
         'referer': '',
         'X-Auth': 1,
-        'X-AppId': mortis['id'],
+        'X-AppId': appId,
         'X-Timestamp': timestamp,
-        'X-Signature': Utils.generateDandanSignature(Uri.parse(options.path).path, timestamp),
+        'X-Signature': Utils.generateDandanSignature(
+            Uri.parse(options.path).path, timestamp),
       };
     }
-    if (options.path.contains(Api.bangumiAPIDomain) || options.path.contains(Api.bangumiAPINextDomain)) {
+    if (options.path.contains(Api.bangumiAPIDomain) ||
+        options.path.contains(Api.bangumiAPINextDomain)) {
       options.headers = bangumiHTTPHeader;
     }
     handler.next(options);
@@ -61,46 +64,48 @@ class ApiInterceptor extends Interceptor {
   }
 
   static Future<String> dioError(DioException error) async {
+    final errorTexts = t.network.error;
     switch (error.type) {
       case DioExceptionType.badCertificate:
-        return '证书有误！';
+        return errorTexts.badCertificate;
       case DioExceptionType.badResponse:
-        return '服务器异常，请稍后重试！';
+        return errorTexts.badResponse;
       case DioExceptionType.cancel:
-        return '请求已被取消，请重新请求';
+        return errorTexts.cancel;
       case DioExceptionType.connectionError:
-        return '连接错误，请检查网络设置';
+        return errorTexts.connection;
       case DioExceptionType.connectionTimeout:
-        return '网络连接超时，请检查网络设置';
+        return errorTexts.connectionTimeout;
       case DioExceptionType.receiveTimeout:
-        return '响应超时，请稍后重试！';
+        return errorTexts.receiveTimeout;
       case DioExceptionType.sendTimeout:
-        return '发送请求超时，请检查网络设置';
+        return errorTexts.sendTimeout;
       case DioExceptionType.unknown:
-        final String res = await checkConnect();
-        return '$res 网络异常';
+  final String res = await checkConnect();
+  return errorTexts.unknown.replaceFirst('{status}', res);
     }
   }
 
   static Future<String> checkConnect() async {
+    final statusTexts = t.network.status;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.mobile)) {
-      return '正在使用移动流量';
+      return statusTexts.mobile;
     }
     if (connectivityResult.contains(ConnectivityResult.wifi)) {
-      return '正在使用wifi';
+      return statusTexts.wifi;
     }
     if (connectivityResult.contains(ConnectivityResult.ethernet)) {
-      return '正在使用局域网';
+      return statusTexts.ethernet;
     }
     if (connectivityResult.contains(ConnectivityResult.vpn)) {
-      return '正在使用代理网络';
+      return statusTexts.vpn;
     }
     if (connectivityResult.contains(ConnectivityResult.other)) {
-      return '正在使用其他网络';
+      return statusTexts.other;
     }
     if (connectivityResult.contains(ConnectivityResult.none)) {
-      return '未连接到任何网络';
+      return statusTexts.none;
     }
     return '';
   }

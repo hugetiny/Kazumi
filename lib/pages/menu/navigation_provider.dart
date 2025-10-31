@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
 
 class NavigationBarStateData {
   final int selectedIndex;
@@ -25,8 +24,9 @@ class NavigationBarStateData {
   }
 }
 
-class NavigationBarController extends SafeStateNotifier<NavigationBarStateData> {
-  NavigationBarController() : super(const NavigationBarStateData());
+class NavigationBarController extends Notifier<NavigationBarStateData> {
+  @override
+  NavigationBarStateData build() => const NavigationBarStateData();
 
   void updateSelectedIndex(int index) {
     if (state.selectedIndex == index) return;
@@ -50,6 +50,6 @@ class NavigationBarController extends SafeStateNotifier<NavigationBarStateData> 
 }
 
 final navigationBarControllerProvider =
-    StateNotifierProvider<NavigationBarController, NavigationBarStateData>(
-  (ref) => NavigationBarController(),
+    NotifierProvider<NavigationBarController, NavigationBarStateData>(
+  NavigationBarController.new,
 );

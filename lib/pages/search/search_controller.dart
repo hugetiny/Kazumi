@@ -4,7 +4,7 @@ import 'package:kazumi/utils/search_parser.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/modules/search/search_history_module.dart';
 import 'package:hive/hive.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SearchPageState {
   final bool isLoading;
@@ -34,18 +34,23 @@ class SearchPageState {
   }
 }
 
-class SearchPageController extends SafeStateNotifier<SearchPageState> {
+class SearchPageController extends Notifier<SearchPageState> {
   final Box setting = GStorage.setting;
   final Box searchHistoryBox = GStorage.searchHistory;
 
-  SearchPageController() : super(const SearchPageState());
+  @override
+  SearchPageState build() {
+    return SearchPageState(searchHistories: _loadHistories());
+  }
+
+  List<SearchHistory> _loadHistories() {
+    final temp = searchHistoryBox.values.toList().cast<SearchHistory>()
+      ..sort((a, b) => b.timestamp - a.timestamp);
+    return List<SearchHistory>.unmodifiable(temp);
+  }
 
   void loadSearchHistories() {
-    var temp = searchHistoryBox.values.toList().cast<SearchHistory>();
-    temp.sort(
-      (a, b) => b.timestamp - a.timestamp,
-    );
-    state = state.copyWith(searchHistories: temp);
+    state = state.copyWith(searchHistories: _loadHistories());
   }
 
   /// Avaliable sort parameters:

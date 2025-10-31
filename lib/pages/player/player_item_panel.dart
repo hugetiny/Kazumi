@@ -7,6 +7,7 @@ import 'package:kazumi/bean/appbar/drag_to_move_bar.dart' as dtb;
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/pages/player/player_controller.dart';
 import 'package:kazumi/pages/player/player_providers.dart';
 import 'package:kazumi/pages/player/player_state.dart';
@@ -83,19 +84,30 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
   }
 
   Future<void> _handleScreenshot() async {
-    KazumiDialog.showToast(message: '截图中...');
+    final t = context.t;
+    KazumiDialog.showToast(message: t.playback.toast.screenshotProcessing);
     try {
       Uint8List? screenshot =
           await playerController.screenshot(format: 'image/png');
       final result = await SaverGallery.saveImage(screenshot!,
           fileName: DateTime.timestamp().toString(), skipIfExists: false);
       if (result.isSuccess) {
-        KazumiDialog.showToast(message: '截图保存到相簿成功');
+        KazumiDialog.showToast(message: t.playback.toast.screenshotSaved);
       } else {
-        KazumiDialog.showToast(message: '截图保存失败：${result.errorMessage}');
+        KazumiDialog.showToast(
+          message: t.playback.toast.screenshotSaveFailed.replaceFirst(
+            '{error}',
+            result.errorMessage ?? '',
+          ),
+        );
       }
     } catch (e) {
-      KazumiDialog.showToast(message: '截图失败：$e');
+      KazumiDialog.showToast(
+        message: t.playback.toast.screenshotError.replaceFirst(
+          '{error}',
+          '$e',
+        ),
+      );
     }
   }
 
@@ -112,7 +124,22 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
     return buffer.toString();
   }
 
+  String _buildSeekStatusText(PlayerState playerState) {
+    final t = context.t;
+    final diffSeconds =
+        (playerState.currentPosition - playerController.playerPosition)
+            .inSeconds
+            .abs();
+    final template =
+        playerState.currentPosition.compareTo(playerController.playerPosition) >
+                0
+            ? t.playback.controls.status.fastForward
+            : t.playback.controls.status.rewind;
+    return template.replaceFirst('{seconds}', diffSeconds.toString());
+  }
+
   Widget buildDanmakuTextField(PlayerState playerState) {
+    final t = context.t;
     return Container(
       constraints: Utils.isDesktop()
           ? const BoxConstraints(maxWidth: 500, maxHeight: 33)
@@ -129,7 +156,9 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
           filled: true,
           fillColor: Colors.white38,
           floatingLabelBehavior: FloatingLabelBehavior.never,
-          hintText: playerState.danmakuOn ? '发个友善的弹幕见证当下' : '已关闭弹幕',
+          hintText: playerState.danmakuOn
+              ? t.playback.danmaku.inputHint
+              : t.playback.danmaku.inputDisabled,
           hintStyle: TextStyle(
               fontSize: Utils.isDesktop() ? 15 : 13, color: Colors.white60),
           alignLabelWithHint: true,
@@ -157,7 +186,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                 borderRadius: BorderRadius.circular(Utils.isDesktop() ? 8 : 20),
               ),
             ),
-            child: const Text('发送'),
+            child: Text(t.playback.danmaku.send),
           ),
         ),
         onTapAlwaysCalled: true,
@@ -187,10 +216,11 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
 
   // 选择倍速
   void showSetSpeedSheet() {
+    final t = context.t;
     final double currentSpeed = playerController.playerSpeed;
     KazumiDialog.show(builder: (context) {
       return AlertDialog(
-        title: const Text('播放速度'),
+        title: Text(t.playback.controls.speed.title),
         content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
           return Wrap(
@@ -222,7 +252,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
             child: Text(
-              '取消',
+              t.app.cancel,
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -231,7 +261,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
               await widget.setPlaybackSpeed(1.0);
               KazumiDialog.dismiss();
             },
-            child: const Text('默认速度'),
+            child: Text(t.playback.controls.speed.reset),
           ),
         ],
       );
@@ -239,10 +269,11 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
   }
 
   void showForwardChange() {
+    final t = context.t;
     KazumiDialog.show(builder: (context) {
       String input = "";
       return AlertDialog(
-        title: const Text('跳过秒数'),
+        title: Text(t.playback.controls.skip.title),
         content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
           return TextField(
@@ -263,7 +294,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
             child: Text(
-              '取消',
+              t.app.cancel,
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -276,7 +307,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                 KazumiDialog.dismiss();
               }
             },
-            child: const Text('确定'),
+            child: Text(t.app.confirm),
           ),
         ],
       );
@@ -312,8 +343,9 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
   }
 
   Widget forwardIcon() {
+    final t = context.t;
     return Tooltip(
-      message: '长按修改时间',
+      message: t.playback.controls.skip.tooltip,
       child: GestureDetector(
         onLongPress: () => showForwardChange(),
         child: IconButton(
@@ -335,6 +367,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerControllerProvider);
     final videoState = ref.watch(videoControllerProvider);
+    final t = context.t;
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -439,11 +472,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           borderRadius: BorderRadius.circular(8.0), // 圆角
                         ),
                         child: Text(
-                          playerState.currentPosition.compareTo(
-                                      playerController.playerPosition) >
-                                  0
-                              ? '快进 ${playerState.currentPosition.inSeconds - playerController.playerPosition.inSeconds} 秒'
-                              : '快退 ${playerController.playerPosition.inSeconds - playerState.currentPosition.inSeconds} 秒',
+                          _buildSeekStatusText(playerState),
                           style: const TextStyle(
                             color: Colors.white,
                           ),
@@ -465,12 +494,13 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8.0), // 圆角
                         ),
-                        child: const Row(
+                        child: Row(
                           children: <Widget>[
-                            Icon(Icons.fast_forward, color: Colors.white),
+                            const Icon(Icons.fast_forward, color: Colors.white),
+                            const SizedBox(width: 4),
                             Text(
-                              ' 倍速播放',
-                              style: TextStyle(
+                              t.playback.controls.status.speed,
+                              style: const TextStyle(
                                 color: Colors.white,
                               ),
                             ),
@@ -597,6 +627,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
     PlayerState playerState,
     VideoPageState videoState,
   ) {
+    final t = context.t;
     final svgString = danmakuOnSvg.replaceFirst(
       '00AEEC',
       Theme.of(context)
@@ -606,6 +637,16 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
           .toRadixString(16)
           .substring(2),
     );
+    final superResolutionOptions = <String>[
+      t.playback.controls.superResolution.off,
+      t.playback.controls.superResolution.balanced,
+      t.playback.controls.superResolution.quality,
+    ];
+    final aspectRatioLabels = <int, String>{
+      1: t.playback.controls.aspectRatio.options.auto,
+      2: t.playback.controls.aspectRatio.options.crop,
+      3: t.playback.controls.aspectRatio.options.stretch,
+    };
     return SafeArea(
       top: false,
       bottom: videoState.isFullscreen,
@@ -692,13 +733,17 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                         if (videoState.roadList.isEmpty ||
                             videoState.currentRoad >=
                                 videoState.roadList.length) {
-                          KazumiDialog.showToast(message: '播放列表为空');
+                          KazumiDialog.showToast(
+                            message: t.playback.toast.playlistEmpty,
+                          );
                           return;
                         }
                         final road =
                             videoState.roadList[videoState.currentRoad];
                         if (videoState.currentEpisode >= road.data.length) {
-                          KazumiDialog.showToast(message: '已经是最新一集');
+                          KazumiDialog.showToast(
+                            message: t.playback.toast.episodeLatest,
+                          );
                           return;
                         }
                         final nextIdentifier =
@@ -706,7 +751,8 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                                 ? road.identifier[videoState.currentEpisode]
                                 : '${videoState.currentEpisode + 1}';
                         KazumiDialog.showToast(
-                          message: '正在加载$nextIdentifier',
+                          message: t.playback.toast.loadingEpisode
+                              .replaceFirst('{identifier}', nextIdentifier),
                         );
                         widget.changeEpisode(
                           videoState.currentEpisode + 1,
@@ -750,8 +796,8 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                                         ),
                                   onPressed: widget.handleDanmaku,
                                   tooltip: playerState.danmakuOn
-                                      ? '关闭弹幕(d)'
-                                      : '打开弹幕(d)',
+                                      ? t.playback.controls.tooltips.danmakuOn
+                                      : t.playback.controls.tooltips.danmakuOff,
                                 ),
                                 IconButton(
                                   onPressed: () {
@@ -809,7 +855,9 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                               height: 24,
                             ),
                       onPressed: widget.handleDanmaku,
-                      tooltip: playerState.danmakuOn ? '关闭弹幕(d)' : '打开弹幕(d)',
+                      tooltip: playerState.danmakuOn
+                          ? t.playback.controls.tooltips.danmakuOn
+                          : t.playback.controls.tooltips.danmakuOff,
                     ),
                     if (playerState.danmakuOn) ...[
                       IconButton(
@@ -866,9 +914,9 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                             controller.open();
                           }
                         },
-                        child: const Text(
-                          '超分辨率',
-                          style: TextStyle(color: Colors.white),
+                        child: Text(
+                          t.playback.controls.superResolution.label,
+                          style: const TextStyle(color: Colors.white),
                         ),
                       );
                     },
@@ -882,11 +930,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              index + 1 == 1
-                                  ? '关闭'
-                                  : index + 1 == 2
-                                      ? '效率档'
-                                      : '质量档',
+                              superResolutionOptions[index],
                               style: TextStyle(
                                 color:
                                     playerState.superResolutionType == index + 1
@@ -922,7 +966,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                         },
                         child: Text(
                           playerState.playerSpeed == 1.0
-                              ? '倍速'
+                              ? t.playback.controls.speedMenu.label
                               : '${playerState.playerSpeed}x',
                           style: const TextStyle(color: Colors.white),
                         ),
@@ -976,7 +1020,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           Icons.aspect_ratio_rounded,
                           color: Colors.white,
                         ),
-                        tooltip: '视频比例',
+                        tooltip: t.playback.controls.aspectRatio.label,
                       );
                     },
                     menuChildren: [
@@ -989,7 +1033,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                entry.value,
+                                aspectRatioLabels[entry.key] ?? entry.value,
                                 style: TextStyle(
                                   color: entry.key ==
                                           playerState.aspectRatioType
@@ -1141,21 +1185,21 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                 menuChildren: [
                   MenuItemButton(
                     onPressed: widget.showDanmakuSwitch,
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 48,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('弹幕切换'),
+                        child: Text(t.playback.controls.menu.danmakuToggle),
                       ),
                     ),
                   ),
                   MenuItemButton(
                     onPressed: widget.showVideoInfo,
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 48,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('视频详情'),
+                        child: Text(t.playback.controls.menu.videoInfo),
                       ),
                     ),
                   ),
@@ -1173,21 +1217,21 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                         }
                       });
                     },
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 48,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('远程投屏'),
+                        child: Text(t.playback.controls.menu.cast),
                       ),
                     ),
                   ),
                   MenuItemButton(
                     onPressed: playerController.lanunchExternalPlayer,
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 48,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('外部播放'),
+                        child: Text(t.playback.controls.menu.external),
                       ),
                     ),
                   ),
@@ -1199,7 +1243,12 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              "当前房间: ${playerState.syncplayRoom.isEmpty ? '未加入' : playerState.syncplayRoom}",
+                              t.playback.controls.syncplay.room.replaceFirst(
+                                '{name}',
+                                playerState.syncplayRoom.isEmpty
+                                    ? t.playback.controls.syncplay.roomEmpty
+                                    : playerState.syncplayRoom,
+                              ),
                             ),
                           ),
                         ),
@@ -1210,28 +1259,33 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              "网络延时: ${playerState.syncplayClientRtt}ms",
+                              t.playback.controls.syncplay.latency.replaceFirst(
+                                '{ms}',
+                                playerState.syncplayClientRtt.toString(),
+                              ),
                             ),
                           ),
                         ),
                       ),
                       MenuItemButton(
                         onPressed: widget.showSyncPlayRoomCreateDialog,
-                        child: const SizedBox(
+                        child: SizedBox(
                           height: 48,
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text('加入房间'),
+                            child: Text(t.playback.controls.syncplay.join),
                           ),
                         ),
                       ),
                       MenuItemButton(
                         onPressed: widget.showSyncPlayEndPointSwitchDialog,
-                        child: const SizedBox(
+                        child: SizedBox(
                           height: 48,
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text('切换服务器'),
+                            child: Text(
+                              t.playback.controls.syncplay.switchServer,
+                            ),
                           ),
                         ),
                       ),
@@ -1239,20 +1293,22 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
                         onPressed: () async {
                           await playerController.exitSyncPlayRoom();
                         },
-                        child: const SizedBox(
+                        child: SizedBox(
                           height: 48,
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Text('断开连接'),
+                            child: Text(
+                              t.playback.controls.syncplay.disconnect,
+                            ),
                           ),
                         ),
                       ),
                     ],
-                    child: const SizedBox(
+                    child: SizedBox(
                       height: 48,
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: Text('一起看'),
+                        child: Text(t.playback.controls.syncplay.label),
                       ),
                     ),
                   ),

@@ -9,6 +9,7 @@ import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class PluginViewPage extends ConsumerStatefulWidget {
   const PluginViewPage({super.key});
@@ -27,18 +28,23 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
   final Set<String> selectedNames = {};
 
   Future<void> _handleUpdate() async {
-    KazumiDialog.showLoading(msg: '更新中');
+    final pluginTexts = context.t.settings.plugins;
+    KazumiDialog.showLoading(msg: pluginTexts.loading.updating);
     int count = await pluginsController.tryUpdateAllPlugin();
     KazumiDialog.dismiss();
     if (count == 0) {
-      KazumiDialog.showToast(message: '所有规则已是最新');
+      KazumiDialog.showToast(message: pluginTexts.toast.allUpToDate);
     } else {
-      KazumiDialog.showToast(message: '更新成功 $count 条');
+      KazumiDialog.showToast(
+        message: pluginTexts.toast.updateCount
+            .replaceFirst('{count}', count.toString()),
+      );
     }
   }
 
   void _handleAdd() {
     KazumiDialog.show(builder: (context) {
+      final pluginTexts = context.t.settings.plugins;
       return AlertDialog(
         // contentPadding: EdgeInsets.zero, // 设置为零以减小内边距
         content: SingleChildScrollView(
@@ -47,7 +53,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
             mainAxisSize: MainAxisSize.min, // 设置为MainAxisSize.min以减小高度
             children: [
               ListTile(
-                title: const Text('新建规则'),
+                title: Text(pluginTexts.actions.newRule),
                 onTap: () {
                   KazumiDialog.dismiss();
                   context.push(
@@ -58,7 +64,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
               ),
               const SizedBox(height: 10),
               ListTile(
-                title: const Text('从规则仓库导入'),
+                title: Text(pluginTexts.actions.importFromRepo),
                 onTap: () {
                   KazumiDialog.dismiss();
                   context.push('/settings/plugin/shop');
@@ -66,7 +72,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
               ),
               const SizedBox(height: 10),
               ListTile(
-                title: const Text('从剪贴板导入'),
+                title: Text(pluginTexts.actions.importFromClipboard),
                 onTap: () {
                   KazumiDialog.dismiss();
                   _showInputDialog();
@@ -82,8 +88,9 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
   void _showInputDialog() {
     final TextEditingController textController = TextEditingController();
     KazumiDialog.show(builder: (context) {
+      final pluginTexts = context.t.settings.plugins;
       return AlertDialog(
-        title: const Text('导入规则'),
+        title: Text(pluginTexts.dialogs.importTitle),
         content: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
           return TextField(
@@ -94,7 +101,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
             child: Text(
-              '取消',
+              pluginTexts.actions.cancel,
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -106,14 +113,18 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 try {
                   pluginsController.updatePlugin(Plugin.fromJson(
                       json.decode(Utils.kazumiBase64ToJson(msg))));
-                  KazumiDialog.showToast(message: '导入成功');
+                  KazumiDialog.showToast(
+                      message: pluginTexts.toast.importSuccess);
                 } catch (e) {
                   KazumiDialog.dismiss();
-                  KazumiDialog.showToast(message: '导入失败 ${e.toString()}');
+                  KazumiDialog.showToast(
+                    message: pluginTexts.toast.importFailed
+                        .replaceFirst('{error}', e.toString()),
+                  );
                 }
                 KazumiDialog.dismiss();
               },
-              child: const Text('导入'),
+              child: Text(pluginTexts.actions.import),
             );
           })
         ],
@@ -139,6 +150,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {});
     final pluginsState = ref.watch(pluginsControllerProvider);
     final pluginList = pluginsState.pluginList;
+    final pluginTexts = context.t.settings.plugins;
     return PopScope(
       canPop: !isMultiSelectMode,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -154,8 +166,13 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
       child: Scaffold(
         appBar: SysAppBar(
           title: isMultiSelectMode
-              ? Text('已选择 ${selectedNames.length} 项')
-              : const Text('规则管理'),
+              ? Text(
+                  pluginTexts.multiSelect.selectedCount.replaceFirst(
+                    '{count}',
+                    selectedNames.length.toString(),
+                  ),
+                )
+              : Text(pluginTexts.title),
           leading: isMultiSelectMode
               ? IconButton(
                   icon: const Icon(Icons.close),
@@ -175,14 +192,18 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                     : () {
                         KazumiDialog.show(
                           builder: (context) => AlertDialog(
-                            title: const Text('删除规则'),
-                            content:
-                                Text('确定要删除选中的 ${selectedNames.length} 条规则吗？'),
+                            title: Text(pluginTexts.dialogs.deleteTitle),
+                            content: Text(
+                              pluginTexts.dialogs.deleteMessage.replaceFirst(
+                                '{count}',
+                                selectedNames.length.toString(),
+                              ),
+                            ),
                             actions: [
                               TextButton(
                                 onPressed: () => KazumiDialog.dismiss(),
                                 child: Text(
-                                  '取消',
+                                  pluginTexts.actions.cancel,
                                   style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme
@@ -199,7 +220,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                                   });
                                   KazumiDialog.dismiss();
                                 },
-                                child: const Text('删除'),
+                                child: Text(pluginTexts.actions.delete),
                               ),
                             ],
                           ),
@@ -212,22 +233,22 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 onPressed: () {
                   _handleUpdate();
                 },
-                tooltip: '更新全部',
+                tooltip: pluginTexts.tooltip.updateAll,
                 icon: const Icon(Icons.update),
               ),
               IconButton(
                 onPressed: () {
                   _handleAdd();
                 },
-                tooltip: '添加规则',
+                tooltip: pluginTexts.tooltip.addRule,
                 icon: const Icon(Icons.add),
               )
             ],
           ],
         ),
         body: pluginList.isEmpty
-            ? const Center(
-                child: Text('啊咧（⊙.⊙） 没有可用规则的说'),
+            ? Center(
+                child: Text(pluginTexts.empty),
               )
             : Builder(builder: (context) {
                 return ReorderableListView.builder(
@@ -252,7 +273,8 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                         key: ValueKey(index),
                         margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                         child: ListTile(
-                          trailing: pluginCardTrailing(index, plugin),
+                          trailing:
+                              pluginCardTrailing(context, index, plugin),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                           onLongPress: () {
@@ -290,7 +312,10 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                               Row(
                                 children: [
                                   Text(
-                                    'Version: ${plugin.version}',
+                                    pluginTexts.labels.version.replaceFirst(
+                                      '{version}',
+                                      plugin.version,
+                                    ),
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                   if (canUpdate) ...[
@@ -305,7 +330,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        '可更新',
+                                        pluginTexts.labels.statusUpdatable,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Theme.of(context)
@@ -328,7 +353,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        '搜索有效',
+                                        pluginTexts.labels.statusSearchValid,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Theme.of(context)
@@ -350,7 +375,8 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
     );
   }
 
-  Widget pluginCardTrailing(int index, Plugin plugin) {
+  Widget pluginCardTrailing(
+      BuildContext context, int index, Plugin plugin) {
     return Row(mainAxisSize: MainAxisSize.min, children: [
       isMultiSelectMode
           ? Checkbox(
@@ -368,7 +394,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 });
               },
             )
-          : popupMenuButton(index, plugin),
+          : popupMenuButton(context, index, plugin),
       ReorderableDragStartListener(
         index: index,
         child: const Icon(Icons.drag_handle), // 单独的拖拽按钮
@@ -376,11 +402,12 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
     ]);
   }
 
-  Widget popupMenuButton(int index, Plugin plugin) {
+  Widget popupMenuButton(BuildContext context, int index, Plugin plugin) {
+    final pluginTexts = context.t.settings.plugins;
     return MenuAnchor(
       consumeOutsideTap: true,
       builder:
-          (BuildContext context, MenuController controller, Widget? child) {
+          (BuildContext menuContext, MenuController controller, Widget? child) {
         return IconButton(
           onPressed: () {
             if (controller.isOpen) {
@@ -398,19 +425,25 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
           onPressed: () async {
             var state = pluginsController.pluginUpdateStatus(plugin);
             if (state == "nonexistent") {
-              KazumiDialog.showToast(message: '规则仓库中没有当前规则');
+              KazumiDialog.showToast(
+                  message: pluginTexts.toast.repoMissing);
             } else if (state == "latest") {
-              KazumiDialog.showToast(message: '规则已是最新');
+              KazumiDialog.showToast(
+                  message: pluginTexts.toast.alreadyLatest);
             } else if (state == "updatable") {
-              KazumiDialog.showLoading(msg: '更新中');
+              KazumiDialog.showLoading(
+                  msg: pluginTexts.loading.updatingSingle);
               int res = await pluginsController.tryUpdatePlugin(plugin);
               KazumiDialog.dismiss();
               if (res == 0) {
-                KazumiDialog.showToast(message: '更新成功');
+                KazumiDialog.showToast(
+                    message: pluginTexts.toast.updateSuccess);
               } else if (res == 1) {
-                KazumiDialog.showToast(message: 'kazumi版本过低, 此规则不兼容当前版本');
+                KazumiDialog.showToast(
+                    message: pluginTexts.toast.updateIncompatible);
               } else if (res == 2) {
-                KazumiDialog.showToast(message: '更新规则失败');
+                KazumiDialog.showToast(
+                    message: pluginTexts.toast.updateFailed);
               }
             }
           },
@@ -423,7 +456,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 children: [
                   Icon(Icons.update_rounded),
                   SizedBox(width: 8),
-                  Text('更新'),
+                  Text(pluginTexts.actions.update),
                 ],
               ),
             ),
@@ -443,7 +476,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 children: [
                   Icon(Icons.edit),
                   SizedBox(width: 8),
-                  Text('编辑'),
+                  Text(pluginTexts.actions.edit),
                 ],
               ),
             ),
@@ -454,7 +487,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
           onPressed: () {
             KazumiDialog.show(builder: (context) {
               return AlertDialog(
-                title: const Text('规则链接'),
+                title: Text(pluginTexts.dialogs.shareTitle),
                 content: SelectableText(
                   Utils.jsonToKazumiBase64(json
                       .encode(plugin.toJson())),
@@ -465,7 +498,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                   TextButton(
                     onPressed: () => KazumiDialog.dismiss(),
                     child: Text(
-                      '取消',
+                      pluginTexts.actions.cancel,
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.outline),
                     ),
@@ -480,8 +513,10 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                         ),
                       ));
                       KazumiDialog.dismiss();
+                      KazumiDialog.showToast(
+                          message: pluginTexts.toast.copySuccess);
                     },
-                    child: const Text('复制到剪贴板'),
+                    child: Text(pluginTexts.actions.copyToClipboard),
                   ),
                 ],
               );
@@ -496,7 +531,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 children: [
                   Icon(Icons.share),
                   SizedBox(width: 8),
-                  Text('分享'),
+                  Text(pluginTexts.actions.share),
                 ],
               ),
             ),
@@ -518,7 +553,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                 children: [
                   Icon(Icons.delete),
                   SizedBox(width: 8),
-                  Text('删除'),
+                  Text(pluginTexts.actions.delete),
                 ],
               ),
             ),

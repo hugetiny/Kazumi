@@ -20,7 +20,7 @@ const ProgressIndicatorThemeData progressIndicatorTheme2024 =
 /// ignore: deprecated_member_use
 const SliderThemeData sliderTheme2024 = SliderThemeData(
   year2023: false,
-  showValueIndicator: ShowValueIndicator.always,
+  showValueIndicator: ShowValueIndicator.onDrag,
 );
 
 /// The page transition method defined here is managed by Flutter and used by
@@ -165,11 +165,11 @@ const String danmakuOnSvg = '''
     </svg>
     ''';
 
-/// 可选默认视频比例
+/// 可选默认视频比例标识
 const Map<int, String> aspectRatioTypeMap = {
-  1: "自动",
-  2: "裁切填充",
-  3: "拉伸填充",
+  1: 'auto',
+  2: 'crop',
+  3: 'stretch',
 };
 
 final List<String> defaultAnimeTags = const [

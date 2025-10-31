@@ -6,6 +6,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/history/history_controller.dart';
 import 'package:kazumi/pages/history/providers.dart';
 import 'package:kazumi/utils/constants.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
@@ -37,16 +38,17 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
   void showHistoryClearDialog() {
     KazumiDialog.show(
       builder: (context) {
+        final t = context.t;
         return AlertDialog(
-          title: const Text('记录管理'),
-          content: const Text('确认要清除所有历史记录吗?'),
+          title: Text(t.library.history.manage.title),
+          content: Text(t.library.history.manage.confirmClear),
           actions: [
             TextButton(
               onPressed: () {
                 KazumiDialog.dismiss();
               },
               child: Text(
-                '取消',
+                t.library.history.manage.cancel,
                 style: TextStyle(color: Theme.of(context).colorScheme.outline),
               ),
             ),
@@ -57,7 +59,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
                   historyController.clearAll();
                 } catch (_) {}
               },
-              child: const Text('确认'),
+              child: Text(t.library.history.manage.confirm),
             ),
           ],
         );
@@ -77,7 +79,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
         },
         child: Scaffold(
           appBar: SysAppBar(
-            title: const Text('历史记录'),
+            title: Text(context.t.library.history.title),
             actions: [
               IconButton(
                   onPressed: () {
@@ -92,6 +94,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
           ),
           body: SafeArea(bottom: false, child: renderBody(state)),
           floatingActionButton: FloatingActionButton(
+            tooltip: context.t.library.history.manage.title,
             child: const Icon(Icons.clear_all),
             onPressed: () {
               showHistoryClearDialog();
@@ -106,8 +109,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     if (state.histories.isNotEmpty) {
       return contentGrid(state);
     } else {
-      return const Center(
-        child: Text('没有找到历史记录 (´;ω;`)'),
+      return Center(
+        child: Text(context.t.library.history.empty),
       );
     }
   }

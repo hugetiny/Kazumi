@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:media_kit/media_kit.dart' hide PlayerState;
@@ -19,18 +20,20 @@ import 'package:kazumi/shaders/shaders_controller.dart';
 import 'package:kazumi/utils/syncplay.dart';
 import 'package:kazumi/utils/external_player.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/pages/player/player_state.dart';
 import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/shaders/providers.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
-class PlayerController extends SafeStateNotifier<PlayerState> {
-  PlayerController(this.ref) : super(const PlayerState()) {
+class PlayerController extends Notifier<PlayerState> {
+  @override
+  PlayerState build() {
     _initializeDependencies();
+    ref.onDispose(() {
+      unawaited(disposeResources());
+    });
+    return const PlayerState();
   }
-
-  final Ref ref;
 
   late final VideoPageController videoPageController;
   late final ShadersController shadersController;
@@ -57,7 +60,7 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
   bool androidEnableOpenSLES = true;
   bool lowMemoryMode = false;
   bool autoPlay = true;
-  bool playerDebugMode = false;
+  bool playerDebugMode = kDebugMode;
   int forwardTime = 80;
 
   // 播放器实时状态
@@ -214,8 +217,10 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
     autoPlay = setting.get(SettingBoxKey.autoPlay, defaultValue: true);
     lowMemoryMode =
         setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false);
-    playerDebugMode =
-        setting.get(SettingBoxKey.playerDebugMode, defaultValue: false);
+    playerDebugMode = setting.get(
+      SettingBoxKey.playerDebugMode,
+      defaultValue: kDebugMode,
+    );
     if (videoPageController.currentPlugin.userAgent == '') {
       userAgent = Utils.getRandomUA();
     } else {
@@ -273,10 +278,14 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
         setting.get(SettingBoxKey.showPlayerError, defaultValue: true);
     mediaPlayer!.stream.error.listen((event) {
       if (showPlayerError) {
+        final t = ref.read(translationsProvider);
+        final details = '${event.toString()} $videoUrl';
         KazumiDialog.showToast(
-            message: '播放器内部错误 ${event.toString()} $videoUrl',
-            duration: const Duration(seconds: 5),
-            showActionButton: true);
+          message:
+              t.playback.toast.internalError.replaceFirst('{details}', details),
+          duration: const Duration(seconds: 5),
+          showActionButton: true,
+        );
       }
       KazumiLogger().log(
           Level.error, 'Player intent error: ${event.toString()} $videoUrl');
@@ -407,16 +416,12 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
     videoController = null;
   }
 
-  @override
-  void dispose() {
-    unawaited(disposeResources());
-    super.dispose();
-  }
-
-  Future<void> stop() async {
+  Future<void> stop({bool updateState = true}) async {
     try {
       await mediaPlayer?.stop();
-      state = state.copyWith(loading: true);
+      if (updateState) {
+        state = state.copyWith(loading: true);
+      }
     } catch (_) {}
   }
 
@@ -466,26 +471,27 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
 
   void lanunchExternalPlayer() async {
     String referer = videoPageController.currentPlugin.referer;
+    final t = ref.read(translationsProvider);
     if ((Platform.isAndroid || Platform.isWindows) && referer.isEmpty) {
       if (await ExternalPlayer.launchURLWithMIME(videoUrl, 'video/mp4')) {
         KazumiDialog.dismiss();
         KazumiDialog.showToast(
-          message: '尝试唤起外部播放器',
+          message: t.playback.externalPlayer.launching,
         );
       } else {
         KazumiDialog.showToast(
-          message: '唤起外部播放器失败',
+          message: t.playback.externalPlayer.launchFailed,
         );
       }
     } else if (Platform.isMacOS || Platform.isIOS) {
       if (await ExternalPlayer.launchURLWithReferer(videoUrl, referer)) {
         KazumiDialog.dismiss();
         KazumiDialog.showToast(
-          message: '尝试唤起外部播放器',
+          message: t.playback.externalPlayer.launching,
         );
       } else {
         KazumiDialog.showToast(
-          message: '唤起外部播放器失败',
+          message: t.playback.externalPlayer.launchFailed,
         );
       }
     } else if (Platform.isLinux && referer.isEmpty) {
@@ -493,21 +499,21 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
       if (await canLaunchUrlString(videoUrl)) {
         launchUrlString(videoUrl);
         KazumiDialog.showToast(
-          message: '尝试唤起外部播放器',
+          message: t.playback.externalPlayer.launching,
         );
       } else {
         KazumiDialog.showToast(
-          message: '无法使用外部播放器',
+          message: t.playback.externalPlayer.unavailable,
         );
       }
     } else {
       if (referer.isEmpty) {
         KazumiDialog.showToast(
-          message: '暂不支持该设备',
+          message: t.playback.externalPlayer.unsupportedDevice,
         );
       } else {
         KazumiDialog.showToast(
-          message: '暂不支持该规则',
+          message: t.playback.externalPlayer.unsupportedPlugin,
         );
       }
     }
@@ -520,6 +526,7 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
           changeEpisode,
       {bool enableTLS = false}) async {
     await syncplayController?.disconnect();
+    final t = ref.read(translationsProvider);
     final String syncPlayEndPoint = setting.get(SettingBoxKey.syncPlayEndPoint,
         defaultValue: defaultSyncPlayEndPoint);
     String syncPlayEndPointHost = '';
@@ -534,10 +541,15 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
     } catch (_) {}
     if (syncPlayEndPointHost == '' || syncPlayEndPointPort == 0) {
       KazumiDialog.showToast(
-        message: 'SyncPlay: 服务器地址不合法 $syncPlayEndPoint',
+        message: t.playback.syncplay.invalidEndpoint
+            .replaceFirst('{endpoint}', syncPlayEndPoint),
       );
       KazumiLogger().log(Level.error, 'SyncPlay: 服务器地址不合法 $syncPlayEndPoint');
       return;
+    }
+    String actorName(dynamic raw) {
+      final value = (raw is String ? raw.trim() : '');
+      return value.isEmpty ? t.playback.syncplay.unknownUser : value;
     }
     syncplayController =
         SyncplayClient(host: syncPlayEndPointHost, port: syncPlayEndPointPort);
@@ -552,10 +564,11 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
           if (error is SyncplayConnectionException) {
             exitSyncPlayRoom();
             KazumiDialog.showToast(
-              message: 'SyncPlay: 同步中断 ${error.message}',
+              message: t.playback.syncplay.disconnected
+                  .replaceFirst('{reason}', '${error.message}'),
               duration: const Duration(seconds: 5),
               showActionButton: true,
-              actionLabel: '重新连接',
+              actionLabel: t.playback.syncplay.actionReconnect,
               onActionPressed: () =>
                   createSyncPlayRoom(room, username, changeEpisode),
             );
@@ -565,25 +578,28 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
       syncplayController!.onRoomMessage.listen(
         (message) {
           if (message['type'] == 'init') {
-            if (message['username'] == '') {
+            final rawUser = (message['username'] as String?) ?? '';
+            if (rawUser.isEmpty) {
               KazumiDialog.showToast(
-                  message: 'SyncPlay: 您是当前房间中的唯一用户',
+                  message: t.playback.syncplay.alone,
                   duration: const Duration(seconds: 5));
               setSyncPlayPlayingBangumi();
             } else {
               KazumiDialog.showToast(
-                  message:
-                      'SyncPlay: 您不是当前房间中的唯一用户, 当前以用户 ${message['username']} 进度为准');
+                  message: t.playback.syncplay.followUser
+                      .replaceFirst('{username}', actorName(rawUser)));
             }
           }
           if (message['type'] == 'left') {
             KazumiDialog.showToast(
-                message: 'SyncPlay: ${message['username']} 离开了房间',
+                message: t.playback.syncplay.userLeft
+                    .replaceFirst('{username}', actorName(message['username'])),
                 duration: const Duration(seconds: 5));
           }
           if (message['type'] == 'joined') {
             KazumiDialog.showToast(
-                message: 'SyncPlay: ${message['username']} 加入了房间',
+                message: t.playback.syncplay.userJoined
+                    .replaceFirst('{username}', actorName(message['username'])),
                 duration: const Duration(seconds: 5));
           }
         },
@@ -601,8 +617,9 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
                 episode != 0 &&
                 episode != videoPageController.currentEpisode) {
               KazumiDialog.showToast(
-                  message:
-                      'SyncPlay: ${message['setBy'] ?? 'unknown'} 切换到第 $episode 话',
+                  message: t.playback.syncplay.switchEpisode
+                      .replaceFirst('{username}', actorName(message['setBy']))
+                      .replaceFirst('{episode}', episode.toString()),
                   duration: const Duration(seconds: 3));
               changeEpisode(episode,
                   currentRoad: videoPageController.currentRoad);
@@ -614,8 +631,10 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
         (message) {
           if (message['username'] != username) {
             KazumiDialog.showToast(
-                message:
-                    'SyncPlay: ${message['username']} 说: ${message['message']}',
+                message: t.playback.syncplay.chat
+                    .replaceFirst('{username}', actorName(message['username']))
+                    .replaceFirst('{message}',
+                        (message['message'] ?? '').toString()),
                 duration: const Duration(seconds: 5));
           }
         },
@@ -631,14 +650,16 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
             if (message['paused']) {
               if (message['position'] != 0) {
                 KazumiDialog.showToast(
-                    message: 'SyncPlay: ${message['setBy'] ?? 'unknown'} 暂停了播放',
+                    message: t.playback.syncplay.paused.replaceFirst(
+                        '{username}', actorName(message['setBy'])),
                     duration: const Duration(seconds: 3));
                 pause(enableSync: false);
               }
             } else {
               if (message['position'] != 0) {
                 KazumiDialog.showToast(
-                    message: 'SyncPlay: ${message['setBy'] ?? 'unknown'} 开始了播放',
+                    message: t.playback.syncplay.resumed.replaceFirst(
+                        '{username}', actorName(message['setBy'])),
                     duration: const Duration(seconds: 3));
                 play(enableSync: false);
               }
@@ -715,6 +736,21 @@ class PlayerController extends SafeStateNotifier<PlayerState> {
   }
 
   // --- UI state helpers ---
+
+  void resetUiState({required bool danmakuEnabled}) {
+    state = state.copyWith(
+      danmakuOn: danmakuEnabled,
+      lockPanel: false,
+      showVideoController: true,
+      showSeekTime: false,
+      showBrightness: false,
+      showVolume: false,
+      showPlaySpeed: false,
+      brightnessSeeking: false,
+      volumeSeeking: false,
+      canHidePlayerPanel: true,
+    );
+  }
 
   Map<int, List<Danmaku>> get danDanmakus => state.danDanmakus;
   set danDanmakus(Map<int, List<Danmaku>> value) {

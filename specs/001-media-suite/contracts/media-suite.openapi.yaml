@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  title: Kazumi Media Suite Service Contract
+  version: 0.1.0
+  description: Interfaces exposed by the media orchestration layer used by Flutter UI and background tasks.
+servers:
+  - url: app-internal://kazumi
+paths:
+  /metadata/{slug}:
+    get:
+      summary: Retrieve merged metadata for a library entry.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: locale
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Metadata payload merged from Bangumi/TMDb.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibraryEntry'
+        '404':
+          description: Entry not found.
+  /metadata/{slug}/refresh:
+    post:
+      summary: Force metadata refresh regardless of retention window.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+      responses:
+        '202':
+          description: Refresh scheduled.
+  /downloads:
+    get:
+      summary: List aria2 download tasks tracked by Kazumi.
+      responses:
+        '200':
+          description: Download task collection.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DownloadTask'
+    post:
+      summary: Queue a new download task.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entrySlug, episodeNumber]
+              properties:
+                entrySlug:
+                  type: string
+                episodeNumber:
+                  type: integer
+                sourceUrl:
+                  type: string
+      responses:
+        '201':
+          description: Download queued.
+  /downloads/{taskId}:
+    patch:
+      summary: Control download task (pause/resume/cancel).
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [pause, resume, cancel]
+      responses:
+        '200':
+          description: Task updated.
+  /playback/profile/{deviceId}:
+    get:
+      summary: Fetch playback profile for a device.
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Playback profile data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaybackProfile'
+    put:
+      summary: Update playback profile preferences.
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaybackProfile'
+      responses:
+        '200':
+          description: Profile updated.
+components:
+  schemas:
+    LocalizedText:
+      type: object
+      additionalProperties:
+        type: string
+    EpisodeRef:
+      type: object
+      properties:
+        number:
+          type: integer
+        title:
+          type: string
+        duration:
+          type: integer
+    WatchState:
+      type: object
+      properties:
+        currentEpisode:
+          type: integer
+        position:
+          type: integer
+        completedEpisodes:
+          type: array
+          items:
+            type: integer
+        lastWatchedAt:
+          type: string
+          format: date-time
+    DownloadState:
+      type: object
+      properties:
+        availableEpisodes:
+          type: array
+          items:
+            type: integer
+        lastSyncedAt:
+          type: string
+          format: date-time
+        storageFootprint:
+          type: integer
+    LibraryEntry:
+      type: object
+      properties:
+        slug:
+          type: string
+        title:
+          $ref: '#/components/schemas/LocalizedText'
+        synopsis:
+          $ref: '#/components/schemas/LocalizedText'
+        posterUrl:
+          type: string
+        metadataSource:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        episodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EpisodeRef'
+        watchHistory:
+          $ref: '#/components/schemas/WatchState'
+        downloadAvailability:
+          $ref: '#/components/schemas/DownloadState'
+    DownloadTask:
+      type: object
+      properties:
+        taskId:
+          type: string
+        entrySlug:
+          type: string
+        episodeNumber:
+          type: integer
+        status:
+          type: string
+          enum: [queued, running, paused, completed, failed]
+        progress:
+          type: number
+          format: float
+        savePath:
+          type: string
+        concurrencySlot:
+          type: integer
+        requestedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    PlaybackProfile:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        danmakuEnabled:
+          type: boolean
+        anime4kPreset:
+          type: string
+          enum: [off, fast, quality]
+        subtitleLanguageOrder:
+          type: array
+          items:
+            type: string
+        lastKnownRoad:
+          type: string
+          nullable: true
+        syncPlayEnabled:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time

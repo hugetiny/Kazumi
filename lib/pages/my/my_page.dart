@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
@@ -14,103 +15,45 @@ class MyPage extends ConsumerStatefulWidget {
 }
 
 class _MyPageState extends ConsumerState<MyPage> {
-
-  void onBackPressed(BuildContext context) {
+  void _onBackPressed(BuildContext context) {
     if (KazumiDialog.observer.hasKazumiDialog) {
       KazumiDialog.dismiss();
       return;
     }
     ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
-  context.go('/tab/popular');
+    context.go('/tab/popular');
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) {
           return;
         }
-        onBackPressed(context);
+        _onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('我的'), needTopOffset: false),
+        appBar: SysAppBar(title: Text(t.library.my.title), needTopOffset: false),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('播放历史与视频源'),
+              title: Text(t.library.my.sections.video),
               tiles: [
                 SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/history');
-                  },
+                  onPressed: (_) => context.push('/my/favorites'),
+                  leading: const Icon(Icons.collections_bookmark_outlined),
+                  title: Text(t.library.my.favorites.title),
+                  description: Text(t.library.my.favorites.description),
+                ),
+                SettingsTile.navigation(
+                  onPressed: (_) => context.push('/my/history'),
                   leading: const Icon(Icons.history_rounded),
-                  title: const Text('历史记录'),
-                  description: const Text('查看播放历史记录'),
-                ),
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/plugin');
-                  },
-                  leading: const Icon(Icons.extension),
-                  title: const Text('规则管理'),
-                  description: const Text('管理番剧资源规则'),
-                ),
-              ],
-            ),
-            SettingsSection(
-              title: const Text('播放器设置'),
-              tiles: [
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/player');
-                  },
-                  leading: const Icon(Icons.display_settings_rounded),
-                  title: const Text('播放设置'),
-                  description: const Text('设置播放器相关参数'),
-                ),
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/danmaku');
-                  },
-                  leading: const Icon(Icons.subtitles_rounded),
-                  title: const Text('弹幕设置'),
-                  description: const Text('设置弹幕相关参数'),
-                ),
-              ],
-            ),
-            SettingsSection(
-              title: const Text('应用与外观'),
-              tiles: [
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/theme');
-                  },
-                  leading: const Icon(Icons.palette_rounded),
-                  title: const Text('外观设置'),
-                  description: const Text('设置应用主题和刷新率'),
-                ),
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/webdav');
-                  },
-                  leading: const Icon(Icons.cloud),
-                  title: const Text('同步设置'),
-                  description: const Text('设置同步参数'),
-                ),
-              ],
-            ),
-            SettingsSection(
-              title: const Text('其他'),
-              tiles: [
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    context.push('/settings/about');
-                  },
-                  leading: const Icon(Icons.info_outline_rounded),
-                  title: const Text('关于'),
+                  title: Text(t.library.my.history.title),
+                  description: Text(t.library.my.history.description),
                 ),
               ],
             ),

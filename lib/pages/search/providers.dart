@@ -1,6 +1,7 @@
-import 'package:riverpod/riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/pages/search/search_controller.dart';
 
-final searchControllerProvider = StateNotifierProvider<SearchPageController, SearchPageState>((ref) {
-  return SearchPageController();
-});
+final searchControllerProvider =
+    NotifierProvider<SearchPageController, SearchPageState>(
+  SearchPageController.new,
+);

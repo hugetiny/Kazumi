@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 // import 'package:kazumi/pages/router.dart';
 import 'navigation_provider.dart';
 
@@ -23,7 +24,14 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
 
     return OrientationBuilder(builder: (context, orientation) {
       final bool isPortrait = orientation == Orientation.portrait;
-      navigationController.setIsBottom(isPortrait);
+      if (navigationState.isBottom != isPortrait) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) {
+            return;
+          }
+          navigationController.setIsBottom(isPortrait);
+        });
+      }
       return isPortrait
           ? bottomMenuWidget(context, navigationState, navigationController)
           : sideMenuWidget(context, navigationState, navigationController);
@@ -35,6 +43,7 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
     NavigationBarStateData state,
     NavigationBarController controller,
   ) {
+    final t = context.t;
     return Scaffold(
         body: Container(
           color: Theme.of(context).colorScheme.primaryContainer,
@@ -43,26 +52,26 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
         bottomNavigationBar: state.isHidden
             ? const SizedBox(height: 0)
             : NavigationBar(
-                destinations: const <Widget>[
+                destinations: <NavigationDestination>[
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.home),
-                    icon: Icon(Icons.home_outlined),
-                    label: '推荐',
+                    selectedIcon: const Icon(Icons.home),
+                    icon: const Icon(Icons.home_outlined),
+                    label: t.navigation.tabs.popular,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.timeline),
-                    icon: Icon(Icons.timeline_outlined),
-                    label: '时间表',
+                    selectedIcon: const Icon(Icons.timeline),
+                    icon: const Icon(Icons.timeline_outlined),
+                    label: t.navigation.tabs.timeline,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_outlined),
-                    label: '追番',
+                    selectedIcon: const Icon(Icons.person),
+                    icon: const Icon(Icons.person_outline),
+                    label: t.navigation.tabs.my,
                   ),
                   NavigationDestination(
-                    selectedIcon: Icon(Icons.settings),
-                    icon: Icon(Icons.settings),
-                    label: '我的',
+                    selectedIcon: const Icon(Icons.settings),
+                    icon: const Icon(Icons.settings_outlined),
+                    label: t.navigation.tabs.settings,
                   ),
                 ],
                 selectedIndex: state.selectedIndex,
@@ -76,10 +85,10 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                       context.go('/tab/timeline');
                       break;
                     case 2:
-                      context.go('/tab/collect');
+                      context.go('/tab/my');
                       break;
                     case 3:
-                      context.go('/tab/my');
+                      context.go('/tab/setting');
                       break;
                   }
                 },
@@ -91,6 +100,7 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
     NavigationBarStateData state,
     NavigationBarController controller,
   ) {
+    final t = context.t;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
       body: Row(
@@ -107,29 +117,30 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   onPressed: () {
                     context.push('/search');
                   },
+                  tooltip: t.navigation.actions.search,
                   child: const Icon(Icons.search),
                 ),
                 labelType: NavigationRailLabelType.selected,
-                destinations: const <NavigationRailDestination>[
+                destinations: <NavigationRailDestination>[
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.home),
-                    icon: Icon(Icons.home_outlined),
-                    label: Text('推荐'),
+                    selectedIcon: const Icon(Icons.home),
+                    icon: const Icon(Icons.home_outlined),
+                    label: Text(t.navigation.tabs.popular),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.timeline),
-                    icon: Icon(Icons.timeline_outlined),
-                    label: Text('时间表'),
+                    selectedIcon: const Icon(Icons.timeline),
+                    icon: const Icon(Icons.timeline_outlined),
+                    label: Text(t.navigation.tabs.timeline),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.favorite),
-                    icon: Icon(Icons.favorite_border),
-                    label: Text('追番'),
+                    selectedIcon: const Icon(Icons.person),
+                    icon: const Icon(Icons.person_outline),
+                    label: Text(t.navigation.tabs.my),
                   ),
                   NavigationRailDestination(
-                    selectedIcon: Icon(Icons.settings),
-                    icon: Icon(Icons.settings_outlined),
-                    label: Text('我的'),
+                    selectedIcon: const Icon(Icons.settings),
+                    icon: const Icon(Icons.settings_outlined),
+                    label: Text(t.navigation.tabs.settings),
                   ),
                 ],
                 selectedIndex: state.selectedIndex,
@@ -143,10 +154,10 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                       context.go('/tab/timeline');
                       break;
                     case 2:
-                      context.go('/tab/collect');
+                      context.go('/tab/my');
                       break;
                     case 3:
-                      context.go('/tab/my');
+                      context.go('/tab/setting');
                       break;
                   }
                 },

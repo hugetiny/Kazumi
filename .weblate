@@ -1,0 +1,101 @@
+# Weblate Configuration for Kazumi
+# This file helps configure Weblate for continuous localization
+
+# Project information
+project_name: Kazumi
+project_web: https://github.com/hugetiny/Kazumi
+
+# File format and structure
+file_format: json
+file_pattern: lib/l10n/app_*.i18n.json
+
+# Base language
+base_locale: zh-CN
+
+# Supported locales
+locales:
+  - zh-CN  # Simplified Chinese (Base)
+  - en-US  # English
+  - ja-JP  # Japanese
+  - zh-TW  # Traditional Chinese
+
+# Translation workflow
+workflow:
+  # Automatic translation suggestions
+  auto_translate: true
+  
+  # Translation memory
+  translation_memory: true
+  
+  # Machine translation providers (optional)
+  machine_translation:
+    - DeepL
+    - Google Translate
+    
+  # Quality checks
+  checks:
+    - inconsistent
+    - unchanged
+    - ellipsis
+    - multiple_failures
+    - escaped_newline
+    - punctuation_spacing
+
+# Integration
+vcs: git
+repo: https://github.com/hugetiny/Kazumi
+branch: main
+
+# File handling
+filemask: lib/l10n/app_*.i18n.json
+template: lib/l10n/app_zh-CN.i18n.json
+new_lang: add
+language_regex: ^[a-z]{2}(-[A-Z]{2})?$
+
+# Additional settings
+manage_strings: true
+edit_template: false
+allow_translation_propagation: true
+enable_suggestions: true
+suggestion_voting: true
+suggestion_autoaccept: 0
+
+# Glossary and style guide
+glossary: true
+style_guide: |
+  # Kazumi Translation Style Guide
+  
+  ## General Guidelines
+  1. Keep translations natural and idiomatic
+  2. Maintain consistency with UI/UX terminology
+  3. Use appropriate formality level for the target language
+  4. Preserve placeholders like {timestamp}
+  
+  ## Key Terms
+  - Kazumi: Keep as-is (app name)
+  - Bangumi: Keep as-is (service name)
+  - TMDb: Keep as-is (service name)
+  - WebDAV: Keep as-is (protocol name)
+  - aria2: Keep as-is (tool name)
+  - Danmaku: 弹幕 (CN), ダンマク (JP), 彈幕 (TW), Danmaku (EN)
+  
+  ## Technical Terms
+  - Metadata: 元数据 (CN), メタデータ (JP), 中繼資料 (TW), Metadata (EN)
+  - Plugin: 插件 (CN), プラグイン (JP), 外掛程式 (TW), Plugin (EN)
+  - Cache: 缓存 (CN), キャッシュ (JP), 快取 (TW), Cache (EN)
+
+# Notes for translators
+translator_notes: |
+  Thank you for contributing to Kazumi's localization!
+  
+  Important:
+  - Test your translations in the app if possible
+  - Keep strings concise to fit UI constraints
+  - Ask questions in the discussion if unsure
+  - Follow the style guide above
+  
+  Technical:
+  - Preserve JSON structure and formatting
+  - Don't translate keys, only values
+  - Keep placeholder syntax intact: {variable}
+  - Maintain the @@locale marker

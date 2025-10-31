@@ -13,7 +13,6 @@ import 'package:hive/hive.dart';
 import 'package:kazumi/request/api.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/logger.dart';
-import 'package:kazumi/utils/mortis.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as path;
@@ -370,30 +369,6 @@ class Utils {
     return false;
   }
 
-  // Deprecated
-  static Future<void> enterWindowsFullscreen() async {
-    if (Platform.isWindows) {
-      const platform = MethodChannel('com.predidit.kazumi/intent');
-      try {
-        await platform.invokeMethod('enterFullscreen');
-      } on PlatformException catch (e) {
-        print("Failed to enter native window mode: '${e.message}'.");
-      }
-    }
-  }
-
-  // Deprecated
-  static Future<void> exitWindowsFullscreen() async {
-    if (Platform.isWindows) {
-      const platform = MethodChannel('com.predidit.kazumi/intent');
-      try {
-        await platform.invokeMethod('exitFullscreen');
-      } on PlatformException catch (e) {
-        print("Failed to exit native window mode: '${e.message}'.");
-      }
-    }
-  }
-
   // 进入全屏显示
   static Future<void> enterFullScreen({bool lockOrientation = true}) async {
     // if (Platform.isWindows) {
@@ -529,14 +504,13 @@ class Utils {
   }
 
   static String generateDandanSignature(String path, int timestamp) {
-    String id = mortis['id']!;
-    String value = mortis['value']!;
+    final String id = GStorage.readDanDanAppId();
+    final String value = GStorage.readDanDanApiKey();
     String data = id + timestamp.toString() + path + value;
     var bytes = utf8.encode(data);
     var digest = sha256.convert(bytes);
     return base64Encode(digest.bytes);
   }
-
 
   /// 格式化日期
   /// eg: 2025-07-27T09:14:12Z -> 2025-07-27

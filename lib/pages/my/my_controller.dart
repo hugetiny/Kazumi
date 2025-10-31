@@ -1,100 +1,157 @@
-import 'package:hive/hive.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/utils/auto_updater.dart';
-import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/modules/bangumi/bangumi_item.dart';
+import 'package:kazumi/modules/collect/collect_module.dart';
+import 'package:kazumi/modules/collect/collect_change_module.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/utils/webdav.dart';
+import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:kazumi/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kazumi/utils/safe_state_notifier.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
-class MyState {
-  final List<String> shieldList;
+class CollectState {
+  final List<CollectedBangumi> collectibles;
+  final bool syncing;
 
-  const MyState({this.shieldList = const []});
+  const CollectState({
+    this.collectibles = const [],
+    this.syncing = false,
+  });
 
-  MyState copyWith({List<String>? shieldList}) {
-    return MyState(
-      shieldList: shieldList ?? this.shieldList,
+  CollectState copyWith({
+    List<CollectedBangumi>? collectibles,
+    bool? syncing,
+  }) => CollectState(
+        collectibles: collectibles ?? this.collectibles,
+        syncing: syncing ?? this.syncing,
+      );
+}
+
+class CollectController extends Notifier<CollectState> {
+  static const Set<int> _visibleTypes = {1, 2, 4};
+
+  @override
+  CollectState build() {
+    return CollectState(
+      collectibles: _filteredCollectibles(),
     );
   }
-}
 
-class MyController extends SafeStateNotifier<MyState> {
-  MyController() : super(const MyState());
+  Box get setting => GStorage.setting;
+  List<BangumiItem> get favorites => GStorage.favorites.values.toList();
 
-  final Box setting = GStorage.setting;
-
-  /// Initializes shield keywords from persistent storage.
-  void loadShieldList() {
-    final values = GStorage.shieldList.values.cast<String>().toList();
-    state = state.copyWith(shieldList: List.unmodifiable(values));
+  List<CollectedBangumi> _filteredCollectibles() {
+    return GStorage.collectibles.values
+        .whereType<CollectedBangumi>()
+        .where((item) => _visibleTypes.contains(item.type))
+        .toList();
   }
 
-  bool isDanmakuBlocked(String? danmaku) {
-    if (danmaku == null || danmaku.isEmpty) return false;
-    for (final item in state.shieldList) {
-      if (item.isEmpty) continue;
-      if (item.startsWith('/') && item.endsWith('/')) {
-        if (item.length <= 2) continue;
-        final pattern = item.substring(1, item.length - 1);
-        try {
-          if (RegExp(pattern).hasMatch(danmaku)) return true;
-        } catch (_) {
-          KazumiLogger().log(Level.error, '无效的弹幕屏蔽正则表达式: $pattern');
-        }
-      } else if (danmaku.contains(item)) {
-        return true;
-      }
+  void loadCollectibles() {
+    state = state.copyWith(
+      collectibles: _filteredCollectibles(),
+    );
+  }
+
+  int getCollectType(BangumiItem bangumiItem) {
+    final collectedBangumi = GStorage.collectibles.get(bangumiItem.id);
+    if (collectedBangumi == null) {
+      return 0;
     }
-    return false;
+    return _visibleTypes.contains(collectedBangumi.type)
+        ? collectedBangumi.type
+        : 0;
   }
 
-  void addShieldList(String item) {
-    final trimmed = item.trim();
-    if (trimmed.isEmpty) {
-      KazumiDialog.showToast(message: '请输入关键词');
+  Future<void> addCollect(BangumiItem bangumiItem, {int type = 1}) async {
+    if (type == 0) {
+      await deleteCollect(bangumiItem);
       return;
     }
-    if (trimmed.length > 64) {
-      KazumiDialog.showToast(message: '关键词过长');
-      return;
-    }
-    if (state.shieldList.contains(trimmed)) {
-      KazumiDialog.showToast(message: '已存在该关键词');
-      return;
-    }
-
-    final updated = List<String>.from(state.shieldList)..add(trimmed);
-    state = state.copyWith(shieldList: List.unmodifiable(updated));
-    GStorage.shieldList.put(trimmed, trimmed);
-    GStorage.shieldList.flush();
+    final collectedBangumi = CollectedBangumi(bangumiItem, DateTime.now(), type);
+    await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
+    await GStorage.collectibles.flush();
+    final collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final collectChange = CollectedBangumiChange(
+      collectChangeId,
+      bangumiItem.id,
+      1,
+      type,
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+    );
+    await GStorage.collectChanges.put(collectChangeId, collectChange);
+    await GStorage.collectChanges.flush();
+    loadCollectibles();
   }
 
-  void removeShieldList(String item) {
-    final updated = List<String>.from(state.shieldList)..remove(item);
-    state = state.copyWith(shieldList: List.unmodifiable(updated));
-    GStorage.shieldList.delete(item);
-    GStorage.shieldList.flush();
+  Future<void> deleteCollect(BangumiItem bangumiItem) async {
+    await GStorage.collectibles.delete(bangumiItem.id);
+    await GStorage.collectibles.flush();
+    final collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
+    final collectChange = CollectedBangumiChange(
+      collectChangeId,
+      bangumiItem.id,
+      3,
+      5,
+      (DateTime.now().millisecondsSinceEpoch ~/ 1000),
+    );
+    await GStorage.collectChanges.put(collectChangeId, collectChange);
+    await GStorage.collectChanges.flush();
+    loadCollectibles();
   }
 
-  Future<bool> checkUpdate({String type = 'manual'}) async {
+  Future<void> updateLocalCollect(BangumiItem bangumiItem) async {
+    final collectedBangumi = GStorage.collectibles.get(bangumiItem.id);
+    if (collectedBangumi == null) return;
+    collectedBangumi.bangumiItem = bangumiItem;
+    await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
+    await GStorage.collectibles.flush();
+    loadCollectibles();
+  }
+
+  Future<void> syncCollectibles() async {
+  final translations = ref.read(translationsProvider);
+  final webDavToast = translations.settings.webdav.toast;
+    if (!WebDav().initialized) {
+      KazumiDialog.showToast(message: webDavToast.notConfigured);
+      return;
+    }
+    state = state.copyWith(syncing: true);
+    var ok = true;
     try {
-      final autoUpdater = AutoUpdater();
-      if (type == 'manual') {
-        await autoUpdater.manualCheckForUpdates();
-      } else {
-        await autoUpdater.autoCheckForUpdates();
-      }
-      return true;
-    } catch (err) {
-      KazumiLogger().log(Level.error, '检查更新失败 ${err.toString()}');
-      if (type == 'manual') {
-        KazumiDialog.showToast(message: '检查更新失败，请稍后重试');
-      }
-      return false;
+      await WebDav().ping();
+    } catch (e) {
+      KazumiLogger().log(Level.error, 'WebDav连接失败: $e');
+      KazumiDialog.showToast(
+        message: webDavToast.connectionFailed
+            .replaceFirst('{error}', e.toString()),
+      );
+      ok = false;
     }
+    if (ok) {
+      try {
+        await WebDav().syncCollectibles();
+      } catch (e) {
+        KazumiDialog.showToast(
+          message: webDavToast.syncFailed
+              .replaceFirst('{error}', e.toString()),
+        );
+      }
+      loadCollectibles();
+    }
+    state = state.copyWith(syncing: false);
+  }
+
+  Future<void> migrateCollect() async {
+    if (favorites.isEmpty) return;
+    int count = 0;
+    for (final item in favorites) {
+      await addCollect(item, type: 1);
+      count++;
+    }
+    await GStorage.favorites.clear();
+    await GStorage.favorites.flush();
+    KazumiLogger().log(Level.debug, '检测到$count条未分类记录, 已迁移');
   }
 }
-
-final myControllerProvider =
-    StateNotifierProvider<MyController, MyState>((ref) => MyController());

@@ -7,6 +7,7 @@ import 'package:kazumi/bean/card/episode_comments_card.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/pages/video/video_state.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class EpisodeInfo extends InheritedWidget {
   /// This widget receives changes of episode and notify it's child,
@@ -27,11 +28,11 @@ class EpisodeCommentsSheet extends ConsumerStatefulWidget {
   const EpisodeCommentsSheet({super.key});
 
   @override
-  ConsumerState<EpisodeCommentsSheet> createState() => _EpisodeCommentsSheetState();
+  ConsumerState<EpisodeCommentsSheet> createState() =>
+      _EpisodeCommentsSheetState();
 }
 
-class _EpisodeCommentsSheetState
-    extends ConsumerState<EpisodeCommentsSheet> {
+class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
   late final VideoPageController videoPageController;
   bool commentsQueryTimeout = false;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
@@ -48,7 +49,8 @@ class _EpisodeCommentsSheetState
 
   Future<void> loadComments(int episode) async {
     commentsQueryTimeout = false;
-    await videoPageController.queryBangumiEpisodeCommentsByID(
+    await videoPageController
+        .queryBangumiEpisodeCommentsByID(
             videoPageController.bangumiItem.id, episode)
         .then((_) {
       if (videoPageController.episodeCommentsList.isEmpty && mounted) {
@@ -96,9 +98,9 @@ class _EpisodeCommentsSheetState
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
           sliver: commentsQueryTimeout
-              ? const SliverFillRemaining(
+              ? SliverFillRemaining(
                   child: Center(
-                    child: Text('空空如也'),
+                    child: Text(context.t.library.common.emptyState),
                   ),
                 )
               : SliverList(
@@ -130,27 +132,28 @@ class _EpisodeCommentsSheetState
   }
 
   Widget _buildCommentsInfo(VideoPageState videoState) {
+    final t = context.t;
     final currentEpisodeInfo = videoState.episodeInfo;
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(' 本集标题  '),
+          Text(t.playback.comments.sectionTitle),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-          '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
+                    '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline)),
                 Text(
-          (currentEpisodeInfo.nameCn != '')
-            ? '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.nameCn}'
-            : '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
+                    (currentEpisodeInfo.nameCn != '')
+                        ? '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.nameCn}'
+                        : '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
@@ -169,9 +172,9 @@ class _EpisodeCommentsSheetState
               onPressed: () {
                 showEpisodeSelection();
               },
-              child: const Text(
-                '手动切换',
-                style: TextStyle(fontSize: 13),
+              child: Text(
+                t.playback.comments.manualSwitch,
+                style: const TextStyle(fontSize: 13),
               ),
             ),
           ),
@@ -183,10 +186,11 @@ class _EpisodeCommentsSheetState
   // 选择要查看评论的集数
   void showEpisodeSelection() {
     final TextEditingController textController = TextEditingController();
+    final t = context.t;
     KazumiDialog.show(
       builder: (context) {
         return AlertDialog(
-          title: const Text('输入集数'),
+          title: Text(t.playback.comments.dialogTitle),
           content: StatefulBuilder(
               builder: (BuildContext context, StateSetter setState) {
             return TextField(
@@ -200,14 +204,16 @@ class _EpisodeCommentsSheetState
             TextButton(
               onPressed: () => KazumiDialog.dismiss(),
               child: Text(
-                '取消',
+                t.app.cancel,
                 style: TextStyle(color: Theme.of(context).colorScheme.outline),
               ),
             ),
             TextButton(
               onPressed: () {
                 if (textController.text.isEmpty) {
-                  KazumiDialog.showToast(message: '请输入集数');
+                  KazumiDialog.showToast(
+                    message: t.playback.comments.dialogEmpty,
+                  );
                   return;
                 }
                 ep = int.tryParse(textController.text) ?? 0;
@@ -217,7 +223,7 @@ class _EpisodeCommentsSheetState
                 _refreshIndicatorKey.currentState?.show();
                 KazumiDialog.dismiss();
               },
-              child: const Text('刷新'),
+              child: Text(t.playback.comments.dialogConfirm),
             ),
           ],
         );

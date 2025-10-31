@@ -6,6 +6,7 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
@@ -14,7 +15,8 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/router.dart';
-import 'package:kazumi/pages/settings/providers.dart';
+import 'package:kazumi/pages/setting/providers.dart';
+import 'package:kazumi/utils/tray_localization.dart';
 
 class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
@@ -30,17 +32,41 @@ class _AppWidgetState extends ConsumerState<AppWidget>
   final TrayManager trayManager = TrayManager.instance;
   bool showingExitDialog = false;
   bool _themeInitialized = false;
+  ProviderSubscription<LocaleSettingsState>? _localeSubscription;
 
   @override
   void initState() {
+    super.initState();
     trayManager.addListener(this);
     windowManager.addListener(this);
     setPreventClose();
     WidgetsBinding.instance.addObserver(this);
+    _localeSubscription = ref.listenManual<LocaleSettingsState>(
+      localeSettingsProvider,
+      (_, __) {
+        if (Utils.isDesktop()) {
+          _handleTray();
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeThemeFromStorage();
+      _initializeLocaleFromStorage();
+      if (Utils.isDesktop()) {
+        _handleTray();
+      }
     });
-    super.initState();
+  }
+
+  void _initializeLocaleFromStorage() {
+    final LocaleSettingsState localeState = ref.read(localeSettingsProvider);
+    // Ensure the global slang locale is aligned before the next frame so
+    // TranslationProvider reads the correct language during startup.
+    if (localeState.followSystem) {
+      LocaleSettings.useDeviceLocale();
+    } else {
+      LocaleSettings.setLocale(localeState.appLocale);
+    }
   }
 
   void _initializeThemeFromStorage() {
@@ -88,6 +114,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   @override
   void dispose() {
+    _localeSubscription?.close();
     trayManager.removeListener(this);
     windowManager.removeListener(this);
     WidgetsBinding.instance.removeObserver(this);
@@ -135,15 +162,16 @@ class _AppWidgetState extends ConsumerState<AppWidget>
         KazumiDialog.show(onDismiss: () {
           showingExitDialog = false;
         }, builder: (context) {
+          final t = context.t;
           bool saveExitBehavior = false; // 下次不再询问？
 
           return AlertDialog(
-            title: const Text('退出确认'),
+            title: Text(t.exitDialog.title),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('您想要退出 Kazumi 吗？'),
+                Text(t.exitDialog.message),
                 const SizedBox(height: 24),
                 StatefulBuilder(builder: (context, setState) {
                   onChanged(value) {
@@ -156,7 +184,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     spacing: 8,
                     children: [
                       Checkbox(value: saveExitBehavior, onChanged: onChanged),
-                      const Text('下次不再询问'),
+                      Text(t.exitDialog.dontAskAgain),
                     ],
                   );
                 }),
@@ -170,7 +198,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     }
                     exit(0);
                   },
-                  child: const Text('退出 Kazumi')),
+                  child: Text(t.exitDialog.exit)),
               TextButton(
                   onPressed: () async {
                     if (saveExitBehavior) {
@@ -179,9 +207,10 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                     KazumiDialog.dismiss();
                     windowManager.hide();
                   },
-                  child: const Text('最小化至托盘')),
-              const TextButton(
-                  onPressed: KazumiDialog.dismiss, child: Text('取消')),
+                  child: Text(t.exitDialog.minimize)),
+              TextButton(
+                  onPressed: KazumiDialog.dismiss,
+                  child: Text(t.exitDialog.cancel)),
             ],
           );
         });
@@ -234,6 +263,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
   }
 
   Future<void> _handleTray() async {
+    final TrayLabels labels = KazumiTrayLabels.fromRef(ref);
     if (Platform.isWindows) {
       await trayManager.setIcon('assets/images/logo/logo_lanczos.ico');
     } else if (Platform.environment.containsKey('FLATPAK_ID') ||
@@ -244,13 +274,13 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     }
 
     if (!Platform.isLinux) {
-      await trayManager.setToolTip('Kazumi');
+      await trayManager.setToolTip(labels.tooltip);
     }
 
     Menu trayMenu = Menu(items: [
-      MenuItem(key: 'show_window', label: '显示窗口'),
+      MenuItem(key: 'show_window', label: labels.showWindow),
       MenuItem.separator(),
-      MenuItem(key: 'exit', label: '退出 Kazumi')
+      MenuItem(key: 'exit', label: labels.exit)
     ]);
     await trayManager.setContextMenu(trayMenu);
   }
@@ -314,40 +344,35 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     // Theme initialization is performed in initState via a
     // post-frame callback to avoid modifying providers during build.
 
-    if (Utils.isDesktop()) {
-      _handleTray();
-    }
     final ThemeData fallbackLightTheme = _buildLightTheme(null, seedColor);
     final ThemeData fallbackDarkTheme =
         _buildDarkTheme(null, seedColor, oledEnhance);
 
-    final app = DynamicColorBuilder(
-      builder: (dynamicLight, dynamicDark) {
-        final bool canUseDynamic =
-            useDynamicColor && dynamicLight != null && dynamicDark != null;
+    final Widget app = TranslationProvider(
+      child: DynamicColorBuilder(
+        builder: (dynamicLight, dynamicDark) {
+          final bool canUseDynamic =
+              useDynamicColor && dynamicLight != null && dynamicDark != null;
 
-        final ThemeData lightTheme = canUseDynamic
-            ? _buildLightTheme(dynamicLight, seedColor)
-            : fallbackLightTheme;
-        final ThemeData darkTheme = canUseDynamic
-            ? _buildDarkTheme(dynamicDark, seedColor, oledEnhance)
-            : fallbackDarkTheme;
+          final ThemeData lightTheme = canUseDynamic
+              ? _buildLightTheme(dynamicLight, seedColor)
+              : fallbackLightTheme;
+          final ThemeData darkTheme = canUseDynamic
+              ? _buildDarkTheme(dynamicDark, seedColor, oledEnhance)
+              : fallbackDarkTheme;
 
-        return MaterialApp.router(
-          title: "Kazumi",
-          localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          supportedLocales: const [
-            Locale.fromSubtags(
-                languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN")
-          ],
-          locale: const Locale.fromSubtags(
-              languageCode: 'zh', scriptCode: 'Hans', countryCode: "CN"),
-          theme: lightTheme,
-          darkTheme: darkTheme,
-          themeMode: themeState.themeMode,
-          routerConfig: router,
-        );
-      },
+          return MaterialApp.router(
+            title: LocaleSettings.currentLocale.translations.app.title,
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            supportedLocales: AppLocaleUtils.supportedLocales,
+            locale: LocaleSettings.currentLocale.flutterLocale,
+            theme: lightTheme,
+            darkTheme: darkTheme,
+            themeMode: themeState.themeMode,
+            routerConfig: router,
+          );
+        },
+      ),
     );
 
     // 强制设置高帧率

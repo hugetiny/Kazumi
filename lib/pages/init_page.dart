@@ -6,10 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:kazumi/pages/collect/providers.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
-import 'package:kazumi/pages/settings/providers.dart';
+import 'package:kazumi/pages/my/providers.dart';
+import 'package:kazumi/pages/setting/setting_controller.dart';
+import 'package:kazumi/pages/setting/providers.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/shaders/providers.dart';
@@ -17,6 +18,7 @@ import 'package:kazumi/shaders/shaders_controller.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 import 'package:logger/logger.dart';
 
 class InitPage extends ConsumerStatefulWidget {
@@ -89,7 +91,11 @@ class _InitPageState extends ConsumerState<InitPage> {
       KazumiLogger().log(Level.info, '同步观看记录完成');
     } catch (e) {
       KazumiLogger().log(Level.error, 'WebDav同步失败: $e');
-      KazumiDialog.showToast(message: '同步观看记录失败 ${e.toString()}');
+      final translations = ref.read(translationsProvider);
+      KazumiDialog.showToast(
+        message: translations.dialogs.webdav.syncFailed
+            .replaceFirst('{error}', e.toString()),
+      );
     }
   }
 
@@ -108,10 +114,11 @@ class _InitPageState extends ConsumerState<InitPage> {
       await KazumiDialog.show(
         clickMaskDismiss: false,
         builder: (dialogContext) {
+          final t = dialogContext.t;
           return PopScope(
             canPop: false,
             child: AlertDialog(
-              title: const Text('免责声明'),
+              title: Text(t.dialogs.disclaimer.title),
               scrollable: true,
               content: Text(statementsText),
               actions: <Widget>[
@@ -120,7 +127,7 @@ class _InitPageState extends ConsumerState<InitPage> {
                     exit(0);
                   },
                   child: Text(
-                    '退出',
+                    t.dialogs.disclaimer.exit,
                     style: TextStyle(
                       color: Theme.of(dialogContext).colorScheme.outline,
                     ),
@@ -138,7 +145,7 @@ class _InitPageState extends ConsumerState<InitPage> {
                       await _switchUpdateMirror();
                     }
                   },
-                  child: const Text('已阅读并同意'),
+                  child: Text(t.dialogs.disclaimer.agree),
                 ),
               ],
             ),
@@ -155,23 +162,22 @@ class _InitPageState extends ConsumerState<InitPage> {
     await KazumiDialog.show(
       clickMaskDismiss: false,
       builder: (dialogContext) {
+        final t = dialogContext.t;
         return PopScope(
           canPop: false,
           child: AlertDialog(
-            title: const Text('更新镜像'),
-            content: const Column(
+            title: Text(t.dialogs.updateMirror.title),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text('您希望从哪里获取应用更新？'),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(t.dialogs.updateMirror.question),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'Github镜像为大多数情况下的最佳选择。如果您使用F-Droid应用商店, 请选择F-Droid镜像。',
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(t.dialogs.updateMirror.description),
                 ),
               ],
             ),
@@ -182,7 +188,7 @@ class _InitPageState extends ConsumerState<InitPage> {
                   KazumiDialog.dismiss();
                   _goHome();
                 },
-                child: const Text('Github'),
+                child: Text(t.dialogs.updateMirror.options.github),
               ),
               TextButton(
                 onPressed: () {
@@ -190,7 +196,7 @@ class _InitPageState extends ConsumerState<InitPage> {
                   KazumiDialog.dismiss();
                   _goHome();
                 },
-                child: const Text('F-Droid'),
+                child: Text(t.dialogs.updateMirror.options.fdroid),
               ),
             ],
           ),
@@ -220,7 +226,11 @@ class _InitPageState extends ConsumerState<InitPage> {
       }
     }
     if (count != 0) {
-      KazumiDialog.showToast(message: '检测到 $count 条规则可以更新');
+      final translations = ref.read(translationsProvider);
+      KazumiDialog.showToast(
+        message: translations.dialogs.pluginUpdates.toast
+            .replaceFirst('{count}', '$count'),
+      );
     }
   }
 

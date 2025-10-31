@@ -1,6 +1,7 @@
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_shield_settings.dart';
@@ -35,24 +36,25 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final playerTexts = context.t.settings.player;
     return SettingsList(
       sections: [
         SettingsSection(
-          title: const Text('弹幕屏蔽'),
+          title: Text(playerTexts.danmakuShield),
           tiles: [
             SettingsTile.navigation(
               onPressed: (_) {
                 showDanmakuShieldSheet();
               },
-              title: const Text('关键词屏蔽'),
+              title: Text(playerTexts.danmakuKeywordShield),
             ),
           ],
         ),
         SettingsSection(
-          title: const Text('弹幕样式'),
+          title: Text(playerTexts.danmakuStyle),
           tiles: [
             SettingsTile(
-              title: const Text('字体大小'),
+              title: Text(playerTexts.danmakuFontSize),
               description: Slider(
                 value: widget.danmakuController.option.fontSize,
                 min: 10,
@@ -71,7 +73,7 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
               ),
             ),
             SettingsTile(
-              title: const Text('弹幕不透明度'),
+              title: Text(playerTexts.danmakuOpacity),
               description: Slider(
                 value: widget.danmakuController.option.opacity,
                 min: 0.1,
@@ -92,10 +94,10 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
           ],
         ),
         SettingsSection(
-          title: const Text('弹幕显示'),
+          title: Text(playerTexts.danmakuDisplay),
           tiles: [
             SettingsTile(
-              title: const Text('弹幕区域'),
+              title: Text(playerTexts.danmakuArea),
               description: Slider(
                 value: widget.danmakuController.option.area,
                 min: 0,
@@ -123,7 +125,7 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                     ));
                 setting.put(SettingBoxKey.danmakuTop, show);
               },
-              title: const Text('顶部弹幕'),
+              title: Text(playerTexts.danmakuTopDisplay),
               initialValue: !widget.danmakuController.option.hideTop,
             ),
             SettingsTile.switchTile(
@@ -136,7 +138,7 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                     ));
                 setting.put(SettingBoxKey.danmakuBottom, show);
               },
-              title: const Text('底部弹幕'),
+              title: Text(playerTexts.danmakuBottomDisplay),
               initialValue: !widget.danmakuController.option.hideBottom,
             ),
             SettingsTile.switchTile(
@@ -149,7 +151,7 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                     ));
                 setting.put(SettingBoxKey.danmakuScroll, show);
               },
-              title: const Text('滚动弹幕'),
+              title: Text(playerTexts.danmakuScrollDisplay),
               initialValue: !widget.danmakuController.option.hideScroll,
             ),
           ],

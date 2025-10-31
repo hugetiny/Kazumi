@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/about/about_page.dart';
-import 'package:kazumi/pages/collect/collect_page.dart';
+import 'package:kazumi/pages/my/favorites_page.dart';
+import 'package:kazumi/pages/my/my_page.dart';
 import 'package:kazumi/pages/info/info_page.dart';
 import 'package:kazumi/pages/init_page.dart';
 import 'package:kazumi/pages/menu/menu.dart';
-import 'package:kazumi/pages/my/my_page.dart';
+import 'package:kazumi/pages/setting/setting_page.dart';
 import 'package:kazumi/pages/popular/popular_page.dart';
 import 'package:kazumi/pages/search/search_page.dart';
 import 'package:kazumi/pages/settings/decoder_settings.dart';
@@ -28,6 +29,7 @@ import 'package:kazumi/pages/history/history_page.dart';
 import 'package:kazumi/request/api.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 final GoRouter router = GoRouter(
   observers: [KazumiDialog.observer],
@@ -48,14 +50,22 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const TimelinePage(),
         ),
         GoRoute(
-          path: '/tab/collect',
-          builder: (context, state) => const CollectPage(),
-        ),
-        GoRoute(
           path: '/tab/my',
           builder: (context, state) => const MyPage(),
         ),
+        GoRoute(
+          path: '/tab/setting',
+          builder: (context, state) => const SettingPage(),
+        ),
       ],
+    ),
+    GoRoute(
+      path: '/my/favorites',
+      builder: (context, state) => const FavoritesPage(),
+    ),
+    GoRoute(
+      path: '/my/history',
+      builder: (context, state) => const HistoryPage(),
     ),
     GoRoute(
       path: '/video',
@@ -101,10 +111,6 @@ final GoRouter router = GoRouter(
           ],
         ),
         GoRoute(
-          path: 'history',
-          builder: (context, state) => const HistoryPage(),
-        ),
-        GoRoute(
           path: 'about',
           builder: (context, state) => const AboutPage(),
           routes: [
@@ -117,7 +123,8 @@ final GoRouter router = GoRouter(
               builder: (context, state) => LicensePage(
                 applicationName: 'Kazumi',
                 applicationVersion: Api.version,
-                applicationLegalese: '开源许可证',
+                applicationLegalese:
+                    context.t.dialogs.about.licenseLegalese,
               ),
             ),
           ],

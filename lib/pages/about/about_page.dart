@@ -7,13 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/setting/setting_controller.dart';
 import 'package:kazumi/request/api.dart';
-import 'package:kazumi/utils/mortis.dart';
 import 'package:kazumi/utils/storage.dart';
-import 'package:kazumi/utils/utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
@@ -23,17 +22,13 @@ class AboutPage extends ConsumerStatefulWidget {
 }
 
 class _AboutPageState extends ConsumerState<AboutPage> {
-  final exitBehaviorTitles = <String>['退出 Kazumi', '最小化至托盘', '每次都询问'];
   late dynamic defaultDanmakuArea;
   late dynamic defaultThemeMode;
   late dynamic defaultThemeColor;
   Box setting = GStorage.setting;
-  late int exitBehavior =
-      setting.get(SettingBoxKey.exitBehavior, defaultValue: 2);
   late bool autoUpdate;
   double _cacheSizeMB = -1;
   late final MyController myController;
-  final MenuController menuController = MenuController();
 
   @override
   void initState() {
@@ -102,16 +97,17 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   void _showCacheDialog() {
     KazumiDialog.show(
       builder: (context) {
+        final cacheDialog = context.t.dialogs.cache;
         return AlertDialog(
-          title: const Text('缓存管理'),
-          content: const Text('缓存为番剧封面, 清除后加载时需要重新下载,确认要清除缓存吗?'),
+          title: Text(cacheDialog.title),
+          content: Text(cacheDialog.message),
           actions: [
             TextButton(
               onPressed: () {
                 KazumiDialog.dismiss();
               },
               child: Text(
-                '取消',
+                context.t.app.cancel,
                 style: TextStyle(color: Theme.of(context).colorScheme.outline),
               ),
             ),
@@ -122,7 +118,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                 } catch (_) {}
                 KazumiDialog.dismiss();
               },
-              child: const Text('确认'),
+              child: Text(context.t.app.confirm),
             ),
           ],
         );
@@ -132,13 +128,22 @@ class _AboutPageState extends ConsumerState<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final String danDanAppId = GStorage.readDanDanAppId();
+    final aboutTranslations = context.t.settings.about;
+    final sections = aboutTranslations.sections;
+    final licenses = sections.licenses;
+    final links = sections.links;
+    final cache = sections.cache;
+    final updates = sections.updates;
+    final formattedDanmakuId = links.danmakuId
+        .replaceFirst('{id}', danDanAppId.isEmpty ? '-' : danDanAppId);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
         onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('关于')),
+        appBar: SysAppBar(title: Text(aboutTranslations.title)),
         // backgroundColor: Colors.transparent,
         body: SettingsList(
           maxWidth: 1000,
@@ -149,27 +154,27 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   onPressed: (_) {
                     _push('/settings/about/license');
                   },
-                  title: const Text('开源许可证'),
-                  description: const Text('查看所有开源许可证'),
+                  title: Text(licenses.title),
+                  description: Text(licenses.description),
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('外部链接'),
+              title: Text(links.title),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     launchUrl(Uri.parse(Api.projectUrl),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('项目主页'),
+                  title: Text(links.project),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
                     launchUrl(Uri.parse(Api.sourceUrl),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('代码仓库'),
+                  title: Text(links.repository),
                   value: const Text('Github'),
                 ),
                 SettingsTile.navigation(
@@ -177,7 +182,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     launchUrl(Uri.parse(Api.iconUrl),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('图标创作'),
+                  title: Text(links.icon),
                   value: const Text('Pixiv'),
                 ),
                 SettingsTile.navigation(
@@ -185,7 +190,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     launchUrl(Uri.parse(Api.bangumiIndex),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('番剧索引'),
+                  title: Text(links.index),
                   value: const Text('Bangumi'),
                 ),
                 SettingsTile.navigation(
@@ -193,68 +198,9 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     launchUrl(Uri.parse(Api.dandanIndex),
                         mode: LaunchMode.externalApplication);
                   },
-                  title: const Text('弹幕来源'),
-                  description: Text('ID: ${mortis['id']}'),
+                  title: Text(links.danmaku),
+                  description: Text(formattedDanmakuId),
                   value: const Text('DanDanPlay'),
-                ),
-              ],
-            ),
-            if (Utils.isDesktop()) // 之后如果有非桌面平台的新选项可以移除
-              SettingsSection(
-                title: const Text('默认行为'),
-                tiles: [
-                  SettingsTile.navigation(
-                    onPressed: (_) {
-                      if (menuController.isOpen) {
-                        menuController.close();
-                      } else {
-                        menuController.open();
-                      }
-                    },
-                    title: const Text('关闭时'),
-                    value: MenuAnchor(
-                      consumeOutsideTap: true,
-                      controller: menuController,
-                      builder: (_, __, ___) {
-                        return Text(exitBehaviorTitles[exitBehavior]);
-                      },
-                      menuChildren: [
-                        for (int i = 0; i < 3; i++)
-                          MenuItemButton(
-                            requestFocusOnHover: false,
-                            onPressed: () {
-                              exitBehavior = i;
-                              setting.put(SettingBoxKey.exitBehavior, i);
-                              setState(() {});
-                            },
-                            child: Container(
-                              height: 48,
-                              constraints: BoxConstraints(minWidth: 112),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  exitBehaviorTitles[i],
-                                  style: TextStyle(
-                                    color: i == exitBehavior
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            SettingsSection(
-              tiles: [
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    _push('/settings/about/logs');
-                  },
-                  title: const Text('错误日志'),
                 ),
               ],
             ),
@@ -264,15 +210,20 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   onPressed: (_) {
                     _showCacheDialog();
                   },
-                  title: const Text('清除缓存'),
+                  title: Text(cache.clearAction),
                   value: _cacheSizeMB == -1
-                      ? const Text('统计中...')
-                      : Text('${_cacheSizeMB.toStringAsFixed(2)}MB'),
+                      ? Text(cache.sizePending)
+                      : Text(
+                          cache.sizeLabel.replaceFirst(
+                            '{size}',
+                            _cacheSizeMB.toStringAsFixed(2),
+                          ),
+                        ),
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('应用更新'),
+              title: Text(updates.title),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -280,15 +231,18 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     await setting.put(SettingBoxKey.autoUpdate, autoUpdate);
                     setState(() {});
                   },
-                  title: const Text('自动更新'),
+                  title: Text(updates.autoUpdate),
                   initialValue: autoUpdate,
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
                     myController.checkUpdate();
                   },
-                  title: const Text('检查更新'),
-                  value: const Text('当前版本 ${Api.version}'),
+                  title: Text(updates.check),
+                  value: Text(
+                    updates.currentVersion
+                        .replaceFirst('{version}', Api.version),
+                  ),
                 ),
               ],
             ),

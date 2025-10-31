@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:kazumi/pages/collect/providers.dart';
+import 'package:kazumi/pages/my/providers.dart';
 
 class CollectButton extends ConsumerStatefulWidget {
   CollectButton({
@@ -41,17 +40,11 @@ class _CollectButtonState extends ConsumerState<CollectButton> {
   // 3. 搁置
   // 4. 看过
   // 5. 抛弃
-  late int collectType;
-  late final CollectController collectController;
-
-  @override
-  void initState() {
-    collectController = ref.read(collectControllerProvider.notifier);
-    super.initState();
-  }
 
   String getTypeStringByInt(int collectType) {
     switch (collectType) {
+      case 0:
+        return "未追";
       case 1:
         return "在看";
       case 2:
@@ -69,6 +62,8 @@ class _CollectButtonState extends ConsumerState<CollectButton> {
 
   IconData getIconByInt(int collectType) {
     switch (collectType) {
+      case 0:
+        return Icons.favorite_border;
       case 1:
         return Icons.favorite;
       case 2:
@@ -87,9 +82,10 @@ class _CollectButtonState extends ConsumerState<CollectButton> {
   @override
   Widget build(BuildContext context) {
     ref.watch(collectControllerProvider);
-    collectType = collectController.getCollectType(widget.bangumiItem);
+    final collectController = ref.read(collectControllerProvider.notifier);
+    final collectType = collectController.getCollectType(widget.bangumiItem);
     return MenuAnchor(
-      consumeOutsideTap: true,
+  consumeOutsideTap: true,
       onClose: widget.onClose,
       onOpen: widget.onOpen,
       crossAxisUnconstrained: false,
@@ -122,44 +118,47 @@ class _CollectButtonState extends ConsumerState<CollectButton> {
           );
         }
       },
-      menuChildren: List<MenuItemButton>.generate(
-        6,
-        (int index) => MenuItemButton(
-          onPressed: () {
-            if (index != collectType && mounted) {
-              collectController.addCollect(widget.bangumiItem, type: index);
-              setState(() {});
-            }
-          },
-          child: Container(
-            height: 48,
-            constraints: BoxConstraints(minWidth: 112),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    getIconByInt(index),
-                    color: index == collectType
-                        ? Theme.of(context).colorScheme.primary
-                        : null,
+      menuChildren: const [0, 1, 2, 4]
+          .map(
+            (type) => MenuItemButton(
+              onPressed: () {
+                if (type != collectType && mounted) {
+                  collectController.addCollect(
+                    widget.bangumiItem,
+                    type: type,
+                  );
+                }
+              },
+              child: Container(
+                height: 48,
+                constraints: BoxConstraints(minWidth: 112),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        getIconByInt(type),
+                        color: type == collectType
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        ' ${getTypeStringByInt(type)}',
+                        style: TextStyle(
+                          color: type == collectType
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 4),
-                  Text(
-                    ' ${getTypeStringByInt(index)}',
-                    style: TextStyle(
-                      color: index == collectType
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      ),
+          )
+          .toList(),
     );
   }
 }

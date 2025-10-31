@@ -1,0 +1,10 @@
+base_locale: en-US
+fallback_strategy: base_locale
+input_directory: lib/l10n
+input_file_pattern: .i18n.json
+output_directory: lib/l10n/generated
+output_file_name: translations.g.dart
+class_name: AppTranslations
+flutter_integration: true
+# Planned locale expansions will live alongside app_zh-CN.i18n.json
+# e.g. app_en-US.i18n.json, app_ja-JP.i18n.json

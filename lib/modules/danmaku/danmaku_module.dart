@@ -10,7 +10,7 @@ class Danmaku {
   int type;
   // 弹幕颜色
   Color color;
-  // 弹幕来源 ([BiliBili], [Gamer])
+  // 弹幕源 ([BiliBili], [Gamer])
   String source;
 
   Danmaku({required this.message, required this.time, required this.type, required this.color, required this.source});

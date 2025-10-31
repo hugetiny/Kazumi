@@ -13,7 +13,7 @@ class Api {
   static const String pluginShop = 'https://raw.githubusercontent.com/Predidit/KazumiRules/main/';
   /// 在线升级
   static const String latestApp =
-      'https://api.github.com/repos/Predidit/Kazumi/releases/latest'; 
+      'https://api.github.com/repos/Predidit/Kazumi/releases/latest';
   /// Github镜像
   static const String gitMirror = 'https://ghfast.top/';
   /// 弹弹官网
@@ -61,6 +61,10 @@ class Api {
   static const String dandanAPIInfo = "/api/v2/bangumi/";
   /// 获取弹弹番剧元数据（通过BGM番剧ID）
   static const String dandanAPIInfoByBgmBangumiId = "/api/v2/bangumi/bgmtv/{0}";
+
+  /// TMDb API
+  static const String tmdbDomain = 'https://api.themoviedb.org/3';
+  static const String tmdbTvDetail = '/tv/{0}';
 
   static String formatUrl(String url, List<dynamic> params) {
     for (int i = 0; i < params.length; i++) {

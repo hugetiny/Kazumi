@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/bean/card/bangumi_card.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/pages/search/providers.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
+import 'package:kazumi/utils/constants.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key, this.inputTag = ''});
@@ -59,6 +60,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void showSortSwitcher() {
+    final t = context.t;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -69,7 +71,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  title: const Text('按热度排序'),
+                  title: Text(t.library.search.sort.byHeat),
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
@@ -81,7 +83,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   },
                 ),
                 ListTile(
-                  title: const Text('按评分排序'),
+                  title: Text(t.library.search.sort.byRating),
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
@@ -93,7 +95,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   },
                 ),
                 ListTile(
-                  title: const Text('按匹配程度排序'),
+                  title: Text(t.library.search.sort.byRelevance),
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
@@ -114,6 +116,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.inputTag.isNotEmpty) {
         final String tagString = 'tag:${Uri.decodeComponent(widget.inputTag)}';
@@ -124,14 +127,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       }
     });
     return Scaffold(
-      appBar: const SysAppBar(
+      appBar: SysAppBar(
         backgroundColor: Colors.transparent,
-        title: Text('搜索'),
+        title: Text(t.navigation.actions.search),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: showSortSwitcher,
         icon: const Icon(Icons.sort),
-        label: const Text('排序方式'),
+        label: Text(t.library.search.sort.label),
       ),
       body: Column(
         children: [
@@ -168,7 +171,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         return Container(
                           height: 400,
                           alignment: Alignment.center,
-                          child: const Text('无匹配的历史记录，回车以直接检索'),
+                          child: Text(t.library.search.noHistory),
                         );
                       }
                       return Column(
@@ -220,7 +223,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   child: SizedBox(
                     height: 400,
                     child: GeneralErrorWidget(
-                      errMsg: '什么都没有找到 (´;ω;`)',
+                      errMsg: t.library.common.emptyState,
                       actions: [
                         GeneralErrorButton(
                           onPressed: () {
@@ -228,7 +231,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 .read(searchControllerProvider.notifier)
                                 .searchBangumi(searchController.text, type: 'init');
                           },
-                          text: '点击重试',
+                          text: t.library.common.retry,
                         ),
                       ],
                     ),

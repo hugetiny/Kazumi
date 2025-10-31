@@ -12,6 +12,9 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - lib/bbcode/generated/**
+    - lib/modules/**/generated/**
+    - lib/l10n/generated/**
+    - test/integration/**.mocks.dart
 
 linter:
   # The lint rules applied to this project can be customized in the

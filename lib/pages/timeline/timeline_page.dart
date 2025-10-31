@@ -11,6 +11,17 @@ import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
+
+const int _weekdayCount = 7;
+const List<_TimelineSeason> _seasonSelectionOrder = <_TimelineSeason>[
+  _TimelineSeason.autumn,
+  _TimelineSeason.summer,
+  _TimelineSeason.spring,
+  _TimelineSeason.winter,
+];
+
+enum _TimelineSeason { winter, spring, summer, autumn }
 
 class TimelinePage extends ConsumerStatefulWidget {
   const TimelinePage({super.key});
@@ -28,13 +39,22 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
   void initState() {
     super.initState();
     int weekday = DateTime.now().weekday - 1;
-    tabController =
-        TabController(vsync: this, length: tabs.length, initialIndex: weekday);
+    final initialIndex = weekday.clamp(0, _weekdayCount - 1);
+    tabController = TabController(
+      vsync: this,
+      length: _weekdayCount,
+      initialIndex: initialIndex,
+    );
     timelineController = ref.read(timelineControllerProvider.notifier);
-    final state = ref.read(timelineControllerProvider);
-    if (state.bangumiCalendar.isEmpty) {
-      timelineController.init();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final state = ref.read(timelineControllerProvider);
+      if (state.bangumiCalendar.isEmpty) {
+        timelineController.init();
+      }
+    });
   }
 
   @override
@@ -52,38 +72,34 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     context.go('/tab/popular');
   }
 
-  DateTime generateDateTime(int year, String season) {
+  DateTime generateDateTime(int year, _TimelineSeason season) {
     switch (season) {
-      case '冬':
+      case _TimelineSeason.winter:
         return DateTime(year, 1, 1);
-      case '春':
+      case _TimelineSeason.spring:
         return DateTime(year, 4, 1);
-      case '夏':
+      case _TimelineSeason.summer:
         return DateTime(year, 7, 1);
-      case '秋':
+      case _TimelineSeason.autumn:
         return DateTime(year, 10, 1);
-      default:
-        return DateTime.now();
     }
   }
 
-  final List<Tab> tabs = const <Tab>[
-    Tab(text: '一'),
-    Tab(text: '二'),
-    Tab(text: '三'),
-    Tab(text: '四'),
-    Tab(text: '五'),
-    Tab(text: '六'),
-    Tab(text: '日'),
-  ];
-
-  final seasons = ['秋', '夏', '春', '冬'];
-
-  String getStringByDateTime(DateTime d) {
-    return d.year.toString() + Utils.getSeasonStringByMonth(d.month);
+  List<Tab> buildWeekTabs(AppTranslations translations) {
+    final weekdays = translations.library.timeline.weekdays;
+    return [
+      Tab(text: weekdays.mon),
+      Tab(text: weekdays.tue),
+      Tab(text: weekdays.wed),
+      Tab(text: weekdays.thu),
+      Tab(text: weekdays.fri),
+      Tab(text: weekdays.sat),
+      Tab(text: weekdays.sun),
+    ];
   }
 
   void showSeasonBottomSheet(BuildContext context) {
+    final t = context.t;
     final currDate = DateTime.now();
     final years = List.generate(20, (index) => currDate.year - index);
 
@@ -91,7 +107,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     Map<int, List<DateTime>> yearSeasons = {};
     for (final year in years) {
       List<DateTime> availableSeasons = [];
-      for (final season in seasons) {
+      for (final season in _seasonSelectionOrder) {
         final date = generateDateTime(year, season);
         if (currDate.isAfter(date)) {
           availableSeasons.add(date);
@@ -137,7 +153,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          '时间机器',
+                          t.library.timeline.seasonPicker.title,
                           style: Theme.of(context)
                               .textTheme
                               .titleLarge
@@ -188,7 +204,8 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
-                                      '$year年',
+                                      t.library.timeline.seasonPicker.yearLabel
+                                          .replaceAll('{year}', '$year'),
                                       style: Theme.of(context)
                                           .textTheme
                                           .titleMedium
@@ -230,17 +247,22 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       }
     }
 
+    final seasonTranslations = context.t.library.timeline.season;
     final segments = availableSeasons.map((date) {
-      final seasonName = Utils.getSeasonStringByMonth(date.month);
+      final season = seasonFromDate(date);
       return ButtonSegment<DateTime>(
         value: date,
         label: Text(
-          seasonName,
+          seasonLabel(
+            seasonTranslations,
+            season,
+            useShort: true,
+          ),
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
         ),
-        icon: getSeasonIcon(seasonName),
+        icon: getSeasonIcon(season),
       );
     }).toList();
 
@@ -278,24 +300,46 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     );
   }
 
-  Widget getSeasonIcon(String seasonName) {
-    IconData iconData;
-    switch (seasonName) {
-      case '春':
-        iconData = Icons.eco;
-        break;
-      case '夏':
-        iconData = Icons.wb_sunny;
-        break;
-      case '秋':
-        iconData = Icons.park;
-        break;
-      case '冬':
-        iconData = Icons.ac_unit;
-        break;
-      default:
-        iconData = Icons.schedule;
+  _TimelineSeason seasonFromDate(DateTime date) {
+    final month = date.month;
+    if (month <= 3) return _TimelineSeason.winter;
+    if (month <= 6) return _TimelineSeason.spring;
+    if (month <= 9) return _TimelineSeason.summer;
+    return _TimelineSeason.autumn;
+  }
+
+  String seasonLabel(
+    dynamic seasonTranslations,
+    _TimelineSeason season, {
+    bool useShort = false,
+  }) {
+    switch (season) {
+      case _TimelineSeason.winter:
+        return useShort
+            ? seasonTranslations.short.winter
+            : seasonTranslations.names.winter;
+      case _TimelineSeason.spring:
+        return useShort
+            ? seasonTranslations.short.spring
+            : seasonTranslations.names.spring;
+      case _TimelineSeason.summer:
+        return useShort
+            ? seasonTranslations.short.summer
+            : seasonTranslations.names.summer;
+      case _TimelineSeason.autumn:
+        return useShort
+            ? seasonTranslations.short.autumn
+            : seasonTranslations.names.autumn;
     }
+  }
+
+  Icon getSeasonIcon(_TimelineSeason season) {
+    final iconData = switch (season) {
+      _TimelineSeason.spring => Icons.eco,
+      _TimelineSeason.summer => Icons.wb_sunny,
+      _TimelineSeason.autumn => Icons.park,
+      _TimelineSeason.winter => Icons.ac_unit,
+    };
 
     return Icon(
       iconData,
@@ -320,27 +364,28 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       // context: context,
       isScrollControlled: true,
       builder: (context) {
+        final localSort = context.t.library.timeline.sort;
         return Wrap(
           children: [
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  title: const Text('按热度排序'),
+                  title: Text(localSort.byHeat),
                   onTap: () {
                     Navigator.pop(context);
                     timelineController.changeSortType(3);
                   },
                 ),
                 ListTile(
-                  title: const Text('按评分排序'),
+                  title: Text(localSort.byRating),
                   onTap: () {
                     Navigator.pop(context);
                     timelineController.changeSortType(2);
                   },
                 ),
                 ListTile(
-                  title: const Text('按时间排序'),
+                  title: Text(localSort.byTime),
                   onTap: () {
                     Navigator.pop(context);
                     timelineController.changeSortType(1);
@@ -356,8 +401,11 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
 
   @override
   Widget build(BuildContext context) {
-  final state = ref.watch(timelineControllerProvider);
-  return PopScope(
+    final state = ref.watch(timelineControllerProvider);
+    final translations = context.t;
+    final timelineTexts = translations.library.timeline;
+    final commonTexts = translations.library.common;
+    return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) {
@@ -371,7 +419,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
           toolbarHeight: 104,
           bottom: TabBar(
             controller: tabController,
-            tabs: tabs,
+            tabs: buildWeekTabs(translations),
             indicatorColor: Theme.of(context).colorScheme.primary,
           ),
           title: InkWell(
@@ -384,7 +432,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
             showSortSwitcher();
           },
           icon: const Icon(Icons.sort),
-          label: const Text("排序方式"),
+          label: Text(timelineTexts.sort.title),
         ),
         body: Builder(builder: (context) {
           if (state.isLoading && state.bangumiCalendar.isEmpty) {
@@ -396,12 +444,12 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
             return Center(
               child: SizedBox(
                 height: 400,
-                child: GeneralErrorWidget(errMsg: '什么都没有找到 (´;ω;`)', actions: [
+                child: GeneralErrorWidget(errMsg: commonTexts.emptyState, actions: [
                   GeneralErrorButton(
                     onPressed: () {
                       onSeasonSelected(state.selectedDate);
                     },
-                    text: '点击重试',
+                    text: commonTexts.retry,
                   ),
                 ]),
               ),
@@ -419,7 +467,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
   List<Widget> contentGrid(List<List<BangumiItem>> bangumiCalendar) {
     // Ensure tab content count matches TabController length to avoid runtime mismatches.
     final normalizedCalendar = List<List<BangumiItem>>.generate(
-      tabs.length,
+      _weekdayCount,
       (index) => index < bangumiCalendar.length ? bangumiCalendar[index] : const [],
     );
 

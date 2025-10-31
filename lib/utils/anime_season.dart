@@ -2,10 +2,17 @@
 class AnimeSeason {
   late DateTime _date;
   final _seasons = ['冬季', '春季', '夏季', '秋季'];
+  static const List<String> _seasonKeys = ['winter', 'spring', 'summer', 'autumn'];
 
   AnimeSeason(DateTime date) {
     _date = date;
   }
+
+  int get seasonIndex => _getYearAndSeason(_date)[1];
+
+  int get year => _getYearAndSeason(_date)[0];
+
+  String get seasonKey => _seasonKeys[seasonIndex];
 
   List<int> _getYearAndSeason(DateTime dt) {
     int year = dt.year;

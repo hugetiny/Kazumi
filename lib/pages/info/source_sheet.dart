@@ -1,11 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
-import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
-import 'package:kazumi/pages/collect/collect_controller.dart';
-import 'package:kazumi/pages/collect/providers.dart';
+import 'package:kazumi/pages/my/my_controller.dart';
+import 'package:kazumi/pages/my/providers.dart';
 import 'package:kazumi/pages/info/info_controller.dart';
 import 'package:kazumi/pages/info/source_search_provider.dart';
 import 'package:kazumi/pages/video/providers.dart';
@@ -14,17 +15,17 @@ import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
-import 'package:url_launcher/url_launcher.dart';
+
+enum SourceSortOption { original, nameAsc, nameDesc }
 
 class SourceSheet extends ConsumerStatefulWidget {
   const SourceSheet({
     super.key,
-    required this.tabController,
     required this.infoController,
   });
 
-  final TabController tabController;
   final InfoController infoController;
 
   @override
@@ -34,25 +35,27 @@ class SourceSheet extends ConsumerStatefulWidget {
 class _SourceSheetState extends ConsumerState<SourceSheet> {
   late final VideoPageController videoPageController;
   late final CollectController collectController;
-  late String keyword;
+  late final String _originalKeyword;
+  SourceSortOption _sortOption = SourceSortOption.original;
 
   @override
   void initState() {
     super.initState();
     videoPageController = ref.read(videoControllerProvider.notifier);
     collectController = ref.read(collectControllerProvider.notifier);
-    keyword = widget.infoController.bangumiItem.nameCn.isEmpty
+    _originalKeyword = widget.infoController.bangumiItem.nameCn.isEmpty
         ? widget.infoController.bangumiItem.name
         : widget.infoController.bangumiItem.nameCn;
   }
 
-  void _showAliasSearchDialog(
-    String pluginName,
-    SourceSearchController searchController,
-  ) {
+  bool get _hasAlias => widget.infoController.bangumiItem.alias.isNotEmpty;
+
+  void _showAliasSearchDialog(SourceSearchController searchController) {
+    final sheetTexts = context.t.library.info.sourceSheet;
+    final aliasTexts = sheetTexts.alias;
     final existingAlias = widget.infoController.bangumiItem.alias;
     if (existingAlias.isEmpty) {
-      KazumiDialog.showToast(message: '无可用别名，试试手动检索');
+      KazumiDialog.showToast(message: sheetTexts.toast.aliasEmpty);
       return;
     }
 
@@ -77,18 +80,21 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                     return ListTile(
                       title: Text(alias),
                       trailing: IconButton(
+                        tooltip: aliasTexts.deleteTooltip,
                         onPressed: () {
                           KazumiDialog.show(
                             builder: (confirmContext) {
+                              final confirmTexts =
+                                  confirmContext.t.library.info.sourceSheet;
+                              final confirmAlias = confirmTexts.alias;
                               return AlertDialog(
-                                title: const Text('删除确认'),
-                                content:
-                                    const Text('删除后无法恢复，确认要永久删除这个别名吗？'),
+                                title: Text(confirmAlias.deleteTitle),
+                                content: Text(confirmAlias.deleteMessage),
                                 actions: [
                                   TextButton(
                                     onPressed: KazumiDialog.dismiss,
                                     child: Text(
-                                      '取消',
+                                      confirmContext.t.app.cancel,
                                       style: TextStyle(
                                         color: Theme.of(confirmContext)
                                             .colorScheme
@@ -101,7 +107,8 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                                       KazumiDialog.dismiss();
                                       final updated = List<String>.from(
                                         widget.infoController.bangumiItem.alias,
-                                      )..removeAt(index);
+                                      )
+                                        ..removeAt(index);
                                       widget.infoController.bangumiItem.alias =
                                           updated;
                                       aliasNotifier.value = List<String>.from(
@@ -114,21 +121,18 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                                         Navigator.of(dialogContext).pop();
                                       }
                                     },
-                                    child: const Text('确认'),
+                                    child: Text(confirmContext.t.app.confirm),
                                   ),
                                 ],
                               );
                             },
                           );
                         },
-                        icon: const Icon(Icons.delete),
+                        icon: const Icon(Icons.delete_outline_rounded),
                       ),
                       onTap: () {
                         KazumiDialog.dismiss();
-                        searchController.queryPlugin(
-                          pluginName,
-                          keywordOverride: alias,
-                        );
+                        searchController.searchWithKeyword(alias);
                       },
                     );
                   }).toList(),
@@ -141,83 +145,48 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     );
   }
 
-  void _showCustomSearchDialog(
-    String pluginName,
-    SourceSearchController searchController,
-  ) {
-    KazumiDialog.show(
-      builder: (context) {
-        final textController = TextEditingController();
-        return AlertDialog(
-          title: const Text('输入别名'),
-          content: TextField(
-            controller: textController,
-            onSubmitted: (value) {
-              final alias = textController.text.trim();
-              if (alias.isEmpty) {
-                return;
-              }
-              widget.infoController.bangumiItem.alias.add(alias);
-              collectController.updateLocalCollect(
-                widget.infoController.bangumiItem,
-              );
-              KazumiDialog.dismiss();
-              searchController.queryPlugin(
-                pluginName,
-                keywordOverride: alias,
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: KazumiDialog.dismiss,
-              child: Text(
-                '取消',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                final alias = textController.text.trim();
-                if (alias.isEmpty) {
-                  return;
-                }
-                widget.infoController.bangumiItem.alias.add(alias);
-                collectController.updateLocalCollect(
-                  widget.infoController.bangumiItem,
-                );
-                KazumiDialog.dismiss();
-                searchController.queryPlugin(
-                  pluginName,
-                  keywordOverride: alias,
-                );
-              },
-              child: const Text('确认'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Color _statusColor(PluginSearchStatus status, ThemeData theme) {
-    switch (status) {
-      case PluginSearchStatus.success:
-        return Colors.green;
-      case PluginSearchStatus.error:
-        return theme.colorScheme.error;
-      case PluginSearchStatus.pending:
-        return theme.colorScheme.outline;
+  String _sortOptionLabel(SourceSortOption option) {
+    final options = context.t.library.info.sourceSheet.sort.options;
+    switch (option) {
+      case SourceSortOption.original:
+        return options.original;
+      case SourceSortOption.nameAsc:
+        return options.nameAsc;
+      case SourceSortOption.nameDesc:
+        return options.nameDesc;
     }
   }
 
-  Future<void> _openSearchPage(Plugin plugin) async {
-    if (plugin.searchURL.isEmpty) {
-      KazumiDialog.showToast(message: '该规则未提供检索链接');
-      return;
+  List<_SourceEntry> _sortedEntries(List<_SourceEntry> entries) {
+    switch (_sortOption) {
+      case SourceSortOption.original:
+        return entries;
+      case SourceSortOption.nameAsc:
+        return [...entries]
+          ..sort((a, b) => a.item.name.compareTo(b.item.name));
+      case SourceSortOption.nameDesc:
+        return [...entries]
+          ..sort((a, b) => b.item.name.compareTo(a.item.name));
     }
-    final url = plugin.searchURL.replaceFirst('@keyword', keyword);
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
+  String _shortenEndpoint(String src) {
+    if (src.isEmpty) {
+      return src;
+    }
+    if (src.startsWith('http')) {
+      try {
+        final uri = Uri.parse(src);
+        final buffer = StringBuffer(uri.host);
+        if (uri.pathSegments.isNotEmpty) {
+          buffer.write('/${uri.pathSegments.first}');
+        }
+        return buffer.toString();
+      } catch (_) {
+        return src;
+      }
+    }
+    return src.length > 48 ? '${src.substring(0, 47)}…' : src;
   }
 
   Future<void> _handleSearchItemTap(
@@ -225,8 +194,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     Plugin plugin,
     SearchItem searchItem,
   ) async {
+    final sheetTexts = context.t.library.info.sourceSheet;
     KazumiDialog.showLoading(
-      msg: '获取中',
+      msg: context.t.app.loading,
       barrierDismissible: Utils.isDesktop(),
       onDismiss: videoPageController.cancelQueryRoads,
     );
@@ -244,178 +214,433 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     } catch (error) {
       KazumiLogger().log(Level.warning, '获取视频播放列表失败: $error');
       KazumiDialog.dismiss();
-      KazumiDialog.showToast(message: '获取视频播放列表失败');
+      KazumiDialog.showToast(message: sheetTexts.toast.loadFailed);
     }
   }
 
-  Widget _buildPluginResultView(
+  Widget _buildSourceCard(
     BuildContext context,
     Plugin plugin,
-    PluginSearchStatus status,
-    List<SearchItem> results,
-    SourceSearchController searchController,
+    SearchItem item,
   ) {
-    switch (status) {
-      case PluginSearchStatus.pending:
-        return const Center(child: CircularProgressIndicator());
-      case PluginSearchStatus.error:
-        return GeneralErrorWidget(
-          errMsg: '${plugin.name} 检索失败 重试或左右滑动以切换到其他视频来源',
+    final sheetTexts = context.t.library.info.sourceSheet;
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _handleSearchItemTap(context, plugin, item),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                sheetTexts.card.title
+                    .replaceFirst('{plugin}', plugin.name),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _shortenEndpoint(item.src),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () =>
+                        _handleSearchItemTap(context, plugin, item),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: Text(sheetTexts.card.play),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  PopupMenuButton<SourceSortOption> _buildSortMenu() {
+    final sortTexts = context.t.library.info.sourceSheet.sort;
+    return PopupMenuButton<SourceSortOption>(
+      tooltip: sortTexts.tooltip
+          .replaceFirst('{label}', _sortOptionLabel(_sortOption)),
+      icon: const Icon(Icons.sort_rounded),
+      onSelected: (option) {
+        setState(() {
+          _sortOption = option;
+        });
+      },
+      itemBuilder: (context) {
+        return SourceSortOption.values.map((option) {
+          final selected = option == _sortOption;
+          return PopupMenuItem<SourceSortOption>(
+            value: option,
+            child: Row(
+              children: [
+                if (selected)
+                  const Icon(Icons.check_rounded, size: 18)
+                else
+                  const SizedBox(width: 18),
+                const SizedBox(width: 12),
+                Text(_sortOptionLabel(option)),
+              ],
+            ),
+          );
+        }).toList();
+      },
+    );
+  }
+
+  ({
+    List<_SourceEntry> entries,
+    List<Plugin> pending,
+    List<Plugin> errors,
+    List<Plugin> empty,
+  }) _aggregateResults(
+    List<Plugin> plugins,
+    SourceSearchState searchState,
+  ) {
+    final entries = <_SourceEntry>[];
+    final pending = <Plugin>[];
+    final errors = <Plugin>[];
+    final empty = <Plugin>[];
+
+    for (final plugin in plugins) {
+      final status =
+          searchState.statuses[plugin.name] ?? PluginSearchStatus.pending;
+      final results =
+          searchState.results[plugin.name] ?? const <SearchItem>[];
+      switch (status) {
+        case PluginSearchStatus.pending:
+          pending.add(plugin);
+          break;
+        case PluginSearchStatus.error:
+          errors.add(plugin);
+          break;
+        case PluginSearchStatus.success:
+          if (results.isEmpty) {
+            empty.add(plugin);
+          } else {
+            for (final item in results) {
+              entries.add(_SourceEntry(plugin, item));
+            }
+          }
+          break;
+      }
+    }
+
+    return (
+      entries: entries,
+      pending: pending,
+      errors: errors,
+      empty: empty,
+    );
+  }
+
+  List<Widget> _buildStatusCards({
+    required List<Plugin> pending,
+    required List<Plugin> errors,
+    required List<Plugin> empty,
+    required SourceSearchController controller,
+  }) {
+    final sheetTexts = context.t.library.info.sourceSheet;
+    final statusTexts = sheetTexts.status;
+    final actions = sheetTexts.actions;
+    final widgets = <Widget>[];
+
+    for (final plugin in pending) {
+      widgets.add(
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+            title: Text(
+              statusTexts.searching.replaceFirst('{plugin}', plugin.name),
+            ),
+            dense: true,
+          ),
+        ),
+      );
+    }
+
+    for (final plugin in errors) {
+      widgets.add(
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: Icon(
+              Icons.error_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              statusTexts.failed.replaceFirst('{plugin}', plugin.name),
+            ),
+            dense: true,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => controller.queryPlugin(plugin.name),
+                  child: Text(context.t.app.retry),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: () => _confirmRemoveSource(plugin),
+                  child: Text(actions.removeSource),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    for (final plugin in empty) {
+      widgets.add(
+        Card(
+          elevation: 0,
+          child: ListTile(
+            leading: Icon(
+              Icons.info_outline_rounded,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            title: Text(
+              statusTexts.empty.replaceFirst('{plugin}', plugin.name),
+            ),
+            dense: true,
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  void _confirmRemoveSource(Plugin plugin) {
+    KazumiDialog.show(
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final dialogTexts =
+            dialogContext.t.library.info.sourceSheet.dialog;
+        return AlertDialog(
+          title: Text(dialogTexts.removeTitle),
+          content: Text(
+            dialogTexts.removeMessage
+                .replaceFirst('{plugin}', plugin.name),
+          ),
           actions: [
-            GeneralErrorButton(
-              onPressed: () {
-                searchController.queryPlugin(plugin.name);
+            TextButton(
+              onPressed: KazumiDialog.dismiss,
+              child: Text(
+                dialogContext.t.app.cancel,
+                style: TextStyle(color: theme.colorScheme.outline),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                KazumiDialog.dismiss();
+                await ref
+                    .read(pluginsControllerProvider.notifier)
+                    .removePlugin(plugin);
+                KazumiDialog.showToast(
+                  message: dialogContext
+                      .t.library.info.sourceSheet.toast.removed
+                      .replaceFirst('{plugin}', plugin.name),
+                );
               },
-              text: '重试',
+              child: Text(dialogContext.t.app.delete),
             ),
           ],
         );
-      case PluginSearchStatus.success:
-        if (results.isEmpty) {
-          return GeneralErrorWidget(
-            errMsg: '${plugin.name} 无结果 使用别名或左右滑动以切换到其他视频来源',
-            actions: [
-              GeneralErrorButton(
-                onPressed: () => _showAliasSearchDialog(
-                  plugin.name,
-                  searchController,
-                ),
-                text: '别名检索',
-              ),
-              GeneralErrorButton(
-                onPressed: () => _showCustomSearchDialog(
-                  plugin.name,
-                  searchController,
-                ),
-                text: '手动检索',
-              ),
-            ],
-          );
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            final item = results[index];
-            return Card(
-              elevation: 0,
-              margin: const EdgeInsets.only(bottom: 10),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () => _handleSearchItemTap(context, plugin, item),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(item.name),
-                ),
-              ),
-            );
-          },
-        );
-    }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final pluginState = ref.watch(pluginsControllerProvider);
     final plugins = pluginState.pluginList;
+
     if (plugins.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    if (plugins.length != widget.tabController.length) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text('插件列表已变更，请关闭面板后重新打开以刷新来源列表'),
+    final searchState = ref.watch(sourceSearchProvider(_originalKeyword));
+    final searchController =
+        ref.read(sourceSearchProvider(_originalKeyword).notifier);
+
+    final aggregation = _aggregateResults(plugins, searchState);
+    final sortedEntries = _sortedEntries(aggregation.entries);
+    final statusCards = _buildStatusCards(
+      pending: aggregation.pending,
+      errors: aggregation.errors,
+      empty: aggregation.empty,
+      controller: searchController,
+    );
+
+    final bangumiName = widget.infoController.bangumiItem.nameCn.isEmpty
+        ? widget.infoController.bangumiItem.name
+        : widget.infoController.bangumiItem.nameCn;
+
+    final sheetTexts = context.t.library.info.sourceSheet;
+
+    final slivers = <Widget>[
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        sliver: SliverToBoxAdapter(
+          child: Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () =>
+                    searchController.searchWithKeyword(_originalKeyword),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(sheetTexts.actions.searchAgain),
+              ),
+              OutlinedButton.icon(
+                onPressed: _hasAlias
+                    ? () => _showAliasSearchDialog(searchController)
+                    : null,
+                icon: const Icon(Icons.badge_outlined),
+                label: Text(sheetTexts.actions.aliasSearch),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    if (statusCards.isNotEmpty) {
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate(statusCards),
+          ),
         ),
       );
     }
 
-    // Ensure the tab index never exceeds the available plugin list.
-    if (widget.tabController.index >= plugins.length) {
-      widget.tabController.index = plugins.length - 1;
-    }
+    if (sortedEntries.isNotEmpty) {
+      slivers.add(
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          sliver: SliverToBoxAdapter(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const minTileWidth = 280.0;
+                const spacing = 16.0;
+                final maxWidth = constraints.maxWidth;
+                var crossAxisCount =
+                    ((maxWidth + spacing) / (minTileWidth + spacing)).floor();
+                crossAxisCount = math.max(1, crossAxisCount);
+                final totalSpacing = spacing * (crossAxisCount - 1);
+                final itemWidth =
+                    (maxWidth - totalSpacing) / crossAxisCount;
 
-    final searchState = ref.watch(sourceSearchProvider(keyword));
-    final searchController = ref.read(sourceSearchProvider(keyword).notifier);
-    final theme = Theme.of(context);
-
-    return Scaffold(
-      body: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.center,
-                  dividerHeight: 0,
-                  controller: widget.tabController,
-                  tabs: plugins.map((plugin) {
-                    final status =
-                        searchState.statuses[plugin.name] ??
-                            PluginSearchStatus.pending;
-                    return Tab(
-                      child: Row(
-                        children: [
-                          Text(
-                            plugin.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize:
-                                  theme.textTheme.titleMedium?.fontSize ?? 16,
-                              color: theme.colorScheme.onSurface,
-                            ),
+                return Align(
+                  alignment: Alignment.topLeft,
+                  child: Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      for (final entry in sortedEntries)
+                        SizedBox(
+                          width: itemWidth,
+                          child: _buildSourceCard(
+                            context,
+                            entry.plugin,
+                            entry.item,
                           ),
-                          const SizedBox(width: 5),
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: _statusColor(status, theme),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              IconButton(
-                onPressed: () async {
-                  final index = widget.tabController.index;
-                  if (index < plugins.length) {
-                    await _openSearchPage(plugins[index]);
-                  }
-                },
-                icon: const Icon(Icons.open_in_browser_rounded),
-              ),
-              const SizedBox(width: 4),
-            ],
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: TabBarView(
-              controller: widget.tabController,
-              children: plugins.map((plugin) {
-                final status =
-                    searchState.statuses[plugin.name] ??
-                        PluginSearchStatus.pending;
-                final results =
-                    searchState.results[plugin.name] ?? const <SearchItem>[];
-                return _buildPluginResultView(
-                  context,
-                  plugin,
-                  status,
-                  results,
-                  searchController,
+                        ),
+                    ],
+                  ),
                 );
-              }).toList(),
+              },
             ),
           ),
+        ),
+      );
+    } else if (aggregation.pending.isNotEmpty) {
+      slivers.add(
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 32,
+                width: 32,
+                child: CircularProgressIndicator(),
+              ),
+              const SizedBox(height: 16),
+              Text(sheetTexts.empty.searching),
+            ],
+          ),
+        ),
+      );
+    } else {
+      slivers.add(
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(
+            child: Text(
+              sheetTexts.empty.noResults,
+              style: Theme.of(context).textTheme.bodyLarge,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          sheetTexts.title.replaceFirst('{name}', bangumiName),
+        ),
+        actions: [
+          _buildSortMenu(),
+          const SizedBox(width: 8),
         ],
+      ),
+      body: CustomScrollView(
+        slivers: slivers,
       ),
     );
   }
+}
+
+class _SourceEntry {
+  const _SourceEntry(this.plugin, this.item);
+
+  final Plugin plugin;
+  final SearchItem item;
 }

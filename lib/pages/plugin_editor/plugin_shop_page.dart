@@ -6,8 +6,9 @@ import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/modules/plugin/plugin_http_module.dart';
-import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
+import 'package:kazumi/plugins/plugins_controller.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/utils/storage.dart';
 
 class PluginShopPage extends ConsumerStatefulWidget {
@@ -88,7 +89,10 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     });
   }
 
-  Widget buildPluginHTTPListBody(List<PluginHTTPItem> pluginHTTPList) {
+  Widget buildPluginHTTPListBody(
+      BuildContext context, List<PluginHTTPItem> pluginHTTPList) {
+    final pluginTexts = context.t.settings.plugins;
+    final shopTexts = pluginTexts.shop;
     final sortedList = List<PluginHTTPItem>.from(pluginHTTPList);
 
     if (sortByName) {
@@ -103,7 +107,13 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       itemCount: sortedList.length,
       itemBuilder: (context, index) {
         final item = sortedList[index];
-        final status = pluginsController.pluginStatus(item);
+    final status = pluginsController.pluginStatus(item);
+    final bool isInstall = status == 'install';
+    final bool isInstalled = status == 'installed';
+    final formattedTimestamp =
+      DateTime.fromMillisecondsSinceEpoch(item.lastUpdate)
+        .toString()
+        .split('.')[0];
 
         return Card(
           margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
@@ -148,7 +158,9 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
                         borderRadius: BorderRadius.circular(16.0),
                       ),
                       child: Text(
-                        item.useNativePlayer ? 'native' : 'webview',
+                        item.useNativePlayer
+                            ? shopTexts.labels.playerType.native
+                            : shopTexts.labels.playerType.webview,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.surface,
                         ),
@@ -159,44 +171,49 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
                 if (item.lastUpdate > 0) ...[
                   const SizedBox(height: 4),
                   Text(
-                    '更新时间: ${DateTime.fromMillisecondsSinceEpoch(item.lastUpdate).toString().split('.')[0]}',
+                    shopTexts.labels.lastUpdated
+                        .replaceFirst('{timestamp}', formattedTimestamp),
                     style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ],
             ),
             trailing: TextButton(
-              onPressed: status == 'installed'
+              onPressed: isInstalled
                   ? null
                   : () async {
+                      final loadingMessage = isInstall
+                          ? pluginTexts.loading.importing
+                          : pluginTexts.loading.updatingSingle;
                       KazumiDialog.showToast(
-                        message: status == 'install' ? '导入中' : '更新中',
+                        message: loadingMessage,
                       );
                       final res = await pluginsController
                           .tryUpdatePluginByName(item.name);
                       if (res == 0) {
                         KazumiDialog.showToast(
-                          message:
-                              status == 'install' ? '导入成功' : '更新成功',
+                          message: isInstall
+                              ? pluginTexts.toast.importSuccess
+                              : pluginTexts.toast.updateSuccess,
                         );
                       } else if (res == 1) {
                         KazumiDialog.showToast(
-                          message: 'kazumi版本过低, 此规则不兼容当前版本',
+                          message: pluginTexts.toast.updateIncompatible,
                         );
                       } else if (res == 2) {
                         KazumiDialog.showToast(
-                          message: status == 'install'
-                              ? '导入规则失败'
-                              : '更新规则失败',
+                          message: isInstall
+                              ? shopTexts.toast.importFailed
+                              : pluginTexts.toast.updateFailed,
                         );
                       }
                     },
               child: Text(
-                status == 'install'
-                    ? '安装'
-                    : status == 'installed'
-                        ? '已安装'
-                        : '更新',
+                isInstall
+                    ? shopTexts.buttons.install
+                    : isInstalled
+                        ? shopTexts.buttons.installed
+                        : shopTexts.buttons.update,
               ),
             ),
           ),
@@ -205,36 +222,12 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     );
   }
 
-  Widget get timeoutWidget {
-    return Center(
-      child: GeneralErrorWidget(
-        errMsg:
-            '啊咧（⊙.⊙） 无法访问远程仓库\n${enableGitProxy ? '镜像已启用' : '镜像已禁用'}',
-        actions: [
-          GeneralErrorButton(
-            onPressed: () {
-              if (!mounted) {
-                return;
-              }
-              context.push('/settings/webdav');
-            },
-            text: enableGitProxy ? '禁用镜像' : '启用镜像',
-          ),
-          GeneralErrorButton(
-            onPressed: () {
-              _handleRefresh();
-            },
-            text: '刷新',
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final pluginsState = ref.watch(pluginsControllerProvider);
     final pluginHTTPList = pluginsState.pluginHTTPList;
+    final pluginTexts = context.t.settings.plugins;
+    final shopTexts = pluginTexts.shop;
 
     return PopScope(
       canPop: true,
@@ -246,18 +239,20 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       },
       child: Scaffold(
         appBar: SysAppBar(
-          title: const Text('规则仓库'),
+          title: Text(shopTexts.title),
           actions: [
             IconButton(
               onPressed: _toggleSort,
-              tooltip: sortByName ? '按名称排序' : '按更新时间排序',
+              tooltip: sortByName
+                  ? shopTexts.tooltip.sortByName
+                  : shopTexts.tooltip.sortByUpdate,
               icon: Icon(
                 sortByName ? Icons.sort_by_alpha : Icons.access_time,
               ),
             ),
             IconButton(
               onPressed: _handleRefresh,
-              tooltip: '刷新规则列表',
+              tooltip: shopTexts.tooltip.refresh,
               icon: const Icon(Icons.refresh),
             ),
           ],
@@ -265,8 +260,38 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
         body: loading
             ? const Center(child: CircularProgressIndicator())
             : pluginHTTPList.isEmpty
-                ? (timeout ? timeoutWidget : const SizedBox.shrink())
-                : buildPluginHTTPListBody(pluginHTTPList),
+                ? (timeout
+                    ? Center(
+                        child: GeneralErrorWidget(
+                          errMsg: shopTexts.error.unreachable.replaceFirst(
+                            '{status}',
+                            enableGitProxy
+                                ? shopTexts.error.mirrorEnabled
+                                : shopTexts.error.mirrorDisabled,
+                          ),
+                          actions: [
+                            GeneralErrorButton(
+                              onPressed: () {
+                                if (!mounted) {
+                                  return;
+                                }
+                                context.go('/tab/my');
+                              },
+                              text: enableGitProxy
+                                  ? shopTexts.buttons.toggleMirrorDisable
+                                  : shopTexts.buttons.toggleMirrorEnable,
+                            ),
+                            GeneralErrorButton(
+                              onPressed: () {
+                                _handleRefresh();
+                              },
+                              text: shopTexts.buttons.refresh,
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink())
+                : buildPluginHTTPListBody(context, pluginHTTPList),
       ),
     );
   }

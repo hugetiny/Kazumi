@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class DanmakuSettingsPage extends StatefulWidget {
   const DanmakuSettingsPage({super.key});
@@ -30,6 +31,8 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
   late bool danmakuBiliBiliSource;
   late bool danmakuGamerSource;
   late bool danmakuDanDanSource;
+  late String danDanAppIdOverride;
+  late String danDanApiKeyOverride;
 
   @override
   void initState() {
@@ -60,6 +63,14 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
         setting.get(SettingBoxKey.danmakuGamerSource, defaultValue: true);
     danmakuDanDanSource =
         setting.get(SettingBoxKey.danmakuDanDanSource, defaultValue: true);
+    danDanAppIdOverride =
+        (setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)
+                ?.trim() ??
+            '';
+    danDanApiKeyOverride =
+        (setting.get(SettingBoxKey.danDanApiKey, defaultValue: '') as String?)
+                ?.trim() ??
+            '';
   }
 
   void onBackPressed(BuildContext context) {
@@ -97,21 +108,137 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
     });
   }
 
+  String _maskSecret(String secret) {
+    if (secret.isEmpty) {
+      return context.t.settings.player.danmakuCredentialNotConfigured;
+    }
+    if (secret.length <= 4) {
+      return '*' * secret.length;
+    }
+    return '${secret.substring(0, 2)}****${secret.substring(secret.length - 2)}';
+  }
+
+  String get _credentialModeLabel {
+    final playerTexts = context.t.settings.player;
+    return danDanAppIdOverride.isEmpty && danDanApiKeyOverride.isEmpty
+        ? playerTexts.danmakuCredentialModeBuiltIn
+        : playerTexts.danmakuCredentialModeCustom;
+  }
+
+  Future<void> _showDanDanCredentialDialog() async {
+    final TextEditingController appIdController =
+        TextEditingController(text: danDanAppIdOverride);
+    final TextEditingController apiKeyController =
+        TextEditingController(text: danDanApiKeyOverride);
+
+    Future<void> save(String appId, String apiKey) async {
+      await setting.put(SettingBoxKey.danDanAppId, appId);
+      await setting.put(SettingBoxKey.danDanApiKey, apiKey);
+      if (!mounted) return;
+      setState(() {
+        danDanAppIdOverride = appId;
+        danDanApiKeyOverride = apiKey;
+      });
+    }
+
+    final playerTexts = context.t.settings.player;
+    final appTexts = context.t.app;
+    final toastTexts = playerTexts.toast;
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(playerTexts.danmakuDanDanCredentials),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: appIdController,
+                decoration: InputDecoration(
+                  labelText: 'AppId',
+                  hintText: playerTexts.danmakuCredentialHint,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: apiKeyController,
+                decoration: InputDecoration(
+                  labelText: 'API Key',
+                  hintText: playerTexts.danmakuCredentialHint,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text(appTexts.cancel),
+            ),
+            TextButton(
+              onPressed: () async {
+                final NavigatorState navigator = Navigator.of(dialogContext);
+                await save('', '');
+                if (!mounted) return;
+                navigator.pop();
+                KazumiDialog.showToast(
+                  message: toastTexts.danmakuCredentialsRestored,
+                );
+              },
+              child: Text(playerTexts.restoreDefault),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final String appId = appIdController.text.trim();
+                final String apiKey = apiKeyController.text.trim();
+                final NavigatorState navigator = Navigator.of(dialogContext);
+                await save(appId, apiKey);
+                if (!mounted) return;
+                navigator.pop();
+                KazumiDialog.showToast(
+                  message: toastTexts.danmakuCredentialsUpdated,
+                );
+              },
+              child: Text(playerTexts.save),
+            ),
+          ],
+        );
+      },
+    ).whenComplete(() {
+      appIdController.dispose();
+      apiKeyController.dispose();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) {});
+    final translations = context.t;
+    final playerTexts = translations.settings.player;
+    final sourcesTexts = playerTexts.danmakuSources;
+    final String effectiveDanDanAppId = GStorage.readDanDanAppId();
+    final String effectiveDanDanApiKey = GStorage.readDanDanApiKey();
+    final String maskedApiKey = _maskSecret(effectiveDanDanApiKey);
+    final String displayAppId = effectiveDanDanAppId.isEmpty
+        ? playerTexts.danmakuCredentialNotConfigured
+        : effectiveDanDanAppId;
+    final String credentialSummary = playerTexts.danmakuCredentialsSummary
+        .replaceFirst('{appId}', displayAppId)
+        .replaceFirst('{apiKey}', maskedApiKey);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('弹幕设置')),
+        appBar: SysAppBar(title: Text(playerTexts.danmakuSettings)),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('弹幕'),
+              title: Text(playerTexts.danmaku),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -120,14 +247,14 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         danmakuEnabledByDefault);
                     setState(() {});
                   },
-                  title: const Text('默认开启'),
-                  description: const Text('默认是否随视频播放弹幕'),
+                  title: Text(playerTexts.danmakuDefaultOn),
+                  description: Text(playerTexts.danmakuDefaultOnDesc),
                   initialValue: danmakuEnabledByDefault,
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('弹幕来源'),
+              title: Text(playerTexts.danmakuSource),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -136,7 +263,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         danmakuBiliBiliSource);
                     setState(() {});
                   },
-                  title: const Text('BiliBili'),
+                  title: Text(sourcesTexts.bilibili),
                   initialValue: danmakuBiliBiliSource,
                 ),
                 SettingsTile.switchTile(
@@ -146,7 +273,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuGamerSource, danmakuGamerSource);
                     setState(() {});
                   },
-                  title: const Text('Gamer'),
+                  title: Text(sourcesTexts.gamer),
                   initialValue: danmakuGamerSource,
                 ),
                 SettingsTile.switchTile(
@@ -156,27 +283,40 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuDanDanSource, danmakuDanDanSource);
                     setState(() {});
                   },
-                  title: const Text('DanDan'),
+                  title: Text(sourcesTexts.dandan),
                   initialValue: danmakuDanDanSource,
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('弹幕屏蔽'),
+              title: Text(playerTexts.danmakuCredentials),
+              tiles: [
+                SettingsTile.navigation(
+                  onPressed: (_) async {
+                    await _showDanDanCredentialDialog();
+                  },
+                  title: Text(playerTexts.danmakuDanDanCredentials),
+                  description: Text(credentialSummary),
+                  value: Text(_credentialModeLabel),
+                ),
+              ],
+            ),
+            SettingsSection(
+              title: Text(playerTexts.danmakuShield),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/danmaku/shield');
                   },
-                  title: const Text('关键词屏蔽'),
+                  title: Text(playerTexts.danmakuKeywordShield),
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('弹幕显示'),
+              title: Text(playerTexts.danmakuDisplay),
               tiles: [
                 SettingsTile(
-                  title: const Text('弹幕区域'),
+                  title: Text(playerTexts.danmakuArea),
                   description: Slider(
                     value: defaultDanmakuArea,
                     min: 0,
@@ -194,7 +334,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                     await setting.put(SettingBoxKey.danmakuTop, danmakuTop);
                     setState(() {});
                   },
-                  title: const Text('顶部弹幕'),
+                  title: Text(playerTexts.danmakuTopDisplay),
                   initialValue: danmakuTop,
                 ),
                 SettingsTile.switchTile(
@@ -204,7 +344,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuBottom, danmakuBottom);
                     setState(() {});
                   },
-                  title: const Text('底部弹幕'),
+                  title: Text(playerTexts.danmakuBottomDisplay),
                   initialValue: danmakuBottom,
                 ),
                 SettingsTile.switchTile(
@@ -214,7 +354,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuScroll, danmakuScroll);
                     setState(() {});
                   },
-                  title: const Text('滚动弹幕'),
+                  title: Text(playerTexts.danmakuScrollDisplay),
                   initialValue: danmakuScroll,
                 ),
                 SettingsTile.switchTile(
@@ -224,14 +364,14 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuMassive, danmakuMassive);
                     setState(() {});
                   },
-                  title: const Text('海量弹幕'),
-                  description: const Text('弹幕过多时进行叠加绘制'),
+                  title: Text(playerTexts.danmakuMassiveDisplay),
+                  description: Text(playerTexts.danmakuMassiveDescription),
                   initialValue: danmakuMassive,
                 ),
               ],
             ),
             SettingsSection(
-              title: const Text('弹幕样式'),
+              title: Text(playerTexts.danmakuStyle),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -240,7 +380,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                         SettingBoxKey.danmakuBorder, danmakuBorder);
                     setState(() {});
                   },
-                  title: const Text('弹幕描边'),
+                  title: Text(playerTexts.danmakuOutline),
                   initialValue: danmakuBorder,
                 ),
                 SettingsTile.switchTile(
@@ -249,11 +389,11 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                     await setting.put(SettingBoxKey.danmakuColor, danmakuColor);
                     setState(() {});
                   },
-                  title: const Text('弹幕颜色'),
+                  title: Text(playerTexts.danmakuColor),
                   initialValue: danmakuColor,
                 ),
                 SettingsTile(
-                  title: const Text('字体大小'),
+                  title: Text(playerTexts.danmakuFontSize),
                   description: Slider(
                     value: defaultDanmakuFontSize,
                     min: 10,
@@ -265,7 +405,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                   ),
                 ),
                 SettingsTile(
-                  title: const Text('字体字重'),
+                  title: Text(playerTexts.danmakuFontWeight),
                   description: Slider(
                     value: defaultDanmakuFontWeight.toDouble(),
                     min: 1,
@@ -278,7 +418,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                   ),
                 ),
                 SettingsTile(
-                  title: const Text('弹幕不透明度'),
+                  title: Text(playerTexts.danmakuOpacity),
                   description: Slider(
                     value: defaultDanmakuOpacity,
                     min: 0.1,
