@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dlna_dart/dlna.dart';
 import 'package:flutter/material.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 
@@ -12,9 +13,12 @@ class RemotePlay {
     final dlna = await searcher.start();
     List<Widget> dlnaDevice = [];
     await KazumiDialog.show(builder: (BuildContext context) {
-      return StatefulBuilder(builder: (context, setState) {
+      return StatefulBuilder(builder: (dialogContext, setState) {
+        final remoteTexts = dialogContext.t.playback.remote;
+        final closeLabel = dialogContext.t.app.cancel;
+        final searchLabel = dialogContext.t.navigation.actions.search;
         return AlertDialog(
-          title: const Text('远程投屏'),
+          title: Text(remoteTexts.title),
           content: SingleChildScrollView(
             child: Column(
               children: dlnaDevice,
@@ -27,15 +31,17 @@ class RemotePlay {
                 KazumiDialog.dismiss();
               },
               child: Text(
-                '退出',
-                style: TextStyle(color: Theme.of(context).colorScheme.outline),
+                closeLabel,
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.outline,
+                ),
               ),
             ),
             TextButton(
                 onPressed: () {
                   setState(() {});
                   KazumiDialog.showToast(
-                    message: '开始搜索',
+                    message: remoteTexts.toast.searching,
                   );
                   dlna.devices.stream.listen((deviceList) {
                     dlnaDevice = [];
@@ -52,7 +58,11 @@ class RemotePlay {
                             onTap: () {
                               try {
                                 KazumiDialog.showToast(
-                                  message: '尝试投屏至 ${value.info.friendlyName}',
+                                  message: remoteTexts.toast.casting
+                                      .replaceFirst(
+                                    '{device}',
+                                    value.info.friendlyName,
+                                  ),
                                 );
                                 DLNADevice(value.info).setUrl(video);
                                 DLNADevice(value.info).play();
@@ -60,7 +70,10 @@ class RemotePlay {
                                 KazumiLogger()
                                     .log(Level.error, 'DLNA Error: $e');
                                 KazumiDialog.showToast(
-                                  message: 'DLNA 异常: $e \n尝试重新进入 DLNA 投屏或切换设备',
+                                  message: remoteTexts.toast.error.replaceFirst(
+                                    '{details}',
+                                    e.toString(),
+                                  ),
                                 );
                               }
                             }));
@@ -74,9 +87,10 @@ class RemotePlay {
                   // });
                 },
                 child: Text(
-                  '搜索',
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.outline),
+                  searchLabel,
+                  style: TextStyle(
+                    color: Theme.of(dialogContext).colorScheme.outline,
+                  ),
                 )),
           ],
         );

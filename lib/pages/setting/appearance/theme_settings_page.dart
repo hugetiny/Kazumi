@@ -8,6 +8,7 @@ import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/card/palette_card.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/settings/color_type.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
@@ -82,19 +83,45 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     ref.watch(themeNotifierProvider);
+    String colorLabel(String key) {
+      final labels = t.settings.appearancePage.colorScheme.labels;
+      switch (key) {
+        case 'default':
+          return labels.defaultLabel;
+        case 'teal':
+          return labels.teal;
+        case 'blue':
+          return labels.blue;
+        case 'indigo':
+          return labels.indigo;
+        case 'violet':
+          return labels.violet;
+        case 'pink':
+          return labels.pink;
+        case 'yellow':
+          return labels.yellow;
+        case 'orange':
+          return labels.orange;
+        case 'deepOrange':
+          return labels.deepOrange;
+        default:
+          return key;
+      }
+    }
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('外观设置')),
+        appBar: SysAppBar(title: Text(t.settings.appearancePage.title)),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('外观'),
+              title: Text(t.settings.general.appearance),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
@@ -104,18 +131,17 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                       menuController.open();
                     }
                   },
-                  title: const Text('深色模式'),
+                  title: Text(t.settings.appearancePage.mode.title),
                   value: MenuAnchor(
                     consumeOutsideTap: true,
                     controller: menuController,
                     builder: (_, __, ___) {
-                      return Text(
-                        switch (defaultThemeMode) {
-                          'light' => '浅色',
-                          'dark' => '深色',
-                          _ => '跟随系统'
-                        },
-                      );
+                      final modeLabel = switch (defaultThemeMode) {
+                        'light' => t.settings.appearancePage.mode.light,
+                        'dark' => t.settings.appearancePage.mode.dark,
+                        _ => t.settings.appearancePage.mode.system,
+                      };
+                      return Text(modeLabel);
                     },
                     menuChildren: [
                       MenuItemButton(
@@ -135,16 +161,16 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  '跟随系统',
-                                  style: TextStyle(
-                                    color: defaultThemeMode == 'system'
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                        : null,
+                                  Text(
+                                    t.settings.appearancePage.mode.system,
+                                    style: TextStyle(
+                                      color: defaultThemeMode == 'system'
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
@@ -167,16 +193,16 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  '浅色',
-                                  style: TextStyle(
-                                    color: defaultThemeMode == 'light'
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                        : null,
+                                  Text(
+                                    t.settings.appearancePage.mode.light,
+                                    style: TextStyle(
+                                      color: defaultThemeMode == 'light'
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
@@ -199,16 +225,16 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  '深色',
-                                  style: TextStyle(
-                                    color: defaultThemeMode == 'dark'
-                                        ? Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                        : null,
+                                  Text(
+                                    t.settings.appearancePage.mode.dark,
+                                    style: TextStyle(
+                                      color: defaultThemeMode == 'dark'
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null,
+                                    ),
                                   ),
-                                ),
                               ],
                             ),
                           ),
@@ -222,7 +248,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                   onPressed: (_) async {
                     KazumiDialog.show(builder: (context) {
                       return AlertDialog(
-                        title: const Text('配色方案'),
+                        title:
+                            Text(t.settings.appearancePage.colorScheme.dialogTitle),
                         content: StatefulBuilder(
                           builder: (BuildContext context, StateSetter setState) {
                             final colorThemes = colorThemeTypes;
@@ -245,7 +272,7 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                     child: Column(
                                       children: [
                                         PaletteCard(
-                                          color: theme['color'],
+                                          color: theme['color'] as Color,
                                           selected: (theme['color']
                                                       .value
                                                       .toRadixString(16) ==
@@ -254,7 +281,7 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                                   colorThemes.indexOf(theme) ==
                                                       0)),
                                         ),
-                                        Text(theme['label']),
+                                        Text(colorLabel(theme['label'] as String)),
                                       ],
                                     ),
                                   ),
@@ -265,7 +292,7 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                       );
                     });
                   },
-                  title: const Text('配色方案'),
+                  title: Text(t.settings.appearancePage.colorScheme.title),
                 ),
                 SettingsTile.switchTile(
                   enabled: !Platform.isIOS,
@@ -280,11 +307,14 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                         .setUseDynamicColor(useDynamicColor);
                     setState(() {});
                   },
-                  title: const Text('动态配色'),
+                  title: Text(
+                    t.settings.appearancePage.colorScheme.dynamicColor,
+                  ),
                   initialValue: useDynamicColor,
                 ),
               ],
-              bottomInfo: const Text('动态配色仅支持安卓12及以上和桌面平台'),
+              bottomInfo:
+                  Text(t.settings.appearancePage.colorScheme.dynamicColorInfo),
             ),
             SettingsSection(
               tiles: [
@@ -295,8 +325,9 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                     updateOledEnhance();
                     setState(() {});
                   },
-                  title: const Text('OLED优化'),
-                  description: const Text('深色模式下使用纯黑背景'),
+                  title: Text(t.settings.appearancePage.oled.title),
+                  description:
+                      Text(t.settings.appearancePage.oled.description),
                   initialValue: oledEnhance,
                 ),
               ],
@@ -313,8 +344,9 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                       );
                       setState(() {});
                     },
-                    title: const Text('使用系统标题栏'),
-                    description: const Text('重启应用生效'),
+                    title: Text(t.settings.appearancePage.window.title),
+                    description:
+                        Text(t.settings.appearancePage.window.description),
                     initialValue: showWindowButton,
                   ),
                 ],
@@ -326,7 +358,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                     onPressed: (_) async {
                       context.push('/settings/theme/display');
                     },
-                    title: const Text('屏幕帧率'),
+                    title:
+                        Text(t.settings.appearancePage.refreshRate.title),
                   ),
                 ],
               ),

@@ -260,15 +260,19 @@ final metadataSettingsProvider =
 class LocaleSettingsState {
   const LocaleSettingsState({
     required this.appLocale,
+    required this.followSystem,
   });
 
   final AppLocale appLocale;
+  final bool followSystem;
 
   LocaleSettingsState copyWith({
     AppLocale? appLocale,
+    bool? followSystem,
   }) {
     return LocaleSettingsState(
       appLocale: appLocale ?? this.appLocale,
+      followSystem: followSystem ?? this.followSystem,
     );
   }
 }
@@ -280,33 +284,50 @@ class LocaleSettingsNotifier extends Notifier<LocaleSettingsState> {
       SettingBoxKey.appLocale,
       defaultValue: '',
     ) as String?;
-    
-    AppLocale initialLocale;
-    if (savedLocale == null || savedLocale.isEmpty) {
-      // Use system locale by default
-      initialLocale = AppLocale.zhCn; // Default to Chinese
-    } else {
-      initialLocale = AppLocaleUtils.findDeviceLocale().languageCode == savedLocale
-          ? AppLocaleUtils.findDeviceLocale()
-          : AppLocaleUtils.parse(savedLocale);
-    }
-    
+
+    final bool followSystem = savedLocale == null || savedLocale.isEmpty;
+    final AppLocale initialLocale = _resolveAppLocale(
+      savedLocale,
+      followSystem: followSystem,
+    );
+
     return LocaleSettingsState(
       appLocale: initialLocale,
+      followSystem: followSystem,
     );
   }
 
   Future<void> setLocale(AppLocale locale) async {
     await GStorage.setting.put(SettingBoxKey.appLocale, locale.languageTag);
     LocaleSettings.setLocale(locale);
-    state = state.copyWith(appLocale: locale);
+    state = state.copyWith(
+      appLocale: locale,
+      followSystem: false,
+    );
   }
 
   Future<void> useSystemLocale() async {
     await GStorage.setting.put(SettingBoxKey.appLocale, '');
-    final deviceLocale = AppLocaleUtils.findDeviceLocale();
-    LocaleSettings.setLocale(deviceLocale);
-    state = state.copyWith(appLocale: deviceLocale);
+    final AppLocale deviceLocale = AppLocaleUtils.findDeviceLocale();
+    LocaleSettings.useDeviceLocale();
+    state = state.copyWith(
+      appLocale: deviceLocale,
+      followSystem: true,
+    );
+  }
+
+  AppLocale _resolveAppLocale(
+    String? savedLocaleTag, {
+    required bool followSystem,
+  }) {
+    if (!followSystem) {
+      try {
+        return AppLocaleUtils.parse(savedLocaleTag!);
+      } catch (_) {
+        // Fallback to device locale if parsing fails.
+      }
+    }
+    return AppLocaleUtils.findDeviceLocale();
   }
 }
 

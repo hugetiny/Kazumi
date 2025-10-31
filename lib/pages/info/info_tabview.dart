@@ -7,6 +7,7 @@ import 'package:kazumi/bean/card/character_card.dart';
 import 'package:kazumi/bean/card/staff_card.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
 import 'package:kazumi/modules/characters/character_item.dart';
@@ -61,14 +62,15 @@ class _InfoTabViewState extends State<InfoTabView>
   bool showAllEpisodes = false;
 
   Widget get infoBody {
+    final infoTexts = context.t.library.info;
     final List<Widget> children = <Widget>[
       _buildMetadataStatusCard(),
       const SizedBox(height: 16),
-      const Text('简介', style: TextStyle(fontSize: 18)),
+      Text(infoTexts.summary.title, style: const TextStyle(fontSize: 18)),
       const SizedBox(height: 8),
       _buildSummarySection(),
       const SizedBox(height: 16),
-      const Text('标签', style: TextStyle(fontSize: 18)),
+      Text(infoTexts.tags.title, style: const TextStyle(fontSize: 18)),
       const SizedBox(height: 8),
       _buildTagsSection(),
     ];
@@ -97,6 +99,7 @@ class _InfoTabViewState extends State<InfoTabView>
   }
 
   Widget _buildSummarySection() {
+    final summaryTexts = context.t.library.info.summary;
     return LayoutBuilder(builder: (context, constraints) {
       final TextSpan span = TextSpan(text: widget.bangumiItem.summary);
       final TextPainter painter =
@@ -126,7 +129,9 @@ class _InfoTabViewState extends State<InfoTabView>
                   fullIntro = !fullIntro;
                 });
               },
-              child: Text(fullIntro ? '加载更少' : '加载更多'),
+              child: Text(
+                fullIntro ? summaryTexts.collapse : summaryTexts.expand,
+              ),
             ),
           ],
         );
@@ -141,6 +146,7 @@ class _InfoTabViewState extends State<InfoTabView>
   }
 
   Widget _buildTagsSection() {
+    final tagsTexts = context.t.library.info.tags;
     return Wrap(
       spacing: 8.0,
       runSpacing: Utils.isDesktop() ? 8 : 0,
@@ -151,7 +157,7 @@ class _InfoTabViewState extends State<InfoTabView>
         if (!fullTag && index == 12) {
           return ActionChip(
             label: Text(
-              '更多 +',
+              tagsTexts.more,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
               ),
@@ -188,6 +194,7 @@ class _InfoTabViewState extends State<InfoTabView>
   }
 
   Widget _buildMetadataStatusCard() {
+    final metadataTexts = context.t.library.info.metadata;
     final MetadataRecord? record = widget.metadataRecord;
     final Widget? refreshButton = widget.onRefreshMetadata == null
         ? null
@@ -195,7 +202,7 @@ class _InfoTabViewState extends State<InfoTabView>
             onPressed:
                 widget.metadataLoading ? null : widget.onRefreshMetadata,
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('刷新'),
+            label: Text(metadataTexts.refresh),
           );
 
     if (widget.metadataLoading && record == null) {
@@ -206,8 +213,8 @@ class _InfoTabViewState extends State<InfoTabView>
             height: 24,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
-          title: const Text('正在同步元数据…'),
-          subtitle: const Text('首次同步可能需要几秒钟。'),
+          title: Text(metadataTexts.syncingTitle),
+          subtitle: Text(metadataTexts.syncingSubtitle),
           trailing: refreshButton,
         ),
       );
@@ -217,14 +224,17 @@ class _InfoTabViewState extends State<InfoTabView>
       return Card(
         child: ListTile(
           leading: const Icon(Icons.info_outline_rounded),
-          title: const Text('尚未获取官方元数据'),
-          subtitle: const Text('稍后重试或检查设置中的元数据开关。'),
+          title: Text(metadataTexts.emptyTitle),
+          subtitle: Text(metadataTexts.emptySubtitle),
           trailing: refreshButton,
         ),
       );
     }
 
     final ThemeData theme = Theme.of(context);
+    final String languageLabel = record.localeTag.isEmpty
+        ? metadataTexts.languageSystem
+        : record.localeTag;
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -243,7 +253,9 @@ class _InfoTabViewState extends State<InfoTabView>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '元数据来自 ${_sourceDisplayName(record.activeSource)}',
+                    metadataTexts.source(
+                      source: _sourceDisplayName(record.activeSource),
+                    ),
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
@@ -252,7 +264,10 @@ class _InfoTabViewState extends State<InfoTabView>
             ),
             const SizedBox(height: 8),
             Text(
-              '最后更新：${_formatUpdatedAt(record.updatedAt)} · 语言：${record.localeTag.isEmpty ? '系统默认' : record.localeTag}',
+              metadataTexts.updated(
+                timestamp: _formatUpdatedAt(record.updatedAt),
+                language: languageLabel,
+              ),
               style: theme.textTheme.bodySmall,
             ),
             if (record.identifiers.isNotEmpty) ...[
@@ -283,6 +298,7 @@ class _InfoTabViewState extends State<InfoTabView>
       return const <Widget>[];
     }
 
+    final episodesTexts = context.t.library.info.episodes;
     final List<EpisodeMetadata> episodes = record.episodes;
     final List<EpisodeMetadata> visibleEpisodes = showAllEpisodes
         ? episodes
@@ -291,7 +307,7 @@ class _InfoTabViewState extends State<InfoTabView>
     return <Widget>[
       Row(
         children: [
-          const Text('剧集', style: TextStyle(fontSize: 18)),
+          Text(episodesTexts.title, style: const TextStyle(fontSize: 18)),
           const SizedBox(width: 8),
           if (widget.metadataLoading)
             const SizedBox(
@@ -308,7 +324,9 @@ class _InfoTabViewState extends State<InfoTabView>
                 });
               },
               child: Text(
-                showAllEpisodes ? '收起' : '展开全部 (${episodes.length})',
+                showAllEpisodes
+                    ? episodesTexts.collapse
+                    : episodesTexts.expand(count: episodes.length),
               ),
             ),
         ],
@@ -329,9 +347,10 @@ class _InfoTabViewState extends State<InfoTabView>
 
   Widget _buildEpisodeTile(EpisodeMetadata episode) {
     final ThemeData theme = Theme.of(context);
+  final episodesTexts = context.t.library.info.episodes;
     final String title = (episode.title?.trim().isNotEmpty ?? false)
         ? episode.title!.trim()
-        : '第${episode.number}话';
+    : episodesTexts.numberedEpisode(number: episode.number);
     final String metadataLine =
         '${_formatEpisodeDate(episode.airDate)} · ${_formatEpisodeRuntime(episode.runtimeMinutes)}';
     final String synopsis = (episode.synopsis ?? '').trim();
@@ -368,30 +387,33 @@ class _InfoTabViewState extends State<InfoTabView>
   }
 
   String _formatEpisodeDate(DateTime? time) {
+    final episodesTexts = context.t.library.info.episodes;
     if (time == null) {
-      return '日期待定';
+      return episodesTexts.dateUnknown;
     }
     final DateTime local = time.toLocal();
     return '${local.year}-${_twoDigits(local.month)}-${_twoDigits(local.day)}';
   }
 
   String _formatEpisodeRuntime(int? minutes) {
+    final episodesTexts = context.t.library.info.episodes;
     if (minutes == null || minutes <= 0) {
-      return '时长未知';
+      return episodesTexts.runtimeUnknown;
     }
-    return '$minutes 分钟';
+    return episodesTexts.runtimeMinutes(minutes: minutes);
   }
 
   String _twoDigits(int value) => value.toString().padLeft(2, '0');
 
   String _sourceDisplayName(String? source) {
+    final metadataTexts = context.t.library.info.metadata;
     switch (source) {
       case 'bangumi':
         return 'Bangumi';
       case 'tmdb':
         return 'TMDb';
       case null:
-        return '多源合并';
+        return metadataTexts.multiSource;
       default:
         return source.toUpperCase();
     }
@@ -444,6 +466,9 @@ class _InfoTabViewState extends State<InfoTabView>
   Widget get commentsListBody {
     return Builder(
       builder: (BuildContext context) {
+        final infoTexts = context.t.library.info;
+        final errorsTexts = infoTexts.errors;
+        final appTexts = context.t.app;
         return NotificationListener<ScrollEndNotification>(
           onNotification: (scrollEnd) {
             final metrics = scrollEnd.metrics;
@@ -456,7 +481,7 @@ class _InfoTabViewState extends State<InfoTabView>
             scrollBehavior: const ScrollBehavior().copyWith(
               scrollbars: false,
             ),
-            key: PageStorageKey<String>('吐槽'),
+            key: const PageStorageKey<String>('comments'),
             slivers: <Widget>[
               SliverOverlapInjector(
                 handle:
@@ -511,14 +536,14 @@ class _InfoTabViewState extends State<InfoTabView>
                 if (widget.commentsQueryTimeout) {
                   return SliverFillRemaining(
                     child: GeneralErrorWidget(
-                      errMsg: '获取失败，请重试',
+                      errMsg: errorsTexts.fetchFailed,
                       actions: [
                         GeneralErrorButton(
                           onPressed: () {
                             widget.loadMoreComments(
                                 offset: widget.commentsList.length);
                           },
-                          text: '重试',
+                          text: appTexts.retry,
                         ),
                       ],
                     ),
@@ -555,11 +580,14 @@ class _InfoTabViewState extends State<InfoTabView>
   Widget get staffListBody {
     return Builder(
       builder: (BuildContext context) {
+        final infoTexts = context.t.library.info;
+        final errorsTexts = infoTexts.errors;
+        final appTexts = context.t.app;
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
             scrollbars: false,
           ),
-          key: PageStorageKey<String>('制作人员'),
+          key: const PageStorageKey<String>('staff'),
           slivers: <Widget>[
             SliverOverlapInjector(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
@@ -588,13 +616,13 @@ class _InfoTabViewState extends State<InfoTabView>
               if (widget.staffQueryTimeout) {
                 return SliverFillRemaining(
                   child: GeneralErrorWidget(
-                    errMsg: '获取失败，请重试',
+                    errMsg: errorsTexts.fetchFailed,
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
                           widget.loadStaff();
                         },
-                        text: '重试',
+                        text: appTexts.retry,
                       ),
                     ],
                   ),
@@ -630,11 +658,14 @@ class _InfoTabViewState extends State<InfoTabView>
   Widget get charactersListBody {
     return Builder(
       builder: (BuildContext context) {
+        final infoTexts = context.t.library.info;
+        final errorsTexts = infoTexts.errors;
+        final appTexts = context.t.app;
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
             scrollbars: false,
           ),
-          key: PageStorageKey<String>('角色'),
+          key: const PageStorageKey<String>('characters'),
           slivers: <Widget>[
             SliverOverlapInjector(
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
@@ -663,13 +694,13 @@ class _InfoTabViewState extends State<InfoTabView>
               if (widget.charactersQueryTimeout) {
                 return SliverFillRemaining(
                   child: GeneralErrorWidget(
-                    errMsg: '获取失败，请重试',
+                    errMsg: errorsTexts.fetchFailed,
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
                           widget.loadCharacters();
                         },
-                        text: '重试',
+                        text: appTexts.retry,
                       ),
                     ],
                   ),
@@ -704,6 +735,7 @@ class _InfoTabViewState extends State<InfoTabView>
 
   @override
   Widget build(BuildContext context) {
+    final infoTexts = context.t.library.info;
     return TabBarView(
       controller: widget.tabController,
       children: [
@@ -720,7 +752,7 @@ class _InfoTabViewState extends State<InfoTabView>
               // The PageStorageKey should be unique to this ScrollView;
               // it allows the list to remember its scroll position when
               // the tab view is not on the screen.
-              key: PageStorageKey<String>('概览'),
+              key: const PageStorageKey<String>('overview'),
               slivers: <Widget>[
                 SliverOverlapInjector(
                   handle:
@@ -745,7 +777,7 @@ class _InfoTabViewState extends State<InfoTabView>
               scrollBehavior: const ScrollBehavior().copyWith(
                 scrollbars: false,
               ),
-              key: PageStorageKey<String>('评论'),
+              key: const PageStorageKey<String>('reviews'),
               slivers: <Widget>[
                 SliverOverlapInjector(
                   handle:
@@ -753,7 +785,7 @@ class _InfoTabViewState extends State<InfoTabView>
                 ),
                 // TODO: 评论区
                 SliverFillRemaining(
-                  child: Center(child: Text('施工中')),
+                  child: Center(child: Text(infoTexts.tabs.placeholder)),
                 ),
               ],
             );

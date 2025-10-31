@@ -16,6 +16,7 @@ import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/bean/appbar/drag_to_move_bar.dart' as dtb;
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class PopularPage extends ConsumerStatefulWidget {
   const PopularPage({super.key});
@@ -85,6 +86,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
   }
 
   void onBackPressed(BuildContext context) {
+    final t = context.t;
     if (KazumiDialog.observer.hasKazumiDialog) {
       KazumiDialog.dismiss();
       return;
@@ -93,7 +95,10 @@ class _PopularPageState extends ConsumerState<PopularPage>
         DateTime.now().difference(_lastPressedAt!) >
             const Duration(seconds: 2)) {
       _lastPressedAt = DateTime.now();
-      KazumiDialog.showToast(message: "再按一次退出应用", context: context);
+      KazumiDialog.showToast(
+        message: t.library.common.backHint,
+        context: context,
+      );
       return;
     }
     SystemNavigator.pop();
@@ -129,12 +134,13 @@ class _PopularPageState extends ConsumerState<PopularPage>
                   StyleString.cardSpace, 0, StyleString.cardSpace, 0),
               sliver: Consumer(builder: (context, ref, _) {
                 final state = ref.watch(popularControllerProvider);
+                final t = context.t;
                 if (state.isTimeOut) {
                   return SliverToBoxAdapter(
                     child: SizedBox(
                       height: 400,
                       child: GeneralErrorWidget(
-                        errMsg: '什么都没有找到 (´;ω;`)',
+                        errMsg: t.library.common.emptyState,
                         actions: [
                           GeneralErrorButton(
                             onPressed: () {
@@ -144,7 +150,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
                                 popularController.queryBangumiByTag();
                               }
                             },
-                            text: '点击重试',
+                            text: t.library.common.retry,
                           ),
                         ],
                       ),
@@ -238,6 +244,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
                     child: Consumer(builder: (context, ref, _) {
                       final state = ref.watch(popularControllerProvider);
                       final bool isTrend = state.currentTag == '';
+                      final t = context.t;
                       return InkWell(
                         key: selectorKey,
                         borderRadius: BorderRadius.circular(8),
@@ -246,7 +253,9 @@ class _PopularPageState extends ConsumerState<PopularPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              isTrend ? '热门番组' : state.currentTag,
+                              isTrend
+                                  ? t.library.popular.allTag
+                                  : state.currentTag,
                               style: theme.textTheme.headlineMedium!.copyWith(
                                 fontWeight: fontWeight,
                                 fontSize: fontSize,
@@ -270,17 +279,18 @@ class _PopularPageState extends ConsumerState<PopularPage>
   }
 
   List<Widget> buildActions() {
+    final t = context.t;
     final actions = <Widget>[
       if (MediaQuery.of(context).orientation == Orientation.portrait)
         IconButton(
-          tooltip: '搜索',
+          tooltip: t.navigation.actions.search,
           onPressed: () => context.push('/search'),
           icon: const Icon(Icons.search),
         ),
     ];
     actions.add(
       IconButton(
-        tooltip: '历史记录',
+        tooltip: t.navigation.actions.history,
   onPressed: () => context.push('/my/history'),
         icon: const Icon(Icons.history),
       ),
@@ -289,7 +299,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
       if (!showWindowButton()) {
         actions.add(
           IconButton(
-            tooltip: '退出',
+            tooltip: t.navigation.actions.close,
             onPressed: () => windowManager.close(),
             icon: const Icon(Icons.close),
           ),
@@ -308,6 +318,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
     final Offset offset = renderBox.localToGlobal(Offset.zero);
     final Size size = renderBox.size;
 
+    final t = context.t;
     final selected = await Navigator.push<String>(
       context,
       PageRouteBuilder(
@@ -319,12 +330,13 @@ class _PopularPageState extends ConsumerState<PopularPage>
             offset: offset,
             buttonSize: size,
             animation: animation,
-            maxWidth: 80,
+            maxWidth: 160,
             items: [
               '',
               ...defaultAnimeTags,
             ],
-            itemBuilder: (item) => item.isEmpty ? '热门番组' : item,
+            itemBuilder: (item) =>
+                item.isEmpty ? t.library.popular.allTag : item,
           );
         },
         transitionDuration: const Duration(milliseconds: 200),

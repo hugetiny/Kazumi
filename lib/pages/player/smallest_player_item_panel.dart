@@ -17,6 +17,7 @@ import 'package:kazumi/pages/video/video_state.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/remote.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class SmallestPlayerItemPanel extends ConsumerStatefulWidget {
   const SmallestPlayerItemPanel({
@@ -96,10 +97,11 @@ class _SmallestPlayerItemPanelState
   }
 
   void showForwardChange() {
+    final t = context.t;
     KazumiDialog.show(builder: (context) {
       String input = '';
       return AlertDialog(
-        title: const Text('跳过秒数'),
+        title: Text(t.playback.controls.skip.title),
         content: StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return TextField(
@@ -120,7 +122,7 @@ class _SmallestPlayerItemPanelState
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
             child: Text(
-              '取消',
+              t.app.cancel,
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -131,7 +133,7 @@ class _SmallestPlayerItemPanelState
               }
               KazumiDialog.dismiss();
             },
-            child: const Text('确定'),
+            child: Text(t.app.confirm),
           ),
         ],
       );
@@ -139,8 +141,9 @@ class _SmallestPlayerItemPanelState
   }
 
   Widget forwardIcon() {
+    final t = context.t;
     return Tooltip(
-      message: '长按修改时间',
+      message: t.playback.controls.skip.tooltip,
       child: GestureDetector(
         onLongPress: showForwardChange,
         child: IconButton(
@@ -206,12 +209,7 @@ class _SmallestPlayerItemPanelState
           top: 25,
           child: playerState.showSeekTime
               ? _buildInfoChip(
-                  playerState.currentPosition.compareTo(
-                            playerController.playerPosition,
-                          ) >
-                          0
-                      ? '快进  秒'
-                      : '快退  秒',
+                  _buildSeekStatusText(playerState),
                 )
               : const SizedBox.shrink(),
         ),
@@ -219,10 +217,13 @@ class _SmallestPlayerItemPanelState
           top: 25,
           child: playerState.showPlaySpeed
               ? _buildInfoChipWidget(
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.fast_forward, color: Colors.white),
-                      Text(' 倍速播放', style: TextStyle(color: Colors.white)),
+                      const Icon(Icons.fast_forward, color: Colors.white),
+                      Text(
+                        ' ${context.t.playback.controls.status.speed}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ],
                   ),
                 )
@@ -384,6 +385,7 @@ class _SmallestPlayerItemPanelState
     PlayerState playerState,
     VideoPageState videoState,
   ) {
+    final t = context.t;
     final svgString = danmakuOnSvg.replaceFirst(
       '00AEEC',
       Theme.of(context)
@@ -435,7 +437,9 @@ class _SmallestPlayerItemPanelState
                     height: 24,
                   ),
             onPressed: widget.handleDanmaku,
-            tooltip: playerState.danmakuOn ? '关闭弹幕' : '打开弹幕',
+            tooltip: playerState.danmakuOn
+                ? t.playback.controls.tooltips.danmakuOn
+                : t.playback.controls.tooltips.danmakuOff,
           ),
           CollectButton(
             bangumiItem: videoPageController.bangumiItem,
@@ -485,15 +489,15 @@ class _SmallestPlayerItemPanelState
                         playerController.setAspectRatioType(index + 1),
                     child: _buildMenuItem(
                       title: index + 1 == 1
-                          ? '自动'
+                          ? t.playback.controls.aspectRatio.options.auto
                           : index + 1 == 2
-                              ? '裁切填充'
-                              : '拉伸填充',
+                              ? t.playback.controls.aspectRatio.options.crop
+                              : t.playback.controls.aspectRatio.options.stretch,
                       highlighted: index + 1 == playerState.aspectRatioType,
                     ),
                   ),
                 ),
-                child: _buildMenuItem(title: '视频比例'),
+                child: _buildMenuItem(title: t.playback.controls.aspectRatio.label),
               ),
               SubmenuButton(
                 menuChildren: [
@@ -503,12 +507,12 @@ class _SmallestPlayerItemPanelState
                         await widget.setPlaybackSpeed(speed);
                       },
                       child: _buildMenuItem(
-                        title: 'x',
+                        title: '${speed}x',
                         highlighted: speed == playerState.playerSpeed,
                       ),
                     ),
                 ],
-                child: _buildMenuItem(title: '倍速'),
+                child: _buildMenuItem(title: t.playback.controls.speedMenu.label),
               ),
               SubmenuButton(
                 menuChildren: List<MenuItemButton>.generate(
@@ -518,50 +522,60 @@ class _SmallestPlayerItemPanelState
                         widget.handleSuperResolutionChange(index + 1),
                     child: _buildMenuItem(
                       title: index + 1 == 1
-                          ? '关闭'
+                          ? t.playback.controls.superResolution.off
                           : index + 1 == 2
-                              ? '效率档'
-                              : '质量档',
+                              ? t.playback.controls.superResolution.balanced
+                              : t.playback.controls.superResolution.quality,
                       highlighted:
                           playerState.superResolutionType == index + 1,
                     ),
                   ),
                 ),
-                child: _buildMenuItem(title: '超分辨率'),
+                child: _buildMenuItem(title: t.playback.controls.superResolution.label),
               ),
               SubmenuButton(
                 menuChildren: [
                   MenuItemButton(
                     child: _buildMenuItem(
-                      title:
-                          '当前房间: ',
+                      title: t.playback.controls.syncplay.room.replaceFirst(
+                        '{name}',
+                        playerState.syncplayRoom.isEmpty
+                            ? t.playback.controls.syncplay.roomEmpty
+                            : playerState.syncplayRoom,
+                      ),
                     ),
                   ),
                   MenuItemButton(
                     child: _buildMenuItem(
-                      title: '网络延时: ms',
+                      title: t.playback.controls.syncplay.latency.replaceFirst(
+                        '{ms}',
+                        playerState.syncplayClientRtt.toString(),
+                      ),
                     ),
                   ),
                   MenuItemButton(
                     onPressed: widget.showSyncPlayRoomCreateDialog,
-                    child: _buildMenuItem(title: '加入房间'),
+                    child: _buildMenuItem(
+                        title: t.playback.controls.syncplay.join),
                   ),
                   MenuItemButton(
                     onPressed: widget.showSyncPlayEndPointSwitchDialog,
-                    child: _buildMenuItem(title: '切换服务器'),
+                    child: _buildMenuItem(
+                        title: t.playback.controls.syncplay.switchServer),
                   ),
                   MenuItemButton(
                     onPressed: () async {
                       await playerController.exitSyncPlayRoom();
                     },
-                    child: _buildMenuItem(title: '断开连接'),
+                    child: _buildMenuItem(
+                        title: t.playback.controls.syncplay.disconnect),
                   ),
                 ],
-                child: _buildMenuItem(title: '一起看'),
+                child: _buildMenuItem(title: t.playback.controls.syncplay.label),
               ),
               MenuItemButton(
                 onPressed: widget.showDanmakuSwitch,
-                child: _buildMenuItem(title: '弹幕切换'),
+                child: _buildMenuItem(title: t.playback.controls.menu.danmakuToggle),
               ),
               MenuItemButton(
                 onPressed: () {
@@ -583,11 +597,11 @@ class _SmallestPlayerItemPanelState
                     },
                   );
                 },
-                child: _buildMenuItem(title: '弹幕设置'),
+                child: _buildMenuItem(title: t.settings.player.danmakuSettings),
               ),
               MenuItemButton(
                 onPressed: widget.showVideoInfo,
-                child: _buildMenuItem(title: '视频详情'),
+                child: _buildMenuItem(title: t.playback.controls.menu.videoInfo),
               ),
               MenuItemButton(
                 onPressed: () {
@@ -604,11 +618,11 @@ class _SmallestPlayerItemPanelState
                     }
                   });
                 },
-                child: _buildMenuItem(title: '远程投屏'),
+                child: _buildMenuItem(title: t.playback.controls.menu.cast),
               ),
               MenuItemButton(
                 onPressed: playerController.lanunchExternalPlayer,
-                child: _buildMenuItem(title: '外部播放'),
+                child: _buildMenuItem(title: t.playback.controls.menu.external),
               ),
             ],
           ),
@@ -632,6 +646,20 @@ class _SmallestPlayerItemPanelState
             : null,
       ),
     );
+  }
+
+  String _buildSeekStatusText(PlayerState playerState) {
+    final t = context.t;
+    final diffSeconds = (playerState.currentPosition -
+            playerController.playerPosition)
+        .inSeconds
+        .abs();
+    final template =
+        playerState.currentPosition.compareTo(playerController.playerPosition) >
+                0
+            ? t.playback.controls.status.fastForward
+            : t.playback.controls.status.rewind;
+    return template.replaceFirst('{seconds}', diffSeconds.toString());
   }
 
   Widget _buildInfoChip(String text) {

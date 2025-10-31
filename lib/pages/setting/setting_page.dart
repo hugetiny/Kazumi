@@ -63,14 +63,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final metadataController = ref.read(metadataSettingsProvider.notifier);
     final localeState = ref.watch(localeSettingsProvider);
     final localeController = ref.read(localeSettingsProvider.notifier);
-    
+
     // Exit behavior options
     final List<String> exitBehaviorTitles = [
       t.settings.general.exitApp,
       t.settings.general.minimizeToTray,
       t.settings.general.askEveryTime,
     ];
-    
+
     // App locale options
     final List<_AppLocaleOption> appLocaleOptions = [
       _AppLocaleOption(
@@ -94,7 +94,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         locale: AppLocale.zhTw,
       ),
     ];
-    
+
     // Metadata locale options
     final List<_MetadataLocaleOption> metadataLocaleOptions =
         <_MetadataLocaleOption>[
@@ -119,7 +119,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         tag: 'en-US',
       ),
     ];
-    
+
     final _MetadataLocaleOption matchedMetadataLocale =
         metadataLocaleOptions.firstWhere(
       (option) => option.tag == metadataState.manualLocaleTag,
@@ -130,14 +130,22 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         : (matchedMetadataLocale.label.isNotEmpty
             ? matchedMetadataLocale.label
             : '${t.settings.metadata.custom} (${metadataState.manualLocaleTag})');
-    
-    final String appLocaleLabel = appLocaleOptions
-            .firstWhere(
-              (option) => option.locale == localeState.appLocale,
-              orElse: () => appLocaleOptions.first,
-            )
-            .label;
-    
+
+    final String appLocaleLabel;
+    if (localeState.followSystem) {
+      appLocaleLabel = appLocaleOptions.first.label;
+    } else {
+      appLocaleLabel = appLocaleOptions
+              .firstWhere(
+                (option) => option.locale == localeState.appLocale,
+                orElse: () => _AppLocaleOption(
+                  label: localeState.appLocale.flutterLocale.toLanguageTag(),
+                  locale: localeState.appLocale,
+                ),
+              )
+              .label;
+    }
+
     final isDesktop = Utils.isDesktop();
     return PopScope(
       canPop: false,
@@ -202,9 +210,19 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                               child: Text(
                                 option.label,
                                 style: TextStyle(
-                                  color: option.locale == localeState.appLocale
-                                      ? Theme.of(context).colorScheme.primary
-                                      : null,
+                                  color: option.locale == null
+                                      ? (localeState.followSystem
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null)
+                                      : (!localeState.followSystem &&
+                                              option.locale ==
+                                                  localeState.appLocale
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                          : null),
                                 ),
                               ),
                             ),

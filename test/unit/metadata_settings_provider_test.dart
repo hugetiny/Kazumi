@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/storage.dart';
 
@@ -17,10 +18,16 @@ void main() {
     Hive.init(tempDir.path);
     box = await Hive.openBox<dynamic>('setting');
     GStorage.setting = box;
+    LocaleSettings.setLocale(AppLocale.zhCn);
+  });
+
+  setUp(() {
+    LocaleSettings.setLocale(AppLocale.zhCn);
   });
 
   tearDown(() async {
     await box.clear();
+    LocaleSettings.setLocale(AppLocale.zhCn);
   });
 
   tearDownAll(() async {
@@ -79,5 +86,47 @@ void main() {
 
     state = container.read(metadataSettingsProvider);
     expect(state.manualLocaleTag, isNull);
+  });
+
+  test('app locale defaults to follow system when preference missing', () {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final LocaleSettingsState state = container.read(localeSettingsProvider);
+
+    expect(state.followSystem, isTrue);
+    expect(state.appLocale, AppLocaleUtils.findDeviceLocale());
+  });
+
+  test('setLocale persists manual selection', () async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final LocaleSettingsNotifier notifier =
+        container.read(localeSettingsProvider.notifier);
+
+    await notifier.setLocale(AppLocale.jaJp);
+
+    final LocaleSettingsState state = container.read(localeSettingsProvider);
+
+    expect(state.followSystem, isFalse);
+    expect(state.appLocale, AppLocale.jaJp);
+    expect(GStorage.setting.get(SettingBoxKey.appLocale), 'ja-JP');
+  });
+
+  test('useSystemLocale clears preference and resumes follow system', () async {
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final LocaleSettingsNotifier notifier =
+        container.read(localeSettingsProvider.notifier);
+
+    await notifier.setLocale(AppLocale.enUs);
+    await notifier.useSystemLocale();
+
+    final LocaleSettingsState state = container.read(localeSettingsProvider);
+
+    expect(state.followSystem, isTrue);
+    expect(GStorage.setting.get(SettingBoxKey.appLocale), '');
   });
 }

@@ -8,6 +8,7 @@ import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
 class CollectState {
   final List<CollectedBangumi> collectibles;
@@ -110,8 +111,10 @@ class CollectController extends Notifier<CollectState> {
   }
 
   Future<void> syncCollectibles() async {
+  final translations = ref.read(translationsProvider);
+  final webDavToast = translations.settings.webdav.toast;
     if (!WebDav().initialized) {
-      KazumiDialog.showToast(message: '未开启WebDav同步或配置无效');
+      KazumiDialog.showToast(message: webDavToast.notConfigured);
       return;
     }
     state = state.copyWith(syncing: true);
@@ -120,14 +123,20 @@ class CollectController extends Notifier<CollectState> {
       await WebDav().ping();
     } catch (e) {
       KazumiLogger().log(Level.error, 'WebDav连接失败: $e');
-      KazumiDialog.showToast(message: 'WebDav连接失败: $e');
+      KazumiDialog.showToast(
+        message: webDavToast.connectionFailed
+            .replaceFirst('{error}', e.toString()),
+      );
       ok = false;
     }
     if (ok) {
       try {
         await WebDav().syncCollectibles();
       } catch (e) {
-        KazumiDialog.showToast(message: 'WebDav同步失败 $e');
+        KazumiDialog.showToast(
+          message: webDavToast.syncFailed
+              .replaceFirst('{error}', e.toString()),
+        );
       }
       loadCollectibles();
     }
@@ -146,4 +155,3 @@ class CollectController extends Notifier<CollectState> {
     KazumiLogger().log(Level.debug, '检测到$count条未分类记录, 已迁移');
   }
 }
-

@@ -4,6 +4,7 @@ import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 // 视频卡片 - 垂直布局
 class BangumiCardV extends StatelessWidget {
@@ -29,7 +30,7 @@ class BangumiCardV extends StatelessWidget {
           onTap: () {
             if (!canTap) {
               KazumiDialog.showToast(
-                message: '编辑模式',
+                message: context.t.library.common.toast.editMode,
               );
               return;
             }

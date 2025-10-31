@@ -13,6 +13,7 @@ analyzer:
   exclude:
     - lib/bbcode/generated/**
     - lib/modules/**/generated/**
+    - lib/l10n/generated/**
     - test/integration/**.mocks.dart
 
 linter:

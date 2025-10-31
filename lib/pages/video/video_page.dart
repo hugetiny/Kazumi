@@ -29,6 +29,7 @@ import 'package:kazumi/pages/history/providers.dart';
 import 'package:kazumi/pages/webview/providers.dart';
 import 'package:kazumi/pages/video/video_state.dart';
 import 'package:kazumi/pages/setting/providers.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class VideoPage extends ConsumerStatefulWidget {
   const VideoPage({super.key});
@@ -311,18 +312,19 @@ class _VideoPageState extends ConsumerState<VideoPage>
   /// 发送弹幕 由于接口限制, 暂时未提交云端
   void sendDanmaku(String msg) async {
     keyboardFocus.requestFocus();
+    final t = context.t;
     final playerState = ref.read(playerControllerProvider);
     if (playerState.danDanmakus.isEmpty) {
       KazumiDialog.showToast(
-        message: '当前剧集不支持弹幕发送的说',
+        message: t.playback.toast.danmakuUnsupported,
       );
       return;
     }
     if (msg.isEmpty) {
-      KazumiDialog.showToast(message: '弹幕内容为空');
+      KazumiDialog.showToast(message: t.playback.toast.danmakuEmpty);
       return;
     } else if (msg.length > 100) {
-      KazumiDialog.showToast(message: '弹幕内容过长');
+      KazumiDialog.showToast(message: t.playback.toast.danmakuTooLong);
       return;
     }
     // Todo 接口方限制
@@ -333,6 +335,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
 
   void showMobileDanmakuInput() {
     final TextEditingController textController = TextEditingController();
+    final t = context.t;
     showModalBottomSheet(
       shape: const BeveledRectangleBorder(),
       isScrollControlled: true,
@@ -354,15 +357,15 @@ class _VideoPageState extends ConsumerState<VideoPage>
                     controller: textController,
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       filled: true,
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      hintText: '发个友善的弹幕见证当下',
-                      hintStyle: TextStyle(fontSize: 14),
+                      hintText: t.playback.danmaku.inputHint,
+                      hintStyle: const TextStyle(fontSize: 14),
                       alignLabelWithHint: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      border: OutlineInputBorder(
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 12),
+                      border: const OutlineInputBorder(
                         borderSide: BorderSide.none,
                         borderRadius: BorderRadius.all(Radius.circular(20)),
                       ),
@@ -551,6 +554,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     PlayerState playerState,
     bool debugModeEnabled,
   ) {
+    final t = context.t;
     final plugin = videoState.currentPlugin;
     final useNativePlayer = plugin?.useNativePlayer ?? false;
     final isFullscreen = videoState.isFullscreen;
@@ -574,8 +578,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
                                     .colorScheme
                                     .tertiaryContainer),
                             const SizedBox(height: 10),
-                            const Text('视频资源解析成功, 播放器加载中',
-                                style: TextStyle(
+                            Text(t.playback.loading.player,
+                                style: const TextStyle(
                                   color: Colors.white,
                                 )),
                           ],
@@ -598,8 +602,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
                                     .colorScheme
                                     .tertiaryContainer),
                             const SizedBox(height: 10),
-                            const Text('视频资源解析中',
-                                style: TextStyle(
+                            Text(t.playback.loading.parsing,
+                                style: const TextStyle(
                                   color: Colors.white,
                                 )),
                           ],
@@ -1079,12 +1083,15 @@ class _VideoPageState extends ConsumerState<VideoPage>
   }
 
   Widget menuBar(VideoPageState videoState) {
+    final t = context.t;
+    String playlistLabel(int index) =>
+        t.playback.playlist.list.replaceFirst('{index}', '$index');
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(' 合集 '),
+          Text(t.playback.playlist.collection),
           Expanded(
             child: Text(
               videoState.title,
@@ -1113,7 +1120,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                     }
                   },
                   child: Text(
-                    '播放列表${currentRoad + 1} ',
+                    playlistLabel(currentRoad + 1),
                     style: const TextStyle(fontSize: 13),
                   ),
                 ),
@@ -1133,7 +1140,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '播放列表${i + 1}',
+                      playlistLabel(i + 1),
                       style: TextStyle(
                         color: i == currentRoad
                             ? Theme.of(context).colorScheme.primary
@@ -1152,11 +1159,16 @@ class _VideoPageState extends ConsumerState<VideoPage>
 
   Widget menuBody(VideoPageState videoState) {
     final cardList = <Widget>[];
-    for (final road in videoState.roadList) {
-      if (road.name != '播放列表${currentRoad + 1}') continue;
-      var episodeIndex = 1;
-      for (final urlItem in road.data) {
-        final currentIndex = episodeIndex;
+    for (var roadIndex = 0;
+        roadIndex < videoState.roadList.length;
+        roadIndex++) {
+      if (roadIndex != currentRoad) continue;
+      final road = videoState.roadList[roadIndex];
+      for (var episodeIndex = 0;
+          episodeIndex < road.data.length;
+          episodeIndex++) {
+        final currentIndex = episodeIndex + 1;
+        final urlItem = road.data[episodeIndex];
         cardList.add(
           Container(
             margin: const EdgeInsets.only(bottom: 4),
@@ -1219,7 +1231,6 @@ class _VideoPageState extends ConsumerState<VideoPage>
             ),
           ),
         );
-        episodeIndex++;
       }
     }
 
@@ -1243,6 +1254,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
   }
 
   Widget tabBody(VideoPageState videoState, PlayerState playerState) {
+    final t = context.t;
     final roads = videoState.roadList;
     final currentRoadIndex = videoState.currentRoad;
     final currentEpisodeIndex = videoState.currentEpisode;
@@ -1279,9 +1291,9 @@ class _VideoPageState extends ConsumerState<VideoPage>
                       menuJumpToCurrentEpisode();
                     }
                   },
-                  tabs: const [
-                    Tab(text: '选集'),
-                    Tab(text: '评论'),
+                  tabs: [
+                    Tab(text: t.playback.tabs.episodes),
+                    Tab(text: t.playback.tabs.comments),
                   ],
                 ),
                 if (MediaQuery.sizeOf(context).width <=
@@ -1304,15 +1316,21 @@ class _VideoPageState extends ConsumerState<VideoPage>
                         if (playerState.danmakuOn && !videoState.loading) {
                           showMobileDanmakuInput();
                         } else if (videoState.loading) {
-                          KazumiDialog.showToast(message: '请等待视频加载完成');
+                          KazumiDialog.showToast(
+                            message: t.playback.toast.waitForVideo,
+                          );
                         } else {
-                          KazumiDialog.showToast(message: '请先打开弹幕');
+                          KazumiDialog.showToast(
+                            message: t.playback.toast.enableDanmakuFirst,
+                          );
                         }
                       },
                       child: Row(
                         children: [
                           Text(
-                            playerState.danmakuOn ? '  点我发弹幕  ' : '  已关闭弹幕  ',
+                            playerState.danmakuOn
+                                ? t.playback.danmaku.mobileButton
+                                : t.playback.danmaku.mobileButtonDisabled,
                             softWrap: false,
                             overflow: TextOverflow.clip,
                             style: TextStyle(

@@ -2,6 +2,7 @@ import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/anime_season.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
 class TimelineState {
   final List<List<BangumiItem>> bangumiCalendar;
@@ -45,7 +46,7 @@ class TimelineController extends Notifier<TimelineState> {
     final now = DateTime.now();
     state = state.copyWith(
       selectedDate: now,
-      seasonString: AnimeSeason(now).toString(),
+      seasonString: _seasonTitle(now),
     );
     await getSchedules();
   }
@@ -90,7 +91,11 @@ class TimelineController extends Notifier<TimelineState> {
   }
 
   void tryEnterSeason(DateTime date) {
-    state = state.copyWith(selectedDate: date, seasonString: '加载中 ٩(◦`꒳´◦)۶');
+    final translations = ref.read(translationsProvider);
+    state = state.copyWith(
+      selectedDate: date,
+      seasonString: translations.library.timeline.season.loading,
+    );
   }
 
   void changeSortType(int type) {
@@ -119,8 +124,32 @@ class TimelineController extends Notifier<TimelineState> {
 
   void finalizeSeasonString() {
     state = state.copyWith(
-      seasonString: AnimeSeason(state.selectedDate).toString(),
+      seasonString: _seasonTitle(state.selectedDate),
     );
   }
-}
 
+  String _seasonTitle(DateTime date) {
+    final translations = ref.read(translationsProvider);
+    final seasonTexts = translations.library.timeline.season;
+    final animeSeason = AnimeSeason(date);
+    final seasonName = _seasonNameFromKey(seasonTexts, animeSeason.seasonKey);
+    return seasonTexts.title
+        .replaceAll('{year}', '${animeSeason.year}')
+        .replaceAll('{season}', seasonName);
+  }
+
+  String _seasonNameFromKey(dynamic seasonTexts, String key) {
+    switch (key) {
+      case 'winter':
+        return seasonTexts.names.winter;
+      case 'spring':
+        return seasonTexts.names.spring;
+      case 'summer':
+        return seasonTexts.names.summer;
+      case 'autumn':
+        return seasonTexts.names.autumn;
+      default:
+        return '';
+    }
+  }
+}

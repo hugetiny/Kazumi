@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
 class WebDavSettingsState {
   final bool enableGitProxy;
@@ -75,6 +76,7 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
 
   Future<WebDavActionResult> toggleWebDav(bool value) async {
     final setting = GStorage.setting;
+    final t = ref.read(translationsProvider);
     if (value) {
       try {
         if (!WebDav().initialized) {
@@ -85,7 +87,8 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
         state = state.copyWith(webDavEnable: false);
         return WebDavActionResult(
           success: false,
-          message: 'WEBDAV初始化失败 $e',
+          message: t.settings.webdav.result.initFailed
+              .replaceFirst('{error}', e.toString()),
         );
       }
     }
@@ -104,11 +107,12 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
   }
 
   Future<WebDavActionResult> toggleWebDavHistory(bool value) async {
+    final t = ref.read(translationsProvider);
     if (!state.webDavEnable) {
       state = state.copyWith();
-      return const WebDavActionResult(
+      return WebDavActionResult(
         success: false,
-        message: '请先开启WEBDAV同步',
+        message: t.settings.webdav.result.requireEnable,
       );
     }
 
@@ -120,10 +124,11 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
   }
 
   Future<WebDavActionResult> updateWebDav() async {
+    final t = ref.read(translationsProvider);
     if (!state.webDavEnable) {
-      return const WebDavActionResult(
+      return WebDavActionResult(
         success: false,
-        message: '未开启WebDav同步或配置无效',
+        message: t.settings.webdav.result.disabled,
       );
     }
 
@@ -136,25 +141,30 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
       try {
         await webDav.ping();
       } catch (_) {
-        return const WebDavActionResult(
+        return WebDavActionResult(
           success: false,
-          message: 'WebDAV连接失败',
+          message: t.settings.webdav.result.connectionFailed,
         );
       }
 
       try {
         await webDav.updateHistory();
-        return const WebDavActionResult(success: true, message: '同步成功');
+        return WebDavActionResult(
+          success: true,
+          message: t.settings.webdav.result.syncSuccess,
+        );
       } catch (e) {
         return WebDavActionResult(
           success: false,
-          message: '同步失败 $e',
+          message: t.settings.webdav.result.syncFailed
+              .replaceFirst('{error}', e.toString()),
         );
       }
     } catch (e) {
       return WebDavActionResult(
         success: false,
-        message: '同步失败 $e',
+        message: t.settings.webdav.result.syncFailed
+            .replaceFirst('{error}', e.toString()),
       );
     } finally {
       state = state.copyWith(isBusy: false);
@@ -162,10 +172,11 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
   }
 
   Future<WebDavActionResult> downloadWebDav() async {
+    final t = ref.read(translationsProvider);
     if (!state.webDavEnable) {
-      return const WebDavActionResult(
+      return WebDavActionResult(
         success: false,
-        message: '未开启WebDav同步或配置无效',
+        message: t.settings.webdav.result.disabled,
       );
     }
 
@@ -178,25 +189,30 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
       try {
         await webDav.ping();
       } catch (_) {
-        return const WebDavActionResult(
+        return WebDavActionResult(
           success: false,
-          message: 'WebDAV连接失败',
+          message: t.settings.webdav.result.connectionFailed,
         );
       }
 
       try {
         await webDav.downloadAndPatchHistory();
-        return const WebDavActionResult(success: true, message: '同步成功');
+        return WebDavActionResult(
+          success: true,
+          message: t.settings.webdav.result.syncSuccess,
+        );
       } catch (e) {
         return WebDavActionResult(
           success: false,
-          message: '同步失败 $e',
+          message: t.settings.webdav.result.syncFailed
+              .replaceFirst('{error}', e.toString()),
         );
       }
     } catch (e) {
       return WebDavActionResult(
         success: false,
-        message: '同步失败 $e',
+        message: t.settings.webdav.result.syncFailed
+            .replaceFirst('{error}', e.toString()),
       );
     } finally {
       state = state.copyWith(isBusy: false);

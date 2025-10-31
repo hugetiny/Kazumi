@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/webdav_editor/providers.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 
 class WebDavSettingsPage extends ConsumerWidget {
   const WebDavSettingsPage({super.key});
@@ -19,6 +20,7 @@ class WebDavSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(webDavSettingsControllerProvider);
     final controller = ref.read(webDavSettingsControllerProvider.notifier);
+    final t = ref.watch(translationsProvider);
 
     return PopScope(
       canPop: true,
@@ -26,14 +28,14 @@ class WebDavSettingsPage extends ConsumerWidget {
         _dismissDialogIfNeeded();
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('同步设置')),
+        appBar: SysAppBar(title: Text(t.settings.webdav.pageTitle)),
         body: !state.initialized
             ? const Center(child: CircularProgressIndicator())
             : SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('WebDAV'),
+              title: Text(t.settings.webdav.section.webdav),
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -44,7 +46,7 @@ class WebDavSettingsPage extends ConsumerWidget {
                       KazumiDialog.showToast(message: result.message);
                     }
                   },
-                  title: const Text('WebDAV 同步'),
+                  title: Text(t.settings.webdav.tile.webdavToggle),
                   initialValue: state.webDavEnable,
                 ),
                 SettingsTile.switchTile(
@@ -56,20 +58,20 @@ class WebDavSettingsPage extends ConsumerWidget {
                       KazumiDialog.showToast(message: result.message);
                     }
                   },
-                  title: const Text('观看记录同步'),
-                  description: const Text('允许自动同步观看记录'),
+                  title: Text(t.settings.webdav.tile.historyToggle),
+                  description: Text(t.settings.webdav.tile.historyDescription),
                   initialValue: state.webDavEnableHistory,
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
                     context.push('/settings/webdav/editor');
                   },
-                  title: const Text('WebDAV 配置'),
+                  title: Text(t.settings.webdav.tile.config),
                 ),
               ],
             ),
             SettingsSection(
-              bottomInfo: const Text('立即将观看记录上传到 WebDAV。'),
+              bottomInfo: Text(t.settings.webdav.info.upload),
               tiles: [
                 SettingsTile(
                   trailing: const Icon(Icons.cloud_upload_rounded),
@@ -77,16 +79,17 @@ class WebDavSettingsPage extends ConsumerWidget {
                     if (state.isBusy) {
                       return;
                     }
-                    KazumiDialog.showToast(message: '正在尝试上传到 WebDAV…');
+                    KazumiDialog.showToast(
+                        message: t.settings.webdav.toast.uploading);
                     final result = await controller.updateWebDav();
                     KazumiDialog.showToast(message: result.message);
                   },
-                  title: const Text('手动上传'),
+                  title: Text(t.settings.webdav.tile.manualUpload),
                 ),
               ],
             ),
             SettingsSection(
-              bottomInfo: const Text('立即将观看记录同步到本地。'),
+              bottomInfo: Text(t.settings.webdav.info.download),
               tiles: [
                 SettingsTile(
                   trailing: const Icon(Icons.cloud_download_rounded),
@@ -94,11 +97,12 @@ class WebDavSettingsPage extends ConsumerWidget {
                     if (state.isBusy) {
                       return;
                     }
-                    KazumiDialog.showToast(message: '正在尝试从 WebDAV 同步…');
+                    KazumiDialog.showToast(
+                        message: t.settings.webdav.toast.downloading);
                     final result = await controller.downloadWebDav();
                     KazumiDialog.showToast(message: result.message);
                   },
-                  title: const Text('手动下载'),
+                  title: Text(t.settings.webdav.tile.manualDownload),
                 ),
               ],
             ),

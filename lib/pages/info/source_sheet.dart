@@ -15,6 +15,7 @@ import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 
 enum SourceSortOption { original, nameAsc, nameDesc }
@@ -50,9 +51,11 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   bool get _hasAlias => widget.infoController.bangumiItem.alias.isNotEmpty;
 
   void _showAliasSearchDialog(SourceSearchController searchController) {
+    final sheetTexts = context.t.library.info.sourceSheet;
+    final aliasTexts = sheetTexts.alias;
     final existingAlias = widget.infoController.bangumiItem.alias;
     if (existingAlias.isEmpty) {
-  KazumiDialog.showToast(message: '暂无可用别名，请先手动添加后再检索。');
+      KazumiDialog.showToast(message: sheetTexts.toast.aliasEmpty);
       return;
     }
 
@@ -77,19 +80,21 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                     return ListTile(
                       title: Text(alias),
                       trailing: IconButton(
-                        tooltip: '删除别名',
+                        tooltip: aliasTexts.deleteTooltip,
                         onPressed: () {
                           KazumiDialog.show(
                             builder: (confirmContext) {
+                              final confirmTexts =
+                                  confirmContext.t.library.info.sourceSheet;
+                              final confirmAlias = confirmTexts.alias;
                               return AlertDialog(
-                                title: const Text('删除确认'),
-                                content:
-                                    const Text('删除后无法恢复，确认要永久删除这个别名吗？'),
+                                title: Text(confirmAlias.deleteTitle),
+                                content: Text(confirmAlias.deleteMessage),
                                 actions: [
                                   TextButton(
                                     onPressed: KazumiDialog.dismiss,
                                     child: Text(
-                                      '取消',
+                                      confirmContext.t.app.cancel,
                                       style: TextStyle(
                                         color: Theme.of(confirmContext)
                                             .colorScheme
@@ -116,7 +121,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                                         Navigator.of(dialogContext).pop();
                                       }
                                     },
-                                    child: const Text('确认'),
+                                    child: Text(confirmContext.t.app.confirm),
                                   ),
                                 ],
                               );
@@ -141,13 +146,14 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   }
 
   String _sortOptionLabel(SourceSortOption option) {
+    final options = context.t.library.info.sourceSheet.sort.options;
     switch (option) {
       case SourceSortOption.original:
-        return '默认顺序';
+        return options.original;
       case SourceSortOption.nameAsc:
-        return '名称升序';
+        return options.nameAsc;
       case SourceSortOption.nameDesc:
-        return '名称降序';
+        return options.nameDesc;
     }
   }
 
@@ -188,8 +194,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     Plugin plugin,
     SearchItem searchItem,
   ) async {
+    final sheetTexts = context.t.library.info.sourceSheet;
     KazumiDialog.showLoading(
-      msg: '获取中',
+      msg: context.t.app.loading,
       barrierDismissible: Utils.isDesktop(),
       onDismiss: videoPageController.cancelQueryRoads,
     );
@@ -205,9 +212,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
       if (!mounted) return;
       context.push('/video');
     } catch (error) {
-  KazumiLogger().log(Level.warning, '获取视频播放列表失败: $error');
-  KazumiDialog.dismiss();
-  KazumiDialog.showToast(message: '获取视频播放列表失败。');
+      KazumiLogger().log(Level.warning, '获取视频播放列表失败: $error');
+      KazumiDialog.dismiss();
+      KazumiDialog.showToast(message: sheetTexts.toast.loadFailed);
     }
   }
 
@@ -216,6 +223,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     Plugin plugin,
     SearchItem item,
   ) {
+    final sheetTexts = context.t.library.info.sourceSheet;
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
@@ -229,7 +237,8 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '源 · ${plugin.name}',
+                sheetTexts.card.title
+                    .replaceFirst('{plugin}', plugin.name),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.labelLarge,
@@ -259,7 +268,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                     onPressed: () =>
                         _handleSearchItemTap(context, plugin, item),
                     icon: const Icon(Icons.play_arrow_rounded),
-                    label: const Text('播放'),
+                    label: Text(sheetTexts.card.play),
                   ),
                 ],
               ),
@@ -271,8 +280,10 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   }
 
   PopupMenuButton<SourceSortOption> _buildSortMenu() {
+    final sortTexts = context.t.library.info.sourceSheet.sort;
     return PopupMenuButton<SourceSortOption>(
-      tooltip: '排序：${_sortOptionLabel(_sortOption)}',
+      tooltip: sortTexts.tooltip
+          .replaceFirst('{label}', _sortOptionLabel(_sortOption)),
       icon: const Icon(Icons.sort_rounded),
       onSelected: (option) {
         setState(() {
@@ -352,6 +363,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     required List<Plugin> empty,
     required SourceSearchController controller,
   }) {
+    final sheetTexts = context.t.library.info.sourceSheet;
+    final statusTexts = sheetTexts.status;
+    final actions = sheetTexts.actions;
     final widgets = <Widget>[];
 
     for (final plugin in pending) {
@@ -364,7 +378,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
               width: 20,
               child: CircularProgressIndicator(strokeWidth: 3),
             ),
-            title: Text('${plugin.name} 检索中…'),
+            title: Text(
+              statusTexts.searching.replaceFirst('{plugin}', plugin.name),
+            ),
             dense: true,
           ),
         ),
@@ -380,19 +396,21 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
               Icons.error_outline_rounded,
               color: Theme.of(context).colorScheme.error,
             ),
-            title: Text('${plugin.name} 检索失败'),
+            title: Text(
+              statusTexts.failed.replaceFirst('{plugin}', plugin.name),
+            ),
             dense: true,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextButton(
                   onPressed: () => controller.queryPlugin(plugin.name),
-                  child: const Text('重试'),
+                  child: Text(context.t.app.retry),
                 ),
                 const SizedBox(width: 8),
                 TextButton(
                   onPressed: () => _confirmRemoveSource(plugin),
-                  child: const Text('删除源'),
+                  child: Text(actions.removeSource),
                 ),
               ],
             ),
@@ -410,7 +428,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
               Icons.info_outline_rounded,
               color: Theme.of(context).colorScheme.outline,
             ),
-            title: Text('${plugin.name} 无检索结果'),
+            title: Text(
+              statusTexts.empty.replaceFirst('{plugin}', plugin.name),
+            ),
             dense: true,
           ),
         ),
@@ -424,14 +444,19 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     KazumiDialog.show(
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);
+        final dialogTexts =
+            dialogContext.t.library.info.sourceSheet.dialog;
         return AlertDialog(
-          title: const Text('删除源'),
-          content: Text('确定要删除源 ${plugin.name} 吗？'),
+          title: Text(dialogTexts.removeTitle),
+          content: Text(
+            dialogTexts.removeMessage
+                .replaceFirst('{plugin}', plugin.name),
+          ),
           actions: [
             TextButton(
               onPressed: KazumiDialog.dismiss,
               child: Text(
-                '取消',
+                dialogContext.t.app.cancel,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
@@ -441,9 +466,13 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                 await ref
                     .read(pluginsControllerProvider.notifier)
                     .removePlugin(plugin);
-                KazumiDialog.showToast(message: '已删除源 ${plugin.name}。');
+                KazumiDialog.showToast(
+                  message: dialogContext
+                      .t.library.info.sourceSheet.toast.removed
+                      .replaceFirst('{plugin}', plugin.name),
+                );
               },
-              child: const Text('删除'),
+              child: Text(dialogContext.t.app.delete),
             ),
           ],
         );
@@ -479,6 +508,8 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
         ? widget.infoController.bangumiItem.name
         : widget.infoController.bangumiItem.nameCn;
 
+    final sheetTexts = context.t.library.info.sourceSheet;
+
     final slivers = <Widget>[
       SliverPadding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -491,14 +522,14 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                 onPressed: () =>
                     searchController.searchWithKeyword(_originalKeyword),
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('重新检索'),
+                label: Text(sheetTexts.actions.searchAgain),
               ),
               OutlinedButton.icon(
                 onPressed: _hasAlias
                     ? () => _showAliasSearchDialog(searchController)
                     : null,
                 icon: const Icon(Icons.badge_outlined),
-                label: const Text('别名检索'),
+                label: Text(sheetTexts.actions.aliasSearch),
               ),
             ],
           ),
@@ -563,14 +594,14 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
           hasScrollBody: false,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              SizedBox(
+            children: [
+              const SizedBox(
                 height: 32,
                 width: 32,
                 child: CircularProgressIndicator(),
               ),
-              SizedBox(height: 16),
-              Text('检索中，请稍候…'),
+              const SizedBox(height: 16),
+              Text(sheetTexts.empty.searching),
             ],
           ),
         ),
@@ -581,7 +612,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
           hasScrollBody: false,
           child: Center(
             child: Text(
-              '暂无可用视频源，请尝试重新检索或使用别名检索。',
+              sheetTexts.empty.noResults,
               style: Theme.of(context).textTheme.bodyLarge,
               textAlign: TextAlign.center,
             ),
@@ -592,7 +623,9 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('选择播放源 ($bangumiName)'),
+        title: Text(
+          sheetTexts.title.replaceFirst('{name}', bangumiName),
+        ),
         actions: [
           _buildSortMenu(),
           const SizedBox(width: 8),

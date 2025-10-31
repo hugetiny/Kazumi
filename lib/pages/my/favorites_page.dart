@@ -12,6 +12,7 @@ import 'package:kazumi/pages/my/my_controller.dart';
 import 'package:kazumi/pages/my/providers.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class FavoritesPage extends ConsumerStatefulWidget {
   const FavoritesPage({super.key});
@@ -23,11 +24,6 @@ class FavoritesPage extends ConsumerStatefulWidget {
 class _FavoritesPageState extends ConsumerState<FavoritesPage>
     with SingleTickerProviderStateMixin {
   static const List<int> _visibleTypes = [1, 2, 4];
-  static const List<Tab> _tabs = <Tab>[
-    Tab(text: '在看'),
-    Tab(text: '想看'),
-    Tab(text: '看过'),
-  ];
 
   late final CollectController collectController;
   late final TabController tabController;
@@ -39,7 +35,7 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
   void initState() {
     super.initState();
     collectController = ref.read(collectControllerProvider.notifier);
-    tabController = TabController(vsync: this, length: _tabs.length);
+    tabController = TabController(vsync: this, length: _visibleTypes.length);
     setting = GStorage.setting;
   }
 
@@ -60,6 +56,8 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
+    final favoritesTexts = t.library.my.favorites;
     final collectibles = ref.watch(collectControllerProvider).collectibles
         .where((item) => _visibleTypes.contains(item.type))
         .toList();
@@ -77,10 +75,10 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
           toolbarHeight: 104,
           bottom: TabBar(
             controller: tabController,
-            tabs: _tabs,
+            tabs: _buildTabs(favoritesTexts.tabs),
             indicatorColor: Theme.of(context).colorScheme.primary,
           ),
-          title: const Text('收藏'),
+          title: Text(favoritesTexts.title),
           actions: [
             IconButton(
               onPressed: () {
@@ -101,11 +99,15 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
                         as bool? ??
                     false;
             if (!webDavEnable) {
-              KazumiDialog.showToast(message: '未启用 WebDAV，同步功能不可用。');
+              KazumiDialog.showToast(
+                message: favoritesTexts.sync.disabled,
+              );
               return;
             }
             if (showDelete) {
-              KazumiDialog.showToast(message: '编辑模式下无法执行同步。');
+              KazumiDialog.showToast(
+                message: favoritesTexts.sync.editing,
+              );
               return;
             }
             if (syncing) {
@@ -130,24 +132,34 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
               : const Icon(Icons.cloud_sync),
         ),
         body: collectibles.isEmpty
-            ? const Center(child: Text('暂无收藏记录。'))
+            ? Center(child: Text(favoritesTexts.empty))
             : TabBarView(
                 controller: tabController,
-                children: _tabs
-                    .map(
-                      (tab) => _buildTab(collectibles, context,
-                          _visibleTypes[_tabs.indexOf(tab)]),
-                    )
-                    .toList(),
+                children: List.generate(
+                  _visibleTypes.length,
+                  (index) => _buildTab(
+                    collectibles,
+                    context,
+                    _visibleTypes[index],
+                    favoritesTexts.tabs.empty,
+                  ),
+                ),
               ),
       ),
     );
   }
 
+  List<Tab> _buildTabs(dynamic tabs) => [
+        Tab(text: tabs.watching),
+        Tab(text: tabs.planned),
+        Tab(text: tabs.completed),
+      ];
+
   Widget _buildTab(
     List<CollectedBangumi> collectibles,
     BuildContext context,
     int type,
+    String emptyText,
   ) {
     final filtered = collectibles
         .where((item) => item.type == type)
@@ -158,11 +170,11 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
       );
 
     if (filtered.isEmpty) {
-      return const CustomScrollView(
+      return CustomScrollView(
         slivers: [
           SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: Text('暂无记录。')),
+            child: Center(child: Text(emptyText)),
           ),
         ],
       );

@@ -5,7 +5,8 @@
     "loading": "読み込み中…",
     "retry": "再試行",
     "confirm": "確認",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "delete": "削除"
   },
   "metadata": {
     "sectionTitle": "作品情報",
@@ -36,7 +37,6 @@
   },
   "settings": {
     "title": "設定",
-    "metadata": "メタデータソース設定",
     "downloads": "ダウンロード設定",
     "playback": "再生設定",
     "general": {
@@ -51,12 +51,162 @@
       "minimizeToTray": "トレイに最小化",
       "askEveryTime": "毎回確認する"
     },
+    "appearancePage": {
+      "title": "外観設定",
+      "mode": {
+        "title": "テーマモード",
+        "system": "システムに合わせる",
+        "light": "ライト",
+        "dark": "ダーク"
+      },
+      "colorScheme": {
+        "title": "アクセントカラー",
+        "dialogTitle": "アクセントカラーを選択",
+        "dynamicColor": "ダイナミックカラーを使用",
+        "dynamicColorInfo": "対応デバイスでは壁紙からカラーパレットを生成します（Android 12+/Windows 11）。",
+        "labels": {
+          "defaultLabel": "デフォルト",
+          "teal": "ティール",
+          "blue": "ブルー",
+          "indigo": "インディゴ",
+          "violet": "バイオレット",
+          "pink": "ピンク",
+          "yellow": "イエロー",
+          "orange": "オレンジ",
+          "deepOrange": "ディープオレンジ"
+        }
+      },
+      "oled": {
+        "title": "OLEDコントラスト",
+        "description": "OLEDディスプレイ向けにより深い黒を適用します。"
+      },
+      "window": {
+        "title": "ウィンドウボタン",
+        "description": "タイトルバーにウィンドウ操作ボタンを表示します。"
+      },
+      "refreshRate": {
+        "title": "リフレッシュレート"
+      }
+    },
     "source": {
       "title": "ソース",
       "ruleManagement": "ルール管理",
       "ruleManagementDesc": "アニメリソースルールを管理",
       "githubProxy": "GitHubプロキシ",
       "githubProxyDesc": "プロキシを使用してルールリポジトリにアクセス"
+    },
+    "plugins": {
+      "title": "Rule Management",
+      "empty": "No rules available",
+      "tooltip": {
+        "updateAll": "Update all",
+        "addRule": "Add rule"
+      },
+      "multiSelect": {
+        "selectedCount": "{count} selected"
+      },
+      "loading": {
+        "updating": "Updating rules…",
+        "updatingSingle": "Updating…",
+        "importing": "Importing…"
+      },
+      "labels": {
+        "version": "Version: {version}",
+        "statusUpdatable": "Update available",
+        "statusSearchValid": "Search valid"
+      },
+      "actions": {
+        "newRule": "Create rule",
+        "importFromRepo": "Import from repository",
+        "importFromClipboard": "Import from clipboard",
+        "cancel": "Cancel",
+        "import": "Import",
+        "update": "Update",
+        "edit": "Edit",
+        "copyToClipboard": "Copy to clipboard",
+        "share": "Share",
+        "delete": "Delete"
+      },
+      "dialogs": {
+        "deleteTitle": "Delete rules",
+        "deleteMessage": "Delete {count} selected rule(s)?",
+        "importTitle": "Import rule",
+        "shareTitle": "Rule link"
+      },
+      "toast": {
+        "allUpToDate": "All rules are up to date.",
+        "updateCount": "Updated {count} rule(s).",
+        "importSuccess": "Import successful.",
+        "importFailed": "Import failed: {error}",
+        "repoMissing": "The repository does not contain this rule.",
+        "alreadyLatest": "Rule is already the latest.",
+        "updateSuccess": "Update successful.",
+        "updateIncompatible": "Kazumi is too old; this rule is incompatible.",
+        "updateFailed": "Failed to update rule.",
+        "copySuccess": "Copied to clipboard."
+      },
+      "editor": {
+        "title": "ルールを編集",
+        "fields": {
+          "name": "ルール名",
+          "version": "バージョン",
+          "baseUrl": "ベースURL",
+          "searchUrl": "検索URL",
+          "searchList": "検索リスト XPath",
+          "searchName": "検索タイトル XPath",
+          "searchResult": "検索結果 XPath",
+          "chapterRoads": "プレイリスト XPath",
+          "chapterResult": "プレイリスト結果 XPath",
+          "userAgent": "User-Agent",
+          "referer": "Referer"
+        },
+        "advanced": {
+          "title": "詳細設定",
+          "legacyParser": {
+            "title": "旧パーサーを使用",
+            "subtitle": "互換性のために旧式の XPath パーサーを使用します。"
+          },
+          "httpPost": {
+            "title": "検索リクエストをPOSTで送信",
+            "subtitle": "検索リクエストを HTTP POST で送信します。"
+          },
+          "nativePlayer": {
+            "title": "ネイティブプレーヤーを強制",
+            "subtitle": "再生時に内蔵プレーヤーを優先します。"
+          }
+        }
+      },
+      "shop": {
+        "title": "Rule Repository",
+        "tooltip": {
+          "sortByName": "Sort by name",
+          "sortByUpdate": "Sort by last update",
+          "refresh": "Refresh rule list"
+        },
+        "labels": {
+          "playerType": {
+            "native": "native",
+            "webview": "webview"
+          },
+          "lastUpdated": "Last updated: {timestamp}"
+        },
+        "buttons": {
+          "install": "Add",
+          "installed": "Added",
+          "update": "Update",
+          "toggleMirrorEnable": "Enable mirror",
+          "toggleMirrorDisable": "Disable mirror",
+          "refresh": "Refresh"
+        },
+        "toast": {
+          "importFailed": "Failed to import rule."
+        },
+        "error": {
+          "unreachable": "Unable to reach the repository\n{status}",
+          "mirrorEnabled": "Mirror enabled",
+          "mirrorDisabled": "Mirror disabled"
+        }
+      }
     },
     "metadata": {
       "title": "メタデータ",
@@ -97,17 +247,33 @@
       "privateModeDesc": "視聴履歴を保存しない",
       "defaultPlaySpeed": "デフォルト再生速度",
       "defaultVideoAspectRatio": "デフォルト動画アスペクト比",
+      "aspectRatio": {
+        "auto": "自動",
+        "crop": "クロップ表示",
+        "stretch": "全画面表示"
+      },
       "danmakuSettings": "弾幕設定",
       "danmakuSettingsDesc": "弾幕パラメータを設定",
       "danmaku": "弾幕",
       "danmakuDefaultOn": "デフォルトでオン",
       "danmakuDefaultOnDesc": "デフォルトで動画と一緒に弾幕を再生するか",
       "danmakuSource": "弾幕ソース",
+      "danmakuSources": {
+        "bilibili": "Bilibili",
+        "gamer": "Gamer",
+        "dandan": "DanDan"
+      },
       "danmakuCredentials": "認証情報",
       "danmakuDanDanCredentials": "DanDan API認証情報",
       "danmakuDanDanCredentialsDesc": "DanDan認証情報をカスタマイズ",
+      "danmakuCredentialModeBuiltIn": "内蔵",
+      "danmakuCredentialModeCustom": "カスタム",
+      "danmakuCredentialHint": "空欄にすると内蔵の認証情報を使用します",
+      "danmakuCredentialNotConfigured": "未設定",
+      "danmakuCredentialsSummary": "App ID: {appId}\nAPI Key: {apiKey}",
       "danmakuShield": "弾幕シールド",
       "danmakuKeywordShield": "キーワードシールド",
+      "danmakuShieldInputHint": "キーワードまたは正規表現を入力",
       "danmakuShieldDescription": "\"/\"で始まり\"/\"で終わるテキストは正規表現として扱われます。例：\"/\\\\d+/\"はすべての数字をブロックします",
       "danmakuShieldCount": "{count}個のキーワードを追加しました",
       "danmakuStyle": "弾幕スタイル",
@@ -117,19 +283,191 @@
       "danmakuBottomDisplay": "下部弾幕",
       "danmakuScrollDisplay": "スクロール弾幕",
       "danmakuMassiveDisplay": "大量弾幕",
+      "danmakuMassiveDescription": "弾幕が多い場合に重ねて描画します",
+      "danmakuOutline": "弾幕アウトライン",
+      "danmakuColor": "弾幕カラー",
       "danmakuFontSize": "フォントサイズ",
+      "danmakuFontWeight": "フォントの太さ",
       "danmakuOpacity": "弾幕不透明度",
       "add": "追加",
       "save": "保存",
       "restoreDefault": "デフォルトに戻す",
       "superResolutionTitle": "超解像度",
+      "superResolutionHint": "既定の超解像モードを選択",
+      "superResolutionOptions": {
+        "off": {
+          "label": "オフ",
+          "description": "画質向上機能を無効にします。"
+        },
+        "efficiency": {
+          "label": "バランス",
+          "description": "パフォーマンスと画質のバランスを取ります。"
+        },
+        "quality": {
+          "label": "画質優先",
+          "description": "画質を最大限まで高めます。負荷が増える場合があります。"
+        }
+      },
       "superResolutionDefaultBehavior": "デフォルト動作",
       "superResolutionClosePrompt": "プロンプトを閉じる",
-      "superResolutionClosePromptDesc": "超解像度を有効にするたびにプロンプトを閉じる"
+      "superResolutionClosePromptDesc": "超解像度を有効にするたびにプロンプトを閉じる",
+      "toast": {
+        "danmakuKeywordEmpty": "キーワードを入力してください",
+        "danmakuKeywordTooLong": "キーワードが長すぎます",
+        "danmakuKeywordExists": "このキーワードは既に存在します",
+        "danmakuCredentialsRestored": "組み込みの認証情報に戻しました",
+        "danmakuCredentialsUpdated": "認証情報を更新しました"
+      }
     },
     "webdav": {
       "title": "WebDAV",
-      "desc": "同期パラメータを設定"
+      "desc": "同期パラメータを設定",
+      "pageTitle": "同期設定",
+      "editor": {
+        "title": "WebDAV 設定",
+        "url": "URL",
+        "username": "ユーザー名",
+        "password": "パスワード",
+        "toast": {
+          "saveSuccess": "設定を保存しました。テストを開始します...",
+          "saveFailed": "設定に失敗しました: {error}",
+          "testSuccess": "テストに成功しました。",
+          "testFailed": "テストに失敗しました: {error}"
+        }
+      },
+      "section": {
+        "webdav": "WebDAV"
+      },
+      "tile": {
+        "webdavToggle": "WebDAV 同期",
+        "historyToggle": "視聴履歴同期",
+        "historyDescription": "視聴履歴を自動同期します",
+        "config": "WebDAV 設定",
+        "manualUpload": "手動アップロード",
+        "manualDownload": "手動ダウンロード"
+      },
+      "info": {
+        "upload": "視聴履歴をすぐに WebDAV へアップロードします。",
+        "download": "視聴履歴をすぐに端末へ同期します。"
+      },
+      "toast": {
+        "uploading": "WebDAV へアップロードを試行中...",
+        "downloading": "WebDAV から同期を試行中...",
+        "notConfigured": "WebDAV 同期が無効、または設定が正しくありません。",
+        "connectionFailed": "WebDAV への接続に失敗しました: {error}",
+        "syncFailed": "WebDAV の同期に失敗しました: {error}"
+      },
+      "result": {
+        "initFailed": "WebDAV の初期化に失敗しました: {error}",
+        "requireEnable": "先に WebDAV 同期を有効にしてください。",
+        "disabled": "WebDAV 同期が無効か、設定が正しくありません。",
+        "connectionFailed": "WebDAV への接続に失敗しました。",
+        "syncSuccess": "同期に成功しました。",
+        "syncFailed": "同期に失敗しました: {error}"
+      }
+    },
+    "update": {
+      "fallbackDescription": "リリースノートはありません。",
+      "error": {
+        "invalidResponse": "更新情報の形式が正しくありません。"
+      },
+      "dialog": {
+        "title": "新しいバージョン {version} が利用可能です",
+        "publishedAt": "{date} に公開",
+        "installationTypeLabel": "インストールパッケージを選択",
+        "actions": {
+          "disableAutoUpdate": "自動更新をオフにする",
+          "remindLater": "あとで通知",
+          "viewDetails": "詳細を見る",
+          "updateNow": "今すぐ更新"
+        }
+      },
+      "installationType": {
+        "windowsMsix": "Windows インストーラー（MSIX）",
+        "windowsPortable": "Windows ポータブル版（ZIP）",
+        "linuxDeb": "Linux パッケージ（DEB）",
+        "linuxTar": "Linux アーカイブ（TAR.GZ）",
+        "macosDmg": "macOS インストーラー（DMG）",
+        "androidApk": "Android パッケージ（APK）",
+        "ios": "iOS 版（GitHub へ）",
+        "unknown": "その他のプラットフォーム"
+      },
+      "toast": {
+        "alreadyLatest": "最新バージョンを利用中です。",
+        "checkFailed": "更新の確認に失敗しました。しばらくしてからもう一度お試しください。",
+        "autoUpdateDisabled": "自動更新を無効にしました。",
+        "downloadLinkMissing": "{type} のダウンロードリンクが見つかりません。",
+        "downloadFailed": "ダウンロードに失敗しました: {error}",
+        "noCompatibleLink": "適切なダウンロードリンクが見つかりません。",
+        "prepareToInstall": "アップデートの準備中です。アプリが終了します...",
+        "openInstallerFailed": "インストーラーを開けません: {error}",
+        "launchInstallerFailed": "インストーラーの起動に失敗しました: {error}",
+        "revealFailed": "ファイルマネージャーを開けません。",
+        "unknownReason": "原因不明"
+      },
+      "download": {
+        "progressTitle": "アップデートをダウンロード中",
+        "cancel": "キャンセル",
+        "error": {
+          "title": "ダウンロードに失敗しました",
+          "general": "アップデートをダウンロードできませんでした。",
+          "permission": "ファイルに書き込む権限がありません。",
+          "diskFull": "ディスクの空き容量が不足しています。",
+          "network": "ネットワーク接続に失敗しました。",
+          "integrity": "ファイル整合性チェックに失敗しました。もう一度ダウンロードしてください。",
+          "details": "詳細: {error}",
+          "confirm": "OK",
+          "retry": "再試行"
+        },
+        "complete": {
+          "title": "ダウンロード完了",
+          "message": "Kazumi {version} をダウンロードしました。",
+          "quitNotice": "インストール中にアプリは終了します。",
+          "fileLocation": "保存先",
+          "buttons": {
+            "later": "あとで",
+            "openFolder": "フォルダーを開く",
+            "installNow": "今すぐインストール"
+          }
+        }
+      }
+    },
+    "about": {
+      "title": "アプリ情報",
+      "sections": {
+        "licenses": {
+          "title": "オープンソースライセンス",
+          "description": "利用中のオープンソースライセンスを表示"
+        },
+        "links": {
+          "title": "外部リンク",
+          "project": "プロジェクトホーム",
+          "repository": "ソースリポジトリ",
+          "icon": "アイコンデザイン",
+          "index": "作品インデックス",
+          "danmaku": "弾幕ソース",
+          "danmakuId": "ID：{id}"
+        },
+        "cache": {
+          "clearAction": "キャッシュを削除",
+          "sizePending": "計算中…",
+          "sizeLabel": "{size} MB"
+        },
+        "updates": {
+          "title": "アプリの更新",
+          "autoUpdate": "自動更新",
+          "check": "更新を確認",
+          "currentVersion": "現在のバージョン {version}"
+        }
+      },
+      "logs": {
+        "title": "アプリログ",
+        "empty": "ログはまだありません。",
+        "toast": {
+          "cleared": "ログを削除しました。",
+          "clearFailed": "ログの削除に失敗しました。"
+        }
+      }
     },
     "other": {
       "title": "その他",
@@ -147,5 +485,481 @@
   "tray": {
     "showWindow": "ウィンドウを表示",
     "exit": "Kazumiを終了"
+  },
+  "navigation": {
+    "tabs": {
+      "popular": "Popular",
+      "timeline": "Timeline",
+      "my": "My",
+      "settings": "Settings"
+    },
+    "actions": {
+      "search": "Search",
+      "history": "History",
+      "close": "Quit"
+    }
+  },
+  "dialogs": {
+    "disclaimer": {
+      "title": "Disclaimer",
+      "agree": "I have read and agree",
+      "exit": "Exit"
+    },
+    "updateMirror": {
+      "title": "Update Mirror",
+      "question": "Where would you like to fetch app updates?",
+      "description": "GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.",
+      "options": {
+        "github": "GitHub",
+        "fdroid": "F-Droid"
+      }
+    },
+    "pluginUpdates": {
+      "toast": "Detected {count} rule updates"
+    },
+    "webdav": {
+      "syncFailed": "Failed to sync watch history: {error}"
+    },
+    "about": {
+      "licenseLegalese": "Open Source Licenses"
+    },
+    "cache": {
+      "title": "Cache Management",
+      "message": "Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?"
+    }
+  },
+  "library": {
+    "common": {
+      "emptyState": "No content found",
+      "retry": "Tap to retry",
+      "backHint": "Press again to exit Kazumi",
+      "toast": {
+        "editMode": "Edit mode is active."
+      }
+    },
+    "popular": {
+      "title": "Trending Anime",
+      "allTag": "Trending",
+      "toast": {
+        "backPress": "Press again to exit Kazumi"
+      }
+    },
+    "timeline": {
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "seasonPicker": {
+        "title": "Time Machine",
+        "yearLabel": "{year}"
+      },
+      "season": {
+        "title": "{season} {year}",
+        "loading": "Loading…",
+        "names": {
+          "winter": "Winter",
+          "spring": "Spring",
+          "summer": "Summer",
+          "autumn": "Autumn"
+        },
+        "short": {
+          "winter": "Winter",
+          "spring": "Spring",
+          "summer": "Summer",
+          "autumn": "Autumn"
+        }
+      },
+      "sort": {
+        "title": "Sort order",
+        "byHeat": "Sort by popularity",
+        "byRating": "Sort by rating",
+        "byTime": "Sort by schedule"
+      }
+    },
+    "search": {
+      "sort": {
+        "label": "検索結果の並び替え",
+        "byHeat": "人気順",
+        "byRating": "評価順",
+        "byRelevance": "関連度順"
+      },
+      "noHistory": "検索履歴はありません"
+    },
+    "history": {
+      "title": "Watch History",
+      "empty": "No watch history found",
+      "chips": {
+        "source": "Source",
+        "progress": "Progress",
+        "episodeNumber": "Episode {number}"
+      },
+      "toast": {
+        "sourceMissing": "Associated source not found."
+      },
+      "manage": {
+        "title": "History Management",
+        "confirmClear": "Clear all watch history?",
+        "cancel": "Cancel",
+        "confirm": "Confirm"
+      }
+    },
+    "info": {
+      "summary": {
+        "title": "あらすじ",
+        "expand": "もっと見る",
+        "collapse": "閉じる"
+      },
+      "tags": {
+        "title": "タグ",
+        "more": "さらに表示 +"
+      },
+      "metadata": {
+        "refresh": "再読み込み",
+        "syncingTitle": "メタデータを同期中…",
+        "syncingSubtitle": "初回同期には数秒かかる場合があります。",
+        "emptyTitle": "公式メタデータはまだ取得されていません",
+        "emptySubtitle": "後でもう一度試すか、メタデータ設定を確認してください。",
+        "source": "メタデータ提供元: $source",
+        "updated": "最終更新: $timestamp · 言語: $language",
+        "languageSystem": "システム既定",
+        "multiSource": "複数ソース統合"
+      },
+      "episodes": {
+        "title": "エピソード",
+        "collapse": "折りたたむ",
+        "expand": "すべて表示 ($count)",
+        "numberedEpisode": "第$number話",
+        "dateUnknown": "放送日未定",
+        "runtimeUnknown": "上映時間不明",
+        "runtimeMinutes": "$minutes 分"
+      },
+      "errors": {
+        "fetchFailed": "読み込みに失敗しました。もう一度お試しください。"
+      },
+      "tabs": {
+        "overview": "概要",
+        "comments": "コメント",
+        "characters": "キャラクター",
+        "reviews": "レビュー",
+        "staff": "スタッフ",
+        "placeholder": "準備中"
+      },
+      "actions": {
+        "startWatching": "視聴を開始"
+      },
+      "toast": {
+        "characterSortFailed": "キャラクターの並び替えに失敗しました: {details}"
+      },
+      "sourceSheet": {
+        "title": "再生ソースを選択 ({name})",
+        "alias": {
+          "deleteTooltip": "別名を削除",
+          "deleteTitle": "別名を削除",
+          "deleteMessage": "この操作は元に戻せません。本当に別名を削除しますか？"
+        },
+        "toast": {
+          "aliasEmpty": "使用できる別名がありません。手動で追加してから再検索してください。",
+          "loadFailed": "再生ルートの読み込みに失敗しました。",
+          "removed": "ソース {plugin} を削除しました。"
+        },
+        "sort": {
+          "tooltip": "並び順: {label}",
+          "options": {
+            "original": "既定の順序",
+            "nameAsc": "名前 (昇順)",
+            "nameDesc": "名前 (降順)"
+          }
+        },
+        "card": {
+          "title": "ソース · {plugin}",
+          "play": "再生"
+        },
+        "actions": {
+          "searchAgain": "再検索",
+          "aliasSearch": "別名検索",
+          "removeSource": "ソースを削除"
+        },
+        "status": {
+          "searching": "{plugin} を検索中…",
+          "failed": "{plugin} の検索に失敗しました",
+          "empty": "{plugin} に結果はありませんでした"
+        },
+        "empty": {
+          "searching": "検索中です。しばらくお待ちください…",
+          "noResults": "利用可能な再生ソースが見つかりません。再検索するか別名検索を試してください。"
+        },
+        "dialog": {
+          "removeTitle": "ソースを削除",
+          "removeMessage": "ソース {plugin} を削除しますか？"
+        }
+      }
+    },
+    "my": {
+      "title": "My",
+      "sections": {
+        "video": "Video"
+      },
+      "favorites": {
+        "title": "Collections",
+        "description": "View watching, planning, and completed lists",
+        "empty": "No favorites yet.",
+        "tabs": {
+          "watching": "Watching",
+          "planned": "Plan to Watch",
+          "completed": "Completed",
+          "empty": "No entries yet."
+        },
+        "sync": {
+          "disabled": "WebDAV sync is disabled.",
+          "editing": "Cannot sync while in edit mode."
+        }
+      },
+      "history": {
+        "title": "Playback History",
+        "description": "See shows you've watched"
+      }
+    }
+  },
+  "playback": {
+    "toast": {
+      "screenshotProcessing": "Capturing screenshot…",
+      "screenshotSaved": "Screenshot saved to gallery",
+      "screenshotSaveFailed": "Failed to save screenshot: {error}",
+      "screenshotError": "Screenshot failed: {error}",
+      "playlistEmpty": "Playlist is empty",
+      "episodeLatest": "Already at the latest episode",
+      "loadingEpisode": "Loading {identifier}",
+      "danmakuUnsupported": "Danmaku sending is unavailable for this episode",
+      "danmakuEmpty": "Danmaku content cannot be empty",
+      "danmakuTooLong": "Danmaku content is too long",
+      "waitForVideo": "Please wait until the video finishes loading",
+      "enableDanmakuFirst": "Turn on danmaku first",
+      "danmakuSearchError": "Danmaku search failed: {error}",
+      "danmakuSearchEmpty": "No matching results found",
+      "danmakuSwitching": "Switching danmaku",
+      "clipboardCopied": "Copied to clipboard",
+      "internalError": "Player internal error: {details}"
+    },
+    "danmaku": {
+      "inputHint": "Share a friendly danmaku in the moment",
+      "inputDisabled": "Danmaku is turned off",
+      "send": "Send",
+      "mobileButton": "Tap to send danmaku",
+      "mobileButtonDisabled": "Danmaku disabled"
+    },
+    "externalPlayer": {
+      "launching": "Trying to open external player",
+      "launchFailed": "Unable to open external player",
+      "unavailable": "External player is not available",
+      "unsupportedDevice": "This device is not supported yet",
+      "unsupportedPlugin": "This plugin is not supported yet"
+    },
+    "controls": {
+      "speed": {
+        "title": "Playback speed",
+        "reset": "Default speed"
+      },
+      "skip": {
+        "title": "Skip duration",
+        "tooltip": "Long press to change duration"
+      },
+      "status": {
+        "fastForward": "Fast forward {seconds} s",
+        "rewind": "Rewind {seconds} s",
+        "speed": "Speed playback"
+      },
+      "superResolution": {
+        "label": "Super resolution",
+        "off": "Off",
+        "balanced": "Balanced",
+        "quality": "Quality"
+      },
+      "speedMenu": {
+        "label": "Speed"
+      },
+      "aspectRatio": {
+        "label": "Aspect ratio",
+        "options": {
+          "auto": "Auto",
+          "crop": "Crop to fill",
+          "stretch": "Stretch to fill"
+        }
+      },
+      "tooltips": {
+        "danmakuOn": "Turn off danmaku (d)",
+        "danmakuOff": "Turn on danmaku (d)"
+      },
+      "menu": {
+        "danmakuToggle": "Danmaku switch",
+        "videoInfo": "Video info",
+        "cast": "Remote cast",
+        "external": "Open in external player"
+      },
+      "syncplay": {
+        "label": "SyncPlay",
+        "room": "Current room: {name}",
+        "roomEmpty": "Not joined",
+        "latency": "Latency: {ms} ms",
+        "join": "Join room",
+        "switchServer": "Switch server",
+        "disconnect": "Disconnect"
+      }
+    },
+    "loading": {
+      "parsing": "Parsing video source…",
+      "player": "Video source parsed, loading player",
+      "danmakuSearch": "Searching danmaku…"
+    },
+    "danmakuSearch": {
+      "title": "Danmaku search",
+      "hint": "Series title",
+      "submit": "Submit"
+    },
+    "remote": {
+      "title": "Remote cast",
+      "toast": {
+        "searching": "Searching…",
+        "casting": "Attempting to cast to {device}",
+        "error": "DLNA error: {details}\nTry reopening the DLNA panel or choosing another device."
+      }
+    },
+    "debug": {
+      "title": "Debug info",
+      "closeTooltip": "Close debug info",
+      "tabs": {
+        "status": "Status",
+        "logs": "Logs"
+      },
+      "sections": {
+        "source": "Playback source",
+        "playback": "Player status",
+        "timing": "Timing & metrics",
+        "media": "Media tracks"
+      },
+      "labels": {
+        "series": "Series",
+        "plugin": "Plugin",
+        "route": "Route",
+        "episode": "Episode",
+        "routeCount": "Route count",
+        "sourceTitle": "Source title",
+        "parsedUrl": "Parsed URL",
+        "playUrl": "Playback URL",
+        "danmakuId": "DanDan ID",
+        "syncRoom": "SyncPlay room",
+        "syncLatency": "SyncPlay RTT",
+        "nativePlayer": "Native player",
+        "parsing": "Parsing",
+        "playerLoading": "Player loading",
+        "playerInitializing": "Player initializing",
+        "playing": "Playing",
+        "buffering": "Buffering",
+        "completed": "Playback completed",
+        "bufferFlag": "Buffer flag",
+        "currentPosition": "Current position",
+        "bufferProgress": "Buffer progress",
+        "duration": "Duration",
+        "speed": "Playback speed",
+        "volume": "Volume",
+        "brightness": "Brightness",
+        "resolution": "Resolution",
+        "aspectRatio": "Aspect ratio",
+        "superResolution": "Super resolution",
+        "videoParams": "Video params",
+        "audioParams": "Audio params",
+        "playlist": "Playlist",
+        "audioTracks": "Audio tracks",
+        "videoTracks": "Video tracks",
+        "audioBitrate": "Audio bitrate"
+      },
+      "values": {
+        "yes": "Yes",
+        "no": "No"
+      },
+      "logs": {
+        "playerEmpty": "Player log (0)",
+        "playerSummary": "Player log ({count} entries, showing {displayed})",
+        "webviewEmpty": "WebView log (0)",
+        "webviewSummary": "WebView log ({count} entries, showing {displayed})"
+      }
+    },
+    "syncplay": {
+      "invalidEndpoint": "SyncPlay: Invalid server address {endpoint}",
+      "disconnected": "SyncPlay: Connection interrupted {reason}",
+      "actionReconnect": "Reconnect",
+      "alone": "SyncPlay: You are the only user in this room",
+      "followUser": "SyncPlay: Using {username}'s progress",
+      "userLeft": "SyncPlay: {username} left the room",
+      "userJoined": "SyncPlay: {username} joined the room",
+      "switchEpisode": "SyncPlay: {username} switched to episode {episode}",
+      "chat": "SyncPlay: {username} said: {message}",
+      "paused": "SyncPlay: {username} paused playback",
+      "resumed": "SyncPlay: {username} resumed playback",
+      "unknownUser": "unknown",
+      "switchServerBlocked": "SyncPlay: Exit the current room before switching servers",
+      "defaultCustomEndpoint": "Custom server",
+      "selectServer": {
+        "title": "Choose server",
+        "customTitle": "Custom server",
+        "customHint": "Enter server URL",
+        "duplicateOrEmpty": "Server URL must be unique and non-empty"
+      },
+      "join": {
+        "title": "Join room",
+        "roomLabel": "Room ID",
+        "roomEmpty": "Enter a room ID",
+        "roomInvalid": "Room ID must be 6 to 10 digits",
+        "usernameLabel": "Username",
+        "usernameEmpty": "Enter a username",
+        "usernameInvalid": "Username must be 4 to 12 letters"
+      }
+    },
+    "playlist": {
+      "collection": "Collection",
+      "list": "Playlist {index}"
+    },
+    "tabs": {
+      "episodes": "Episodes",
+      "comments": "Comments"
+    },
+    "comments": {
+      "sectionTitle": "Episode title",
+      "manualSwitch": "Switch manually",
+      "dialogTitle": "Enter episode number",
+      "dialogEmpty": "Please enter an episode number",
+      "dialogConfirm": "Refresh"
+    },
+    "superResolution": {
+      "warning": {
+        "title": "Performance warning",
+        "message": "Enabling super resolution (quality) may cause stutter. Continue?",
+        "dontAskAgain": "Don't ask again"
+      }
+    }
+  },
+  "network": {
+    "error": {
+      "badCertificate": "Certificate error.",
+      "badResponse": "Server error. Please try again later.",
+      "cancel": "Request was cancelled. Please retry.",
+      "connection": "Connection error. Check your network settings.",
+      "connectionTimeout": "Connection timed out. Check your network settings.",
+      "receiveTimeout": "Response timed out. Please try again.",
+      "sendTimeout": "Request timed out. Check your network settings.",
+      "unknown": "{status} network issue."
+    },
+    "status": {
+      "mobile": "Using mobile data",
+      "wifi": "Using Wi-Fi",
+      "ethernet": "Using Ethernet",
+      "vpn": "Using VPN connection",
+      "other": "Using another network",
+      "none": "No network connection"
+    }
   }
 }

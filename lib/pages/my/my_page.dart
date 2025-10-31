@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class MyPage extends ConsumerStatefulWidget {
   const MyPage({super.key});
@@ -25,6 +26,7 @@ class _MyPageState extends ConsumerState<MyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -34,24 +36,24 @@ class _MyPageState extends ConsumerState<MyPage> {
         _onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('我的'), needTopOffset: false),
+        appBar: SysAppBar(title: Text(t.library.my.title), needTopOffset: false),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
             SettingsSection(
-              title: const Text('视频'),
+              title: Text(t.library.my.sections.video),
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) => context.push('/my/favorites'),
                   leading: const Icon(Icons.collections_bookmark_outlined),
-                  title: const Text('收藏'),
-                  description: const Text('查看在看、想看、看过'),
+                  title: Text(t.library.my.favorites.title),
+                  description: Text(t.library.my.favorites.description),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) => context.push('/my/history'),
                   leading: const Icon(Icons.history_rounded),
-                  title: const Text('播放历史记录'),
-                  description: const Text('查看播放过的番剧'),
+                  title: Text(t.library.my.history.title),
+                  description: Text(t.library.my.history.description),
                 ),
               ],
             ),

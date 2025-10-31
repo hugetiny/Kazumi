@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/webdav_editor/providers.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 
@@ -46,9 +47,10 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = ref.watch(translationsProvider);
     return Scaffold(
-      appBar: const SysAppBar(
-  title: Text('WebDAV 设置'),
+      appBar: SysAppBar(
+        title: Text(t.settings.webdav.editor.title),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -59,21 +61,25 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
               children: [
                 TextField(
                   controller: webDavURLController,
-                  decoration: const InputDecoration(
-                      labelText: 'URL', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: t.settings.webdav.editor.url,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: webDavUsernameController,
-                  decoration: const InputDecoration(
-                      labelText: 'Username', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: t.settings.webdav.editor.username,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: webDavPasswordController,
                   obscureText: !passwordVisible,
                   decoration: InputDecoration(
-                    labelText: 'Password',
+                    labelText: t.settings.webdav.editor.password,
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       onPressed: () {
@@ -99,29 +105,39 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.save),
-    onPressed: () async {
-      await setting.put(SettingBoxKey.webDavURL, webDavURLController.text);
-      await setting.put(
-        SettingBoxKey.webDavUsername, webDavUsernameController.text);
-      await setting.put(
-        SettingBoxKey.webDavPassword, webDavPasswordController.text);
+        onPressed: () async {
+          await setting.put(SettingBoxKey.webDavURL, webDavURLController.text);
+          await setting.put(SettingBoxKey.webDavUsername,
+              webDavUsernameController.text);
+          await setting.put(SettingBoxKey.webDavPassword,
+              webDavPasswordController.text);
           final webDav = WebDav();
           try {
             await webDav.init();
           } catch (e) {
-            KazumiDialog.showToast(message: '配置失败：${e.toString()}');
+            KazumiDialog.showToast(
+              message: t.settings.webdav.editor.toast.saveFailed
+                  .replaceFirst('{error}', e.toString()),
+            );
             await setting.put(SettingBoxKey.webDavEnable, false);
             await ref
                 .read(webDavSettingsControllerProvider.notifier)
                 .refreshFromStorage();
             return;
           }
-          KazumiDialog.showToast(message: '配置成功，开始测试。');
+          KazumiDialog.showToast(
+            message: t.settings.webdav.editor.toast.saveSuccess,
+          );
           try {
             await webDav.ping();
-            KazumiDialog.showToast(message: '测试成功。');
+            KazumiDialog.showToast(
+              message: t.settings.webdav.editor.toast.testSuccess,
+            );
           } catch (e) {
-            KazumiDialog.showToast(message: '测试失败：${e.toString()}');
+            KazumiDialog.showToast(
+              message: t.settings.webdav.editor.toast.testFailed
+                  .replaceFirst('{error}', e.toString()),
+            );
             await setting.put(SettingBoxKey.webDavEnable, false);
           }
           await ref

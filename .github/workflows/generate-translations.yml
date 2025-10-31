@@ -3,8 +3,8 @@ name: Generate Translations
 on:
   pull_request:
     paths:
-      - 'lib/l10n/*.i18n.json'
-      - 'slang.yaml'
+      - lib/l10n/*.i18n.json
+      - slang.yaml
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,10 +34,17 @@ jobs:
       - name: Generate translations
         run: dart run slang
 
+      - name: Run localization audit
+        run: dart run tool/localization_audit.dart
+
       - name: Check for changes
         id: check_changes
         run: |
-          git diff --exit-code lib/l10n/generated/translations.g.dart || echo "changed=true" >> $GITHUB_OUTPUT
+          if git diff --exit-code lib/l10n/generated/translations.g.dart; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit changes
         if: steps.check_changes.outputs.changed == 'true'

@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/router.dart';
 import 'package:kazumi/pages/setting/providers.dart';
+import 'package:kazumi/utils/tray_localization.dart';
 
 class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
@@ -31,24 +32,41 @@ class _AppWidgetState extends ConsumerState<AppWidget>
   final TrayManager trayManager = TrayManager.instance;
   bool showingExitDialog = false;
   bool _themeInitialized = false;
+  ProviderSubscription<LocaleSettingsState>? _localeSubscription;
 
   @override
   void initState() {
+    super.initState();
     trayManager.addListener(this);
     windowManager.addListener(this);
     setPreventClose();
     WidgetsBinding.instance.addObserver(this);
+    _localeSubscription = ref.listenManual<LocaleSettingsState>(
+      localeSettingsProvider,
+      (_, __) {
+        if (Utils.isDesktop()) {
+          _handleTray();
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeThemeFromStorage();
       _initializeLocaleFromStorage();
+      if (Utils.isDesktop()) {
+        _handleTray();
+      }
     });
-    super.initState();
   }
 
   void _initializeLocaleFromStorage() {
-    final localeNotifier = ref.read(localeSettingsProvider.notifier);
-    final savedLocale = ref.read(localeSettingsProvider).appLocale;
-    LocaleSettings.setLocale(savedLocale);
+    final LocaleSettingsState localeState = ref.read(localeSettingsProvider);
+    // Ensure the global slang locale is aligned before the next frame so
+    // TranslationProvider reads the correct language during startup.
+    if (localeState.followSystem) {
+      LocaleSettings.useDeviceLocale();
+    } else {
+      LocaleSettings.setLocale(localeState.appLocale);
+    }
   }
 
   void _initializeThemeFromStorage() {
@@ -96,6 +114,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   @override
   void dispose() {
+    _localeSubscription?.close();
     trayManager.removeListener(this);
     windowManager.removeListener(this);
     WidgetsBinding.instance.removeObserver(this);
@@ -243,8 +262,8 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     }
   }
 
-  Future<void> _handleTray(BuildContext context) async {
-    final t = context.t;
+  Future<void> _handleTray() async {
+    final TrayLabels labels = KazumiTrayLabels.fromRef(ref);
     if (Platform.isWindows) {
       await trayManager.setIcon('assets/images/logo/logo_lanczos.ico');
     } else if (Platform.environment.containsKey('FLATPAK_ID') ||
@@ -255,13 +274,13 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     }
 
     if (!Platform.isLinux) {
-      await trayManager.setToolTip('Kazumi');
+      await trayManager.setToolTip(labels.tooltip);
     }
 
     Menu trayMenu = Menu(items: [
-      MenuItem(key: 'show_window', label: t.tray.showWindow),
+      MenuItem(key: 'show_window', label: labels.showWindow),
       MenuItem.separator(),
-      MenuItem(key: 'exit', label: t.tray.exit)
+      MenuItem(key: 'exit', label: labels.exit)
     ]);
     await trayManager.setContextMenu(trayMenu);
   }
@@ -325,9 +344,6 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     // Theme initialization is performed in initState via a
     // post-frame callback to avoid modifying providers during build.
 
-    if (Utils.isDesktop()) {
-      _handleTray(context);
-    }
     final ThemeData fallbackLightTheme = _buildLightTheme(null, seedColor);
     final ThemeData fallbackDarkTheme =
         _buildDarkTheme(null, seedColor, oledEnhance);

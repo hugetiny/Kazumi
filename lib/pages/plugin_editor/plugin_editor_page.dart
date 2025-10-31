@@ -4,6 +4,7 @@ import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class PluginEditorPage extends ConsumerStatefulWidget {
   const PluginEditorPage({
@@ -66,10 +67,11 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
   @override
   Widget build(BuildContext context) {
     final Plugin plugin = widget.plugin;
+    final editorTexts = context.t.settings.plugins.editor;
 
     return Scaffold(
-      appBar: const SysAppBar(
-        title: Text('规则编辑器'),
+      appBar: SysAppBar(
+        title: Text(editorTexts.title),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -80,64 +82,83 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(
-                      labelText: 'Name', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.name,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: versionController,
-                  decoration: const InputDecoration(
-                      labelText: 'Version', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.version,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: baseURLController,
-                  decoration: const InputDecoration(
-                      labelText: 'BaseURL', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.baseUrl,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: searchURLController,
-                  decoration: const InputDecoration(
-                      labelText: 'SearchURL', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.searchUrl,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: searchListController,
-                  decoration: const InputDecoration(
-                      labelText: 'SearchList', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.searchList,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: searchNameController,
-                  decoration: const InputDecoration(
-                      labelText: 'SearchName', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.searchName,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: searchResultController,
-                  decoration: const InputDecoration(
-                      labelText: 'SearchResult', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.searchResult,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: chapterRoadsController,
-                  decoration: const InputDecoration(
-                      labelText: 'ChapterRoads', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.chapterRoads,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: chapterResultController,
-                  decoration: const InputDecoration(
-                      labelText: 'ChapterResult', border: OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: editorTexts.fields.chapterResult,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 ExpansionTile(
-                  title: const Text('高级选项'),
+                  title: Text(editorTexts.advanced.title),
                   children: [
                     SwitchListTile(
-                      title: const Text('简易解析'),
-                      subtitle: const Text('使用简易解析器而不是现代解析器'),
+                      title: Text(editorTexts.advanced.legacyParser.title),
+                      subtitle:
+                          Text(editorTexts.advanced.legacyParser.subtitle),
                       value: useLegacyParser,
                       onChanged: (bool value) {
                         setState(() {
@@ -146,8 +167,8 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
                       },
                     ),
                     SwitchListTile(
-                      title: const Text('POST'),
-                      subtitle: const Text('使用POST而不是GET进行检索'),
+                      title: Text(editorTexts.advanced.httpPost.title),
+                      subtitle: Text(editorTexts.advanced.httpPost.subtitle),
                       value: usePost,
                       onChanged: (bool value) {
                         setState(() {
@@ -156,8 +177,9 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
                       },
                     ),
                     SwitchListTile(
-                      title: const Text('内置播放器'),
-                      subtitle: const Text('使用内置播放器播放视频'),
+                      title: Text(editorTexts.advanced.nativePlayer.title),
+                      subtitle:
+                          Text(editorTexts.advanced.nativePlayer.subtitle),
                       value: useNativePlayer,
                       onChanged: (bool value) {
                         setState(() {
@@ -168,14 +190,18 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
                     const SizedBox(height: 20),
                     TextField(
                       controller: userAgentController,
-                      decoration: const InputDecoration(
-                          labelText: 'UserAgent', border: OutlineInputBorder()),
+                      decoration: InputDecoration(
+                        labelText: editorTexts.fields.userAgent,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     TextField(
                       controller: refererController,
-                      decoration: const InputDecoration(
-                          labelText: 'Referer', border: OutlineInputBorder()),
+                      decoration: InputDecoration(
+                        labelText: editorTexts.fields.referer,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
                   ],
                 ),

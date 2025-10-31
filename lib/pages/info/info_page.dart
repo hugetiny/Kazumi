@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/bean/appbar/drag_to_move_bar.dart' as dtb;
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class InfoPage extends ConsumerStatefulWidget {
   const InfoPage({super.key, this.bangumi});
@@ -172,7 +173,15 @@ class _InfoPageState extends ConsumerState<InfoPage>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(infoControllerProvider);
-    final List<String> tabs = <String>['概览', '吐槽', '角色', '评论', '制作人员'];
+    final infoTexts = context.t.library.info;
+    final metadataTexts = infoTexts.metadata;
+    final List<String> tabs = <String>[
+      infoTexts.tabs.overview,
+      infoTexts.tabs.comments,
+      infoTexts.tabs.characters,
+      infoTexts.tabs.reviews,
+      infoTexts.tabs.staff,
+    ];
     final bool showWindowButton = GStorage.setting
         .get(SettingBoxKey.showWindowButton, defaultValue: false);
     return PopScope(
@@ -214,7 +223,7 @@ class _InfoPageState extends ConsumerState<InfoPage>
                     actions: [
                       EmbeddedNativeControlArea(
                         child: IconButton(
-                          tooltip: '刷新元数据',
+                          tooltip: metadataTexts.refresh,
                           onPressed: state.metadataLoading
                               ? null
                               : () {
@@ -371,7 +380,7 @@ class _InfoPageState extends ConsumerState<InfoPage>
           ),
           floatingActionButton: FloatingActionButton.extended(
             icon: const Icon(Icons.play_arrow_rounded),
-            label: Text('开始观看'),
+            label: Text(infoTexts.actions.startWatching),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

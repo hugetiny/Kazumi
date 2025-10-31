@@ -4,6 +4,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class LogsPage extends StatefulWidget {
   const LogsPage({super.key});
@@ -25,6 +26,7 @@ class _LogsPageState extends State<LogsPage> {
     final file = await _getLogsFile();
     if (await file.exists()) {
       final content = await file.readAsString();
+      if (!mounted) return;
       setState(() {
         fileContent = content;
       });
@@ -38,27 +40,43 @@ class _LogsPageState extends State<LogsPage> {
   }
 
   Future<void> _clearLogs() async {
-    final file = await _getLogsFile();
-    await file.writeAsString('');
-    setState(() {
-      fileContent = '';
-    });
+    try {
+      final file = await _getLogsFile();
+      await file.writeAsString('');
+      if (!mounted) return;
+      setState(() {
+        fileContent = '';
+      });
+      KazumiDialog.showToast(
+        message: context.t.settings.about.logs.toast.cleared,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      KazumiDialog.showToast(
+        message: context.t.settings.about.logs.toast.clearFailed,
+      );
+    }
   }
 
   Future<void> _copyLogs() async {
     await Clipboard.setData(ClipboardData(text: fileContent));
-    KazumiDialog.showToast(message: '已复制到剪贴板');
+    if (!mounted) return;
+    KazumiDialog.showToast(
+      message: context.t.playback.toast.clipboardCopied,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return SelectionArea(
         child: Scaffold(
-      appBar: const SysAppBar(
-        title: Text('日志'),
+      appBar: SysAppBar(
+        title: Text(context.t.settings.about.logs.title),
       ),
       body: fileContent.isEmpty
-          ? const Center(child: Text('没有数据'))
+          ? Center(
+              child: Text(context.t.settings.about.logs.empty),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Text(fileContent),
@@ -67,13 +85,13 @@ class _LogsPageState extends State<LogsPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
-            heroTag: null, 
+            heroTag: null,
             onPressed: _clearLogs,
             child: const Icon(Icons.clear_all),
           ),
           const SizedBox(width: 15),
           FloatingActionButton(
-            heroTag: null, 
+            heroTag: null,
             onPressed: _copyLogs,
             child: const Icon(Icons.copy),
           ),

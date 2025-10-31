@@ -29,6 +29,7 @@ import 'package:kazumi/pages/history/history_page.dart';
 import 'package:kazumi/request/api.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 final GoRouter router = GoRouter(
   observers: [KazumiDialog.observer],
@@ -122,7 +123,8 @@ final GoRouter router = GoRouter(
               builder: (context, state) => LicensePage(
                 applicationName: 'Kazumi',
                 applicationVersion: Api.version,
-                applicationLegalese: '开源许可证',
+                applicationLegalese:
+                    context.t.dialogs.about.licenseLegalese,
               ),
             ),
           ],

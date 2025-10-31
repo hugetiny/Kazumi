@@ -3,6 +3,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/utils/auto_updater.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/providers/translations_provider.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -51,16 +52,18 @@ class MyController extends Notifier<MyState> {
 
   void addShieldList(String item) {
     final trimmed = item.trim();
+    final toastTexts =
+        ref.read(translationsProvider).settings.player.toast;
     if (trimmed.isEmpty) {
-      KazumiDialog.showToast(message: '请输入关键词');
+      KazumiDialog.showToast(message: toastTexts.danmakuKeywordEmpty);
       return;
     }
     if (trimmed.length > 64) {
-      KazumiDialog.showToast(message: '关键词过长');
+      KazumiDialog.showToast(message: toastTexts.danmakuKeywordTooLong);
       return;
     }
     if (state.shieldList.contains(trimmed)) {
-      KazumiDialog.showToast(message: '已存在该关键词');
+      KazumiDialog.showToast(message: toastTexts.danmakuKeywordExists);
       return;
     }
 
@@ -89,7 +92,9 @@ class MyController extends Notifier<MyState> {
     } catch (err) {
       KazumiLogger().log(Level.error, '检查更新失败 ${err.toString()}');
       if (type == 'manual') {
-        KazumiDialog.showToast(message: '检查更新失败，请稍后重试');
+        final updateToast =
+            ref.read(translationsProvider).settings.update.toast;
+        KazumiDialog.showToast(message: updateToast.checkFailed);
       }
       return false;
     }

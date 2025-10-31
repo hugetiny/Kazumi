@@ -15,6 +15,7 @@ import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 // 视频历史记录卡片 - 水平布局
 class BangumiHistoryCardV extends ConsumerStatefulWidget {
@@ -102,13 +103,13 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
         onTap: () async {
           if (widget.showDelete) {
             KazumiDialog.showToast(
-              message: '编辑模式',
+              message: context.t.library.common.toast.editMode,
             );
             return;
           }
           final router = GoRouter.of(context);
           KazumiDialog.showLoading(
-            msg: '获取中',
+            msg: context.t.app.loading,
             barrierDismissible: Utils.isDesktop(),
             onDismiss: () {
               videoPageController.cancelQueryRoads();
@@ -124,7 +125,9 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
           }
           if (!flag) {
             KazumiDialog.dismiss();
-            KazumiDialog.showToast(message: '未找到关联番剧源');
+            KazumiDialog.showToast(
+              message: context.t.library.history.toast.sourceMissing,
+            );
             return;
           }
           videoPageController.bangumiItem = widget.historyItem.bangumiItem;
@@ -180,14 +183,19 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
                       runSpacing: 4,
                       children: [
                         propertyChip(
-                          title: '源',
+                          title: context.t.library.history.chips.source,
                           value: widget.historyItem.adapterName,
                           showTitle: true,
                         ),
                         propertyChip(
-                          title: '看到',
+                          title: context.t.library.history.chips.progress,
                           value: widget.historyItem.lastWatchEpisodeName.isEmpty
-                              ? '第${widget.historyItem.lastWatchEpisode}话'
+                              ? context.t.library.history.chips.episodeNumber
+                                  .replaceFirst(
+                                  '{number}',
+                                  widget.historyItem.lastWatchEpisode
+                                      .toString(),
+                                )
                               : widget.historyItem.lastWatchEpisodeName,
                           showTitle: true,
                         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/pages/setting/setting_controller.dart';
 
 class DanmakuShieldSettings extends ConsumerStatefulWidget {
@@ -30,10 +31,18 @@ class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
   Widget build(BuildContext context) {
     final shieldState = ref.watch(myControllerProvider);
     final controller = ref.read(myControllerProvider.notifier);
+  final playerTexts = context.t.settings.player;
+    final shieldDescription = playerTexts.danmakuShieldDescription;
+    final shieldCount = playerTexts.danmakuShieldCount
+        .replaceFirst('{count}', '${shieldState.shieldList.length}');
+
+    void addKeyword() {
+      controller.addShieldList(textEditingController.text);
+    }
 
     return Scaffold(
-      appBar: const SysAppBar(
-        title: Text('弹幕屏蔽'),
+      appBar: SysAppBar(
+        title: Text(playerTexts.danmakuShield),
       ),
       body: ListView(
         padding: const EdgeInsets.all(12),
@@ -42,23 +51,23 @@ class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
             controller: textEditingController,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
-              hintText: '输入关键词或正则表达式',
+              hintText: playerTexts.danmakuShieldInputHint,
               suffixIcon: TextButton.icon(
                 onPressed: () {
-                  controller.addShieldList(textEditingController.text);
+                  addKeyword();
                 },
                 icon: const Icon(Icons.add),
-                label: const Text('添加'),
+                label: Text(playerTexts.add),
               ),
             ),
             onSubmitted: (_) {
-              controller.addShieldList(textEditingController.text);
+              addKeyword();
             },
           ),
           const SizedBox(height: 12),
-          const Text('以"/"开头和结尾将视作正则表达式, 如"/\\d+/"表示屏蔽所有数字'),
+          Text(shieldDescription),
           const SizedBox(height: 12),
-          Text('已添加${shieldState.shieldList.length}个关键词'),
+          Text(shieldCount),
           const SizedBox(height: 12),
           Wrap(
             runSpacing: 12,

@@ -5,7 +5,8 @@
     "loading": "加载中…",
     "retry": "重试",
     "confirm": "确认",
-    "cancel": "取消"
+    "cancel": "取消",
+    "delete": "删除"
   },
   "metadata": {
     "sectionTitle": "作品信息",
@@ -36,7 +37,6 @@
   },
   "settings": {
     "title": "设置",
-    "metadata": "信息源设置",
     "downloads": "下载设置",
     "playback": "播放偏好",
     "general": {
@@ -51,12 +51,162 @@
       "minimizeToTray": "最小化至托盘",
       "askEveryTime": "每次都询问"
     },
+    "appearancePage": {
+      "title": "外观设置",
+      "mode": {
+        "title": "主题模式",
+        "system": "跟随系统",
+        "light": "浅色",
+        "dark": "深色"
+      },
+      "colorScheme": {
+        "title": "主题色",
+        "dialogTitle": "选择主题色",
+        "dynamicColor": "动态配色",
+        "dynamicColorInfo": "在支持的设备上根据系统壁纸生成调色板（Android 12+/Windows 11）。",
+        "labels": {
+          "defaultLabel": "默认",
+          "teal": "青色",
+          "blue": "蓝色",
+          "indigo": "靛蓝",
+          "violet": "紫罗兰",
+          "pink": "粉色",
+          "yellow": "黄色",
+          "orange": "橙色",
+          "deepOrange": "深橙色"
+        }
+      },
+      "oled": {
+        "title": "OLED 增强",
+        "description": "针对 OLED 屏幕优化纯黑配色。"
+      },
+      "window": {
+        "title": "窗口按钮",
+        "description": "在标题栏显示窗口控制按钮。"
+      },
+      "refreshRate": {
+        "title": "屏幕刷新率"
+      }
+    },
     "source": {
       "title": "源",
       "ruleManagement": "规则管理",
       "ruleManagementDesc": "管理番剧资源规则",
       "githubProxy": "Github 镜像",
       "githubProxyDesc": "使用镜像访问规则托管仓库"
+    },
+    "plugins": {
+      "title": "规则管理",
+      "empty": "没有可用规则",
+      "tooltip": {
+        "updateAll": "更新全部",
+        "addRule": "添加规则"
+      },
+      "multiSelect": {
+        "selectedCount": "已选择 {count} 项"
+      },
+      "loading": {
+        "updating": "正在更新规则…",
+        "updatingSingle": "更新中",
+        "importing": "导入中"
+      },
+      "labels": {
+        "version": "版本：{version}",
+        "statusUpdatable": "可更新",
+        "statusSearchValid": "搜索有效"
+      },
+      "actions": {
+        "newRule": "新建规则",
+        "importFromRepo": "从规则仓库导入",
+        "importFromClipboard": "从剪贴板导入",
+        "cancel": "取消",
+        "import": "导入",
+        "update": "更新",
+        "edit": "编辑",
+        "copyToClipboard": "复制到剪贴板",
+        "share": "分享",
+        "delete": "删除"
+      },
+      "dialogs": {
+        "deleteTitle": "删除规则",
+        "deleteMessage": "确定要删除选中的 {count} 条规则吗？",
+        "importTitle": "导入规则",
+        "shareTitle": "规则链接"
+      },
+      "toast": {
+        "allUpToDate": "所有规则已是最新",
+        "updateCount": "已更新 {count} 条规则",
+        "importSuccess": "导入成功",
+        "importFailed": "导入失败：{error}",
+        "repoMissing": "规则仓库中没有当前规则",
+        "alreadyLatest": "规则已是最新",
+        "updateSuccess": "更新成功",
+        "updateIncompatible": "Kazumi 版本过低，此规则不兼容当前版本",
+        "updateFailed": "更新规则失败",
+        "copySuccess": "已复制到剪贴板"
+      },
+      "editor": {
+        "title": "编辑规则",
+        "fields": {
+          "name": "规则名称",
+          "version": "版本",
+          "baseUrl": "基础 URL",
+          "searchUrl": "搜索 URL",
+          "searchList": "搜索列表 XPath",
+          "searchName": "搜索标题 XPath",
+          "searchResult": "搜索结果 XPath",
+          "chapterRoads": "剧集线路 XPath",
+          "chapterResult": "剧集结果 XPath",
+          "userAgent": "User-Agent",
+          "referer": "Referer"
+        },
+        "advanced": {
+          "title": "高级配置",
+          "legacyParser": {
+            "title": "启用旧版解析",
+            "subtitle": "使用旧版 XPath 解析逻辑以兼容部分规则。"
+          },
+          "httpPost": {
+            "title": "使用 POST 请求",
+            "subtitle": "以 HTTP POST 方式发送搜索请求。"
+          },
+          "nativePlayer": {
+            "title": "强制原生播放器",
+            "subtitle": "优先使用内置播放器播放链接。"
+          }
+        }
+      },
+      "shop": {
+        "title": "规则仓库",
+        "tooltip": {
+          "sortByName": "按名称排序",
+          "sortByUpdate": "按更新时间排序",
+          "refresh": "刷新规则列表"
+        },
+        "labels": {
+          "playerType": {
+            "native": "native",
+            "webview": "webview"
+          },
+          "lastUpdated": "更新时间: {timestamp}"
+        },
+        "buttons": {
+          "install": "添加",
+          "installed": "已添加",
+          "update": "更新",
+          "toggleMirrorEnable": "启用镜像",
+          "toggleMirrorDisable": "禁用镜像",
+          "refresh": "刷新"
+        },
+        "toast": {
+          "importFailed": "导入规则失败"
+        },
+        "error": {
+          "unreachable": "无法访问远程仓库\n{status}",
+          "mirrorEnabled": "镜像已启用",
+          "mirrorDisabled": "镜像已禁用"
+        }
+      }
     },
     "metadata": {
       "title": "元数据",
@@ -97,17 +247,33 @@
       "privateModeDesc": "不保留观看记录",
       "defaultPlaySpeed": "默认倍速",
       "defaultVideoAspectRatio": "默认视频比例",
+      "aspectRatio": {
+        "auto": "自动",
+        "crop": "裁切填充",
+        "stretch": "拉伸填充"
+      },
       "danmakuSettings": "弹幕设置",
       "danmakuSettingsDesc": "设置弹幕相关参数",
       "danmaku": "弹幕",
       "danmakuDefaultOn": "默认开启",
       "danmakuDefaultOnDesc": "默认是否随视频播放弹幕",
       "danmakuSource": "弹幕源",
+      "danmakuSources": {
+        "bilibili": "Bilibili",
+        "gamer": "Gamer",
+        "dandan": "DanDan"
+      },
       "danmakuCredentials": "凭证",
       "danmakuDanDanCredentials": "DanDan API 凭证",
       "danmakuDanDanCredentialsDesc": "自定义 DanDan 凭证",
+  "danmakuCredentialModeBuiltIn": "内置",
+  "danmakuCredentialModeCustom": "自定义",
+  "danmakuCredentialHint": "留空使用内置凭证",
+      "danmakuCredentialNotConfigured": "未配置",
+      "danmakuCredentialsSummary": "AppId：{appId}\nAPI Key：{apiKey}",
       "danmakuShield": "弹幕屏蔽",
       "danmakuKeywordShield": "关键词屏蔽",
+  "danmakuShieldInputHint": "输入关键词或正则表达式",
       "danmakuShieldDescription": "以\"/\"开头和结尾将视作正则表达式, 如\"/\\\\d+/\"表示屏蔽所有数字",
       "danmakuShieldCount": "已添加{count}个关键词",
       "danmakuStyle": "弹幕样式",
@@ -117,23 +283,195 @@
       "danmakuBottomDisplay": "底部弹幕",
       "danmakuScrollDisplay": "滚动弹幕",
       "danmakuMassiveDisplay": "海量弹幕",
+      "danmakuMassiveDescription": "弹幕过多时叠加绘制",
+      "danmakuOutline": "弹幕描边",
+      "danmakuColor": "弹幕颜色",
       "danmakuFontSize": "字体大小",
+      "danmakuFontWeight": "字体字重",
       "danmakuOpacity": "弹幕不透明度",
       "add": "添加",
       "save": "保存",
       "restoreDefault": "恢复默认",
       "superResolutionTitle": "超分辨率",
+      "superResolutionHint": "选择默认的超分辨率模式",
+      "superResolutionOptions": {
+        "off": {
+          "label": "关闭",
+          "description": "不启用画面增强。"
+        },
+        "efficiency": {
+          "label": "高效模式",
+          "description": "在性能消耗与画质提升之间取得平衡。"
+        },
+        "quality": {
+          "label": "画质优先",
+          "description": "最大化画质提升，可能增加资源消耗。"
+        }
+      },
       "superResolutionDefaultBehavior": "默认行为",
       "superResolutionClosePrompt": "关闭提示",
-      "superResolutionClosePromptDesc": "关闭每次启用超分辨率时的提示"
+      "superResolutionClosePromptDesc": "关闭每次启用超分辨率时的提示",
+      "toast": {
+        "danmakuKeywordEmpty": "请输入关键词",
+        "danmakuKeywordTooLong": "关键词过长",
+        "danmakuKeywordExists": "已存在该关键词",
+        "danmakuCredentialsRestored": "已恢复内置凭证",
+        "danmakuCredentialsUpdated": "凭证已更新"
+      }
     },
     "webdav": {
       "title": "WebDAV",
-      "desc": "设置同步参数"
+      "desc": "配置同步参数",
+      "pageTitle": "同步设置",
+      "editor": {
+        "title": "WebDAV 配置",
+        "url": "URL",
+        "username": "用户名",
+        "password": "密码",
+        "toast": {
+          "saveSuccess": "配置已保存，开始测试...",
+          "saveFailed": "配置失败：{error}",
+          "testSuccess": "测试成功。",
+          "testFailed": "测试失败：{error}"
+        }
+      },
+      "section": {
+        "webdav": "WebDAV"
+      },
+      "tile": {
+        "webdavToggle": "WebDAV 同步",
+        "historyToggle": "观看记录同步",
+        "historyDescription": "允许自动同步观看记录",
+        "config": "WebDAV 配置",
+        "manualUpload": "手动上传",
+        "manualDownload": "手动下载"
+      },
+      "info": {
+        "upload": "立即将观看记录上传到 WebDAV。",
+        "download": "立即将观看记录同步到本地。"
+      },
+      "toast": {
+        "uploading": "正在尝试上传到 WebDAV...",
+        "downloading": "正在尝试从 WebDAV 同步...",
+        "notConfigured": "未开启 WebDAV 同步或配置无效。",
+        "connectionFailed": "WebDAV 连接失败：{error}",
+        "syncFailed": "WebDAV 同步失败：{error}"
+      },
+      "result": {
+        "initFailed": "WebDAV 初始化失败：{error}",
+        "requireEnable": "请先开启 WebDAV 同步。",
+        "disabled": "未开启 WebDAV 同步或配置无效。",
+        "connectionFailed": "WebDAV 连接失败。",
+        "syncSuccess": "同步成功。",
+        "syncFailed": "同步失败：{error}"
+      }
+    },
+    "update": {
+      "fallbackDescription": "暂无更新说明。",
+      "error": {
+        "invalidResponse": "更新响应无效。"
+      },
+      "dialog": {
+        "title": "发现新版本 {version}",
+        "publishedAt": "发布于 {date}",
+        "installationTypeLabel": "选择安装包",
+        "actions": {
+          "disableAutoUpdate": "关闭自动更新",
+          "remindLater": "稍后提醒",
+          "viewDetails": "查看详情",
+          "updateNow": "立即更新"
+        }
+      },
+      "installationType": {
+        "windowsMsix": "Windows 安装包（MSIX）",
+        "windowsPortable": "Windows 便携版（ZIP）",
+        "linuxDeb": "Linux 安装包（DEB）",
+        "linuxTar": "Linux 压缩包（TAR.GZ）",
+        "macosDmg": "macOS 安装包（DMG）",
+        "androidApk": "Android 安装包（APK）",
+        "ios": "iOS 版本（前往 GitHub）",
+        "unknown": "其他平台"
+      },
+      "toast": {
+        "alreadyLatest": "当前已是最新版本",
+  "checkFailed": "检查更新失败，请稍后重试。",
+        "autoUpdateDisabled": "已关闭自动更新",
+        "downloadLinkMissing": "没有找到 {type} 的下载链接",
+        "downloadFailed": "下载失败：{error}",
+        "noCompatibleLink": "未找到适用的下载链接",
+        "prepareToInstall": "正在准备安装更新，应用即将退出…",
+        "openInstallerFailed": "无法打开安装文件：{error}",
+        "launchInstallerFailed": "启动安装程序失败：{error}",
+        "revealFailed": "无法打开文件管理器",
+        "unknownReason": "未知原因"
+      },
+      "download": {
+        "progressTitle": "正在下载更新",
+        "cancel": "取消",
+        "error": {
+          "title": "下载失败",
+          "general": "无法下载更新。",
+          "permission": "没有写入文件的权限。",
+          "diskFull": "磁盘空间不足。",
+          "network": "网络连接失败。",
+          "integrity": "文件校验失败，请重新下载。",
+          "details": "详细信息：{error}",
+          "confirm": "确定",
+          "retry": "重试"
+        },
+        "complete": {
+          "title": "下载完成",
+          "message": "已下载 Kazumi {version}。",
+          "quitNotice": "安装过程中应用将退出。",
+          "fileLocation": "文件位置",
+          "buttons": {
+            "later": "稍后再说",
+            "openFolder": "打开文件夹",
+            "installNow": "立即安装"
+          }
+        }
+      }
     },
     "other": {
       "title": "其他",
       "about": "关于"
+    },
+    "about": {
+      "title": "关于",
+      "sections": {
+        "licenses": {
+          "title": "开源许可证",
+          "description": "查看所有开源许可证"
+        },
+        "links": {
+          "title": "外部链接",
+          "project": "项目主页",
+          "repository": "代码仓库",
+          "icon": "图标创作",
+          "index": "番剧索引",
+          "danmaku": "弹幕源",
+          "danmakuId": "ID：{id}"
+        },
+        "cache": {
+          "clearAction": "清除缓存",
+          "sizePending": "统计中…",
+          "sizeLabel": "{size} MB"
+        },
+        "updates": {
+          "title": "应用更新",
+          "autoUpdate": "自动更新",
+          "check": "检查更新",
+          "currentVersion": "当前版本 {version}"
+        }
+      },
+      "logs": {
+        "title": "应用日志",
+        "empty": "暂无日志内容。",
+        "toast": {
+          "cleared": "日志已清空。",
+          "clearFailed": "清空日志失败。"
+        }
+      }
     }
   },
   "exitDialog": {
@@ -147,5 +485,482 @@
   "tray": {
     "showWindow": "显示窗口",
     "exit": "退出 Kazumi"
-  }
+  },
+  "navigation": {
+    "tabs": {
+      "popular": "热门番组",
+      "timeline": "时间表",
+      "my": "我的",
+      "settings": "设置"
+    },
+    "actions": {
+      "search": "搜索",
+      "history": "历史记录",
+      "close": "退出"
+    }
+  },
+  "dialogs": {
+    "disclaimer": {
+      "title": "免责声明",
+      "agree": "已阅读并同意",
+      "exit": "退出"
+    },
+    "updateMirror": {
+      "title": "更新镜像",
+      "question": "您希望从哪里获取应用更新？",
+      "description": "Github 镜像适用于大多数情况。如果您使用 F-Droid 应用商店，请选择 F-Droid 镜像。",
+      "options": {
+        "github": "Github",
+        "fdroid": "F-Droid"
+      }
+    },
+    "pluginUpdates": {
+      "toast": "检测到 {count} 条规则可以更新"
+    },
+    "webdav": {
+      "syncFailed": "同步观看记录失败 {error}"
+    },
+    "about": {
+      "licenseLegalese": "开源许可证"
+    },
+    "cache": {
+      "title": "缓存管理",
+      "message": "缓存包含番剧封面，清除后加载时需要重新下载，确认要清除缓存吗？"
+    }
+  },
+  "library": {
+    "common": {
+      "emptyState": "没有找到内容",
+      "retry": "点击重试",
+      "backHint": "再按一次退出应用",
+      "toast": {
+        "editMode": "当前为编辑模式"
+      }
+    },
+    "popular": {
+      "title": "热门番组",
+      "allTag": "热门番组",
+      "toast": {
+        "backPress": "再按一次退出应用"
+      }
+    },
+    "timeline": {
+      "weekdays": {
+        "mon": "一",
+        "tue": "二",
+        "wed": "三",
+        "thu": "四",
+        "fri": "五",
+        "sat": "六",
+        "sun": "日"
+      },
+      "seasonPicker": {
+        "title": "时间机器",
+        "yearLabel": "{year}年"
+      },
+      "season": {
+        "title": "{year}年{season}新番",
+        "loading": "加载中…",
+        "names": {
+          "winter": "冬季",
+          "spring": "春季",
+          "summer": "夏季",
+          "autumn": "秋季"
+        },
+        "short": {
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋"
+        }
+      },
+      "sort": {
+        "title": "排序方式",
+        "byHeat": "按热度排序",
+        "byRating": "按评分排序",
+        "byTime": "按时间排序"
+      }
+    },
+    "search": {
+      "sort": {
+        "label": "搜索排序",
+        "byHeat": "按热度排序",
+        "byRating": "按评分排序",
+        "byRelevance": "按相关度排序"
+      },
+      "noHistory": "暂无搜索记录"
+    },
+    "history": {
+      "title": "历史记录",
+      "empty": "没有找到历史记录",
+      "chips": {
+        "source": "来源",
+        "progress": "已看到",
+        "episodeNumber": "第{number}话"
+      },
+      "toast": {
+        "sourceMissing": "未找到关联番剧源"
+      },
+      "manage": {
+        "title": "记录管理",
+        "confirmClear": "确认要清除所有历史记录吗？",
+        "cancel": "取消",
+        "confirm": "确认"
+      }
+    },
+    "info": {
+      "summary": {
+        "title": "简介",
+        "expand": "加载更多",
+        "collapse": "加载更少"
+      },
+      "tags": {
+        "title": "标签",
+        "more": "更多 +"
+      },
+      "metadata": {
+        "refresh": "刷新",
+        "syncingTitle": "正在同步元数据…",
+        "syncingSubtitle": "首次同步可能需要几秒钟。",
+        "emptyTitle": "尚未获取官方元数据",
+        "emptySubtitle": "稍后重试或检查设置中的元数据开关。",
+  "source": "元数据来自 $source",
+  "updated": "最后更新：$timestamp · 语言：$language",
+        "languageSystem": "系统默认",
+        "multiSource": "多源合并"
+      },
+      "episodes": {
+        "title": "剧集",
+        "collapse": "收起",
+  "expand": "展开全部 ($count)",
+  "numberedEpisode": "第$number话",
+        "dateUnknown": "日期待定",
+        "runtimeUnknown": "时长未知",
+  "runtimeMinutes": "$minutes 分钟"
+      },
+      "errors": {
+        "fetchFailed": "获取失败，请重试"
+      },
+      "tabs": {
+        "overview": "概览",
+        "comments": "吐槽",
+        "characters": "角色",
+        "reviews": "评论",
+        "staff": "制作人员",
+        "placeholder": "施工中"
+      },
+      "actions": {
+        "startWatching": "开始观看"
+      },
+      "toast": {
+        "characterSortFailed": "角色排序失败：{details}"
+      },
+      "sourceSheet": {
+        "title": "选择播放源 ({name})",
+        "alias": {
+          "deleteTooltip": "删除别名",
+          "deleteTitle": "删除别名",
+          "deleteMessage": "删除后无法恢复，确认要永久删除这个别名吗？"
+        },
+        "toast": {
+          "aliasEmpty": "暂无可用别名，请先手动添加后再检索。",
+          "loadFailed": "获取视频播放列表失败。",
+          "removed": "已删除源 {plugin}。"
+        },
+        "sort": {
+          "tooltip": "排序：{label}",
+          "options": {
+            "original": "默认顺序",
+            "nameAsc": "名称升序",
+            "nameDesc": "名称降序"
+          }
+        },
+        "card": {
+          "title": "源 · {plugin}",
+          "play": "播放"
+        },
+        "actions": {
+          "searchAgain": "重新检索",
+          "aliasSearch": "别名检索",
+          "removeSource": "删除源"
+        },
+        "status": {
+          "searching": "{plugin} 检索中…",
+          "failed": "{plugin} 检索失败",
+          "empty": "{plugin} 无检索结果"
+        },
+        "empty": {
+          "searching": "检索中，请稍候…",
+          "noResults": "暂无可用视频源，请尝试重新检索或使用别名检索。"
+        },
+        "dialog": {
+          "removeTitle": "删除源",
+          "removeMessage": "确定要删除源 {plugin} 吗？"
+        }
+      }
+    },
+    "my": {
+      "title": "我的",
+      "sections": {
+        "video": "视频"
+      },
+      "favorites": {
+        "title": "收藏",
+        "description": "查看在看、想看、看过",
+        "empty": "暂无收藏记录。",
+        "tabs": {
+          "watching": "在看",
+          "planned": "想看",
+          "completed": "看过",
+          "empty": "暂无记录。"
+        },
+        "sync": {
+          "disabled": "未启用 WebDAV，同步功能不可用。",
+          "editing": "编辑模式下无法执行同步。"
+        }
+      },
+      "history": {
+        "title": "播放历史记录",
+        "description": "查看播放过的番剧"
+      }
+    }
+  },
+  "playback": {
+    "toast": {
+      "screenshotProcessing": "截图中...",
+      "screenshotSaved": "截图保存到相簿成功",
+      "screenshotSaveFailed": "截图保存失败：{error}",
+      "screenshotError": "截图失败：{error}",
+      "playlistEmpty": "播放列表为空",
+      "episodeLatest": "已经是最新一集",
+      "loadingEpisode": "正在加载{identifier}",
+      "danmakuUnsupported": "当前剧集暂不支持发送弹幕",
+      "danmakuEmpty": "弹幕内容为空",
+      "danmakuTooLong": "弹幕内容过长",
+      "waitForVideo": "请等待视频加载完成",
+    "enableDanmakuFirst": "请先开启弹幕",
+    "danmakuSearchError": "弹幕检索错误: {error}",
+    "danmakuSearchEmpty": "未找到匹配结果",
+    "danmakuSwitching": "弹幕切换中",
+      "clipboardCopied": "已复制到剪贴板",
+      "internalError": "播放器内部错误：{details}"
+    },
+    "danmaku": {
+      "inputHint": "发个友善的弹幕见证当下",
+      "inputDisabled": "已关闭弹幕",
+      "send": "发送",
+      "mobileButton": "点我发弹幕",
+      "mobileButtonDisabled": "已关闭弹幕"
+    },
+    "externalPlayer": {
+      "launching": "尝试唤起外部播放器",
+      "launchFailed": "唤起外部播放器失败",
+      "unavailable": "无法使用外部播放器",
+      "unsupportedDevice": "暂不支持该设备",
+      "unsupportedPlugin": "暂不支持该规则"
+    },
+    "controls": {
+      "speed": {
+        "title": "播放速度",
+        "reset": "默认速度"
+      },
+      "skip": {
+        "title": "跳过秒数",
+        "tooltip": "长按修改时间"
+      },
+      "status": {
+        "fastForward": "快进 {seconds} 秒",
+        "rewind": "快退 {seconds} 秒",
+        "speed": "倍速播放"
+      },
+      "superResolution": {
+        "label": "超分辨率",
+        "off": "关闭",
+        "balanced": "效率档",
+        "quality": "质量档"
+      },
+      "speedMenu": {
+        "label": "倍速"
+      },
+      "aspectRatio": {
+        "label": "视频比例",
+        "options": {
+          "auto": "自动",
+          "crop": "裁切填充",
+          "stretch": "拉伸填充"
+        }
+      },
+      "tooltips": {
+        "danmakuOn": "关闭弹幕(d)",
+        "danmakuOff": "打开弹幕(d)"
+      },
+      "menu": {
+        "danmakuToggle": "弹幕切换",
+        "videoInfo": "视频详情",
+        "cast": "远程投屏",
+        "external": "外部播放"
+      },
+      "syncplay": {
+        "label": "一起看",
+        "room": "当前房间：{name}",
+        "roomEmpty": "未加入",
+        "latency": "网络延时：{ms}ms",
+        "join": "加入房间",
+        "switchServer": "切换服务器",
+        "disconnect": "断开连接"
+      }
+    },
+    "loading": {
+      "parsing": "视频资源解析中",
+      "player": "视频资源解析成功，播放器加载中",
+      "danmakuSearch": "弹幕检索中..."
+    },
+    "danmakuSearch": {
+      "title": "弹幕检索",
+      "hint": "番剧名",
+      "submit": "提交"
+    },
+    "remote": {
+      "title": "远程投屏",
+      "toast": {
+        "searching": "开始搜索",
+        "casting": "尝试投屏至 {device}",
+        "error": "DLNA 异常: {details}\n尝试重新进入 DLNA 投屏或切换设备"
+      }
+    },
+    "debug": {
+      "title": "调试信息",
+      "closeTooltip": "关闭调试信息",
+      "tabs": {
+        "status": "状态",
+        "logs": "日志"
+      },
+      "sections": {
+        "source": "播放源",
+        "playback": "播放器状态",
+        "timing": "时间与参数",
+        "media": "媒体轨道"
+      },
+      "labels": {
+        "series": "番剧",
+        "plugin": "插件",
+        "route": "线路",
+        "episode": "集数",
+        "routeCount": "线路数量",
+        "sourceTitle": "源标题",
+        "parsedUrl": "解析地址",
+        "playUrl": "播放地址",
+        "danmakuId": "DanDan ID",
+        "syncRoom": "SyncPlay 房间",
+        "syncLatency": "SyncPlay RTT",
+        "nativePlayer": "原生播放器",
+        "parsing": "解析中",
+        "playerLoading": "播放器加载",
+        "playerInitializing": "播放器初始化",
+        "playing": "播放中",
+        "buffering": "缓冲中",
+        "completed": "播放完成",
+        "bufferFlag": "缓冲标志",
+        "currentPosition": "当前位置",
+        "bufferProgress": "缓冲进度",
+        "duration": "总时长",
+        "speed": "播放速度",
+        "volume": "音量",
+        "brightness": "亮度",
+        "resolution": "分辨率",
+        "aspectRatio": "视频比例",
+        "superResolution": "超分辨率",
+        "videoParams": "视频参数",
+        "audioParams": "音频参数",
+        "playlist": "播放列表",
+        "audioTracks": "音频轨",
+        "videoTracks": "视频轨",
+        "audioBitrate": "音频码率"
+      },
+      "values": {
+        "yes": "是",
+        "no": "否"
+      },
+      "logs": {
+        "playerEmpty": "播放器日志（0）",
+        "playerSummary": "播放器日志（{count} 条，展示 {displayed} 条）",
+        "webviewEmpty": "WebView 日志（0）",
+        "webviewSummary": "WebView 日志（{count} 条，展示 {displayed} 条）"
+      }
+    },
+    "syncplay": {
+      "invalidEndpoint": "SyncPlay：服务器地址不合法 {endpoint}",
+      "disconnected": "SyncPlay：同步中断 {reason}",
+      "actionReconnect": "重新连接",
+      "alone": "SyncPlay：您是当前房间中的唯一用户",
+      "followUser": "SyncPlay：当前以用户 {username} 的进度为准",
+      "userLeft": "SyncPlay：{username} 离开了房间",
+      "userJoined": "SyncPlay：{username} 加入了房间",
+      "switchEpisode": "SyncPlay：{username} 切换到第 {episode} 话",
+      "chat": "SyncPlay：{username} 说：{message}",
+      "paused": "SyncPlay：{username} 暂停了播放",
+      "resumed": "SyncPlay：{username} 开始了播放",
+      "unknownUser": "未知用户",
+      "switchServerBlocked": "SyncPlay：请先退出当前房间再切换服务器",
+      "defaultCustomEndpoint": "自定义服务器",
+      "selectServer": {
+        "title": "选择服务器",
+        "customTitle": "自定义服务器",
+        "customHint": "请输入服务器地址",
+        "duplicateOrEmpty": "服务器地址不能重复或为空"
+      },
+      "join": {
+        "title": "加入房间",
+        "roomLabel": "房间号",
+        "roomEmpty": "请输入房间号",
+        "roomInvalid": "房间号需要6到10位数字",
+        "usernameLabel": "用户名",
+        "usernameEmpty": "请输入用户名",
+        "usernameInvalid": "用户名必须为4到12位英文字符"
+      }
+    },
+    "playlist": {
+      "collection": "合集",
+      "list": "播放列表{index}"
+    },
+    "tabs": {
+      "episodes": "选集",
+      "comments": "评论"
+    },
+    "comments": {
+      "sectionTitle": "本集标题",
+      "manualSwitch": "手动切换",
+      "dialogTitle": "输入集数",
+      "dialogEmpty": "请输入集数",
+      "dialogConfirm": "刷新"
+    },
+    "superResolution": {
+      "warning": {
+        "title": "性能提示",
+        "message": "启用超分辨率（质量档）可能会造成设备卡顿，是否继续？",
+        "dontAskAgain": "下次不再询问"
+      }
+    }
+  },
+  "network": {
+    "error": {
+      "badCertificate": "证书有误！",
+      "badResponse": "服务器异常，请稍后重试！",
+      "cancel": "请求已被取消，请重新请求",
+      "connection": "连接错误，请检查网络设置",
+      "connectionTimeout": "网络连接超时，请检查网络设置",
+      "receiveTimeout": "响应超时，请稍后重试！",
+      "sendTimeout": "发送请求超时，请检查网络设置",
+      "unknown": "{status} 网络异常"
+    },
+    "status": {
+      "mobile": "正在使用移动流量",
+      "wifi": "正在使用 Wi-Fi",
+      "ethernet": "正在使用局域网",
+      "vpn": "正在使用代理网络",
+      "other": "正在使用其他网络",
+      "none": "未连接到任何网络"
+    }
+  },
+  "sync": {}
 }

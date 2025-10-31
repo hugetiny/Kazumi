@@ -10,6 +10,7 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class PlayerSettingsPage extends ConsumerStatefulWidget {
   const PlayerSettingsPage({super.key});
@@ -74,14 +75,20 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.t;
     final playerState = ref.watch(playerSettingsProvider);
+    final aspectRatioLabels = {
+      1: t.settings.player.aspectRatio.auto,
+      2: t.settings.player.aspectRatio.crop,
+      3: t.settings.player.aspectRatio.stretch,
+    };
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         onBackPressed(context);
       },
       child: Scaffold(
-        appBar: const SysAppBar(title: Text('播放设置')),
+        appBar: SysAppBar(title: Text(t.settings.player.playerSettings)),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
@@ -93,15 +100,15 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                     await setting.put(SettingBoxKey.hAenable, v);
                     ref.read(playerSettingsProvider.notifier).setHAEnable(v);
                   },
-                  title: const Text('硬件解码'),
+                  title: Text(t.settings.player.hardwareDecoding),
                   initialValue: playerState.hAenable,
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) async {
                     context.push('/settings/player/decoder');
                   },
-                  title: const Text('硬件解码器'),
-                  description: const Text('仅在硬件解码启用时生效'),
+                  title: Text(t.settings.player.hardwareDecoder),
+                  description: Text(t.settings.player.hardwareDecoderDesc),
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
@@ -111,8 +118,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .read(playerSettingsProvider.notifier)
                         .setLowMemoryMode(v);
                   },
-                  title: const Text('低内存模式'),
-                  description: const Text('禁用高级缓存以减少内存占用'),
+                  title: Text(t.settings.player.lowMemoryMode),
+                  description: Text(t.settings.player.lowMemoryModeDesc),
                   initialValue: playerState.lowMemoryMode,
                 ),
                 if (Platform.isAndroid)
@@ -124,15 +131,15 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                           .read(playerSettingsProvider.notifier)
                           .setAndroidEnableOpenSLES(v);
                     },
-                    title: const Text('低延迟音频'),
-                    description: const Text('启用 OpenSLES 音频输出以降低延时'),
+                    title: Text(t.settings.player.lowLatencyAudio),
+                    description: Text(t.settings.player.lowLatencyAudioDesc),
                     initialValue: playerState.androidEnableOpenSLES,
                   ),
                 SettingsTile.navigation(
                   onPressed: (_) async {
                     context.push('/settings/player/super');
                   },
-                  title: const Text('超分辨率'),
+                  title: Text(t.settings.player.superResolution),
                 ),
               ],
             ),
@@ -144,8 +151,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                     await setting.put(SettingBoxKey.playResume, v);
                     ref.read(playerSettingsProvider.notifier).setPlayResume(v);
                   },
-                  title: const Text('自动跳转'),
-                  description: const Text('跳转到上次播放位置'),
+                  title: Text(t.settings.player.autoJump),
+                  description: Text(t.settings.player.autoJumpDesc),
                   initialValue: playerState.playResume,
                 ),
                 SettingsTile.switchTile(
@@ -156,8 +163,9 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .read(playerSettingsProvider.notifier)
                         .setPlayerDisableAnimations(v);
                   },
-                  title: const Text('禁用动画'),
-                  description: const Text('禁用播放器内的过渡动画'),
+                  title: Text(t.settings.player.disableAnimations),
+                  description:
+                      Text(t.settings.player.disableAnimationsDesc),
                   initialValue: playerState.playerDisableAnimations,
                 ),
                 SettingsTile.switchTile(
@@ -168,8 +176,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .read(playerSettingsProvider.notifier)
                         .setShowPlayerError(v);
                   },
-                  title: const Text('错误提示'),
-                  description: const Text('显示播放器内部错误提示'),
+                  title: Text(t.settings.player.errorPrompt),
+                  description: Text(t.settings.player.errorPromptDesc),
                   initialValue: playerState.showPlayerError,
                 ),
                 SettingsTile.switchTile(
@@ -180,8 +188,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .read(playerSettingsProvider.notifier)
                         .setPlayerDebugMode(v);
                   },
-                  title: const Text('调试模式'),
-                  description: const Text('记录播放器内部日志'),
+                  title: Text(t.settings.player.debugMode),
+                  description: Text(t.settings.player.debugModeDesc),
                   initialValue: playerState.playerDebugMode,
                 ),
                 SettingsTile.switchTile(
@@ -192,8 +200,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .read(playerSettingsProvider.notifier)
                         .setPrivateMode(v);
                   },
-                  title: const Text('隐身模式'),
-                  description: const Text('不保留观看记录'),
+                  title: Text(t.settings.player.privateMode),
+                  description: Text(t.settings.player.privateModeDesc),
                   initialValue: playerState.privateMode,
                 ),
               ],
@@ -201,7 +209,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
             SettingsSection(
               tiles: [
                 SettingsTile(
-                  title: const Text('默认倍速'),
+                  title: Text(t.settings.player.defaultPlaySpeed),
                   description: Slider(
                     value: playerState.defaultPlaySpeed,
                     min: 0.25,
@@ -223,14 +231,14 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                       menuController.open();
                     }
                   },
-                  title: const Text('默认视频比例'),
+                  title: Text(t.settings.player.defaultVideoAspectRatio),
                   value: MenuAnchor(
                     consumeOutsideTap: true,
                     controller: menuController,
                     builder: (_, __, ___) {
                       return Text(
-                        aspectRatioTypeMap[playerState.defaultAspectRatioType] ??
-                            '自动',
+                        aspectRatioLabels[playerState.defaultAspectRatioType] ??
+                            t.settings.player.aspectRatio.auto,
                       );
                     },
                     menuChildren: [
@@ -244,7 +252,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                             child: Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                entry.value,
+                                aspectRatioLabels[entry.key] ??
+                                    t.settings.player.aspectRatio.auto,
                                 style: TextStyle(
                                   color: entry.key ==
                                           playerState.defaultAspectRatioType

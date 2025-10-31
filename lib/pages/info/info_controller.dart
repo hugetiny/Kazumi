@@ -16,6 +16,7 @@ import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class InfoState {
   final bool isLoading;
@@ -203,7 +204,12 @@ class InfoController extends Notifier<InfoState> {
         return valueA.compareTo(valueB);
       });
     } catch (e) {
-      KazumiDialog.showToast(message: '$e');
+      KazumiDialog.showToast(
+        message: t.library.info.toast.characterSortFailed.replaceFirst(
+          '{details}',
+          e.toString(),
+        ),
+      );
     }
     state = state.copyWith(characterList: characters);
     KazumiLogger().log(Level.info, '已加载角色列表长度 ${characters.length}');
