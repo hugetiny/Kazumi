@@ -42,10 +42,10 @@ class _PopularPageState extends ConsumerState<PopularPage>
   void initState() {
     super.initState();
     scrollController.addListener(scrollListener);
-    popularController = ref.read(popularControllerProvider.notifier);
+    popularController = ref.read(popularProvider.notifier);
 
     // Use ref.listenManual to load data after widget is built
-    final state = ref.read(popularControllerProvider);
+    final state = ref.read(popularProvider);
     if (state.trendList.isEmpty) {
       // Schedule loading after initState completes
       Future.microtask(() {
@@ -69,7 +69,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
   }
 
   void scrollListener() {
-    final state = ref.read(popularControllerProvider);
+    final state = ref.read(popularProvider);
     popularController.updateScrollOffset(scrollController.offset);
     if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200 &&
         !state.isLoadingMore) {
@@ -121,7 +121,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
             buildSliverAppBar(),
             SliverToBoxAdapter(
               child: Consumer(builder: (context, ref, _) {
-                final state = ref.watch(popularControllerProvider);
+                final state = ref.watch(popularProvider);
                 return AnimatedOpacity(
                   opacity: state.isLoadingMore ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 300),
@@ -135,7 +135,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
               padding: const EdgeInsets.fromLTRB(
                   StyleString.cardSpace, 0, StyleString.cardSpace, 0),
               sliver: Consumer(builder: (context, ref, _) {
-                final state = ref.watch(popularControllerProvider);
+                final state = ref.watch(popularProvider);
                 final t = context.t;
                 if (state.isTimeOut) {
                   return SliverToBoxAdapter(
@@ -244,7 +244,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
                   child: SizedBox(
                     height: 44,
                     child: Consumer(builder: (context, ref, _) {
-                      final state = ref.watch(popularControllerProvider);
+                      final state = ref.watch(popularProvider);
                       final bool isTrend = state.currentTag == '';
                       final t = context.t;
                       return InkWell(
@@ -347,7 +347,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
     );
 
     if (selected == null) return;
-    final state = ref.read(popularControllerProvider);
+    final state = ref.read(popularProvider);
     if (selected == '' && state.currentTag != '') {
       scrollController.animateTo(0,
           duration: const Duration(milliseconds: 250), curve: Curves.easeOut);

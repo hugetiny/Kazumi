@@ -37,87 +37,11 @@ class _InfoPageState extends ConsumerState<InfoPage>
   late final VideoPageController videoPageController;
   late TabController infoTabController;
 
-  bool commentsIsLoading = false;
-  bool charactersIsLoading = false;
-  bool commentsQueryTimeout = false;
-  bool charactersQueryTimeout = false;
-  bool staffIsLoading = false;
-  bool staffQueryTimeout = false;
-
-  Future<void> loadCharacters() async {
-    if (charactersIsLoading) return;
-    setState(() {
-      charactersIsLoading = true;
-      charactersQueryTimeout = false;
-    });
-  infoController
-    .queryBangumiCharactersByID(infoController.bangumiItem.id)
-        .then((_) {
-      if (infoController.characterList.isEmpty && mounted) {
-        setState(() {
-          charactersIsLoading = false;
-          charactersQueryTimeout = true;
-        });
-      }
-      if (infoController.characterList.isNotEmpty && mounted) {
-        setState(() {
-          charactersIsLoading = false;
-        });
-      }
-    });
-  }
-
-  Future<void> loadStaff() async {
-    if (staffIsLoading) return;
-    setState(() {
-      staffIsLoading = true;
-      staffQueryTimeout = false;
-    });
-  infoController
-    .queryBangumiStaffsByID(infoController.bangumiItem.id)
-        .then((_) {
-      if (infoController.staffList.isEmpty && mounted) {
-        setState(() {
-          staffIsLoading = false;
-          staffQueryTimeout = true;
-        });
-      }
-      if (infoController.staffList.isNotEmpty && mounted) {
-        setState(() {
-          staffIsLoading = false;
-        });
-      }
-    });
-  }
-
-  Future<void> loadMoreComments({int offset = 0}) async {
-    if (commentsIsLoading) return;
-    setState(() {
-      commentsIsLoading = true;
-      commentsQueryTimeout = false;
-    });
-  infoController
-    .queryBangumiCommentsByID(infoController.bangumiItem.id, offset: offset)
-        .then((_) {
-      if (infoController.commentsList.isEmpty && mounted) {
-        setState(() {
-          commentsIsLoading = false;
-          commentsQueryTimeout = true;
-        });
-      }
-      if (infoController.commentsList.isNotEmpty && mounted) {
-        setState(() {
-          commentsIsLoading = false;
-        });
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
-    infoController = ref.read(infoControllerProvider.notifier);
-    videoPageController = ref.read(videoControllerProvider.notifier);
+    infoController = ref.read(bangumiInfoProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
     final BangumiItem? initialBangumi = widget.bangumi;
 
     // Delay provider state modifications until after initState completes
@@ -138,22 +62,8 @@ class _InfoPageState extends ConsumerState<InfoPage>
     });
 
     infoTabController = TabController(length: 5, vsync: this);
-    infoTabController.addListener(() {
-      int index = infoTabController.index;
-      if (index == 1 &&
-          infoController.commentsList.isEmpty &&
-          !commentsIsLoading) {
-        loadMoreComments();
-      }
-      if (index == 2 &&
-          infoController.characterList.isEmpty &&
-          !charactersIsLoading) {
-        loadCharacters();
-      }
-      if (index == 4 && infoController.staffList.isEmpty && !staffIsLoading) {
-        loadStaff();
-      }
-    });
+    // ✅ Riverpod providers will handle lazy loading automatically
+    // No need for manual tab listener to trigger data loading
   }
 
   @override
@@ -165,7 +75,6 @@ class _InfoPageState extends ConsumerState<InfoPage>
   Future<void> queryBangumiInfoByID(int id, {String type = "init"}) async {
     try {
       await infoController.queryBangumiInfoByID(id, type: type);
-      setState(() {});
     } catch (e) {
       KazumiLogger().log(Level.error, e.toString());
     }
@@ -173,7 +82,7 @@ class _InfoPageState extends ConsumerState<InfoPage>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(infoControllerProvider);
+    final state = ref.watch(bangumiInfoProvider);
     final infoTexts = context.t.library.info;
     final metadataTexts = infoTexts.metadata;
     final List<String> tabs = <String>[
@@ -362,15 +271,7 @@ class _InfoPageState extends ConsumerState<InfoPage>
             body: InfoTabView(
               tabController: infoTabController,
               bangumiItem: infoController.bangumiItem,
-              commentsQueryTimeout: commentsQueryTimeout,
-              charactersQueryTimeout: charactersQueryTimeout,
-              staffQueryTimeout: staffQueryTimeout,
-              loadMoreComments: loadMoreComments,
-              loadCharacters: loadCharacters,
-              loadStaff: loadStaff,
               commentsList: state.commentsList,
-              characterList: state.characterList,
-              staffList: state.staffList,
               isLoading: state.isLoading,
               metadataRecord: state.metadataRecord,
               metadataLoading: state.metadataLoading,

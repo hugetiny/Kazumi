@@ -15,17 +15,17 @@ class HistoryPage extends ConsumerStatefulWidget {
   ConsumerState<HistoryPage> createState() => _HistoryPageState();
 }
 
+/// Provider for show delete button state
+final historyShowDeleteProvider = StateProvider.autoDispose<bool>((ref) => false);
+
 class _HistoryPageState extends ConsumerState<HistoryPage>
     with SingleTickerProviderStateMixin {
   late HistoryController historyController;
 
-  /// show delete button
-  bool showDelete = false;
-
   @override
   void initState() {
     super.initState();
-    historyController = ref.read(historyControllerProvider.notifier);
+    historyController = ref.read(historyProvider.notifier);
   }
 
   void onBackPressed(BuildContext context) {
@@ -69,7 +69,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(historyControllerProvider);
+    final state = ref.watch(historyProvider);
+    final showDelete = ref.watch(historyShowDeleteProvider);
+
     return Builder(builder: (context) {
       return PopScope(
         canPop: true,
@@ -82,16 +84,14 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
             actions: [
               IconButton(
                   onPressed: () {
-                    setState(() {
-                      showDelete = !showDelete;
-                    });
+                    ref.read(historyShowDeleteProvider.notifier).state = !showDelete;
                   },
                   icon: showDelete
                       ? const Icon(Icons.edit_outlined)
                       : const Icon(Icons.edit))
             ],
           ),
-          body: SafeArea(bottom: false, child: renderBody(state)),
+          body: SafeArea(bottom: false, child: renderBody(state, showDelete)),
           floatingActionButton: FloatingActionButton(
             tooltip: context.t.library.history.manage.title,
             child: const Icon(Icons.clear_all),
@@ -104,9 +104,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     });
   }
 
-  Widget renderBody(HistoryState state) {
+  Widget renderBody(HistoryState state, bool showDelete) {
     if (state.histories.isNotEmpty) {
-      return contentGrid(state);
+      return contentGrid(state, showDelete);
     } else {
       return Center(
         child: Text(context.t.library.history.empty),
@@ -114,7 +114,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
     }
   }
 
-  Widget contentGrid(HistoryState state) {
+  Widget contentGrid(HistoryState state, bool showDelete) {
     int crossCount = 1;
     if (MediaQuery.sizeOf(context).width > LayoutBreakpoint.compact['width']!) {
       crossCount = 2;

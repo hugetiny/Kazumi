@@ -2,26 +2,31 @@ import 'dart:async';
 
 import 'package:dlna_dart/dlna.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 
+/// Provider for DLNA device list in remote play dialog
+final dlnaDeviceListProvider = StateProvider.autoDispose<List<Widget>>((ref) => []);
+
 class RemotePlay {
   Future<void> castVideo(String video, String referer) async {
     final searcher = DLNAManager();
     final dlna = await searcher.start();
-    List<Widget> dlnaDevice = [];
     await KazumiDialog.show(builder: (BuildContext context) {
-      return StatefulBuilder(builder: (dialogContext, setState) {
+      return Consumer(builder: (dialogContext, ref, child) {
         final remoteTexts = dialogContext.t.playback.remote;
         final closeLabel = dialogContext.t.app.cancel;
         final searchLabel = dialogContext.t.navigation.actions.search;
+        final dlnaDevices = ref.watch(dlnaDeviceListProvider);
+
         return AlertDialog(
           title: Text(remoteTexts.title),
           content: SingleChildScrollView(
             child: Column(
-              children: dlnaDevice,
+              children: dlnaDevices,
             ),
           ),
           actions: [
@@ -39,18 +44,17 @@ class RemotePlay {
             ),
             TextButton(
                 onPressed: () {
-                  setState(() {});
+                  ref.read(dlnaDeviceListProvider.notifier).state = [];
                   KazumiDialog.showToast(
                     message: remoteTexts.toast.searching,
                   );
                   dlna.devices.stream.listen((deviceList) {
-                    dlnaDevice = [];
+                    final devices = <Widget>[];
                     deviceList.forEach((key, value) async {
                       debugPrint('Key: $key');
                       debugPrint(
                           'Value: ${value.info.friendlyName} ${value.info.deviceType} ${value.info.URLBase}');
-                      setState(() {
-                        dlnaDevice.add(ListTile(
+                      devices.add(ListTile(
                             leading: _deviceUPnPIcon(
                                 value.info.deviceType.split(':')[3]),
                             title: Text(value.info.friendlyName),
@@ -77,14 +81,9 @@ class RemotePlay {
                                 );
                               }
                             }));
-                      });
+                      ref.read(dlnaDeviceListProvider.notifier).state = devices;
                     });
                   });
-                  // Timer(const Duration(seconds: 30), () {
-                  //   KazumiDialog.showToast(
-                  //     message: '已搜索30s，若未发现设备请尝试重新进入 DLNA 投屏',
-                  //   );
-                  // });
                 },
                 child: Text(
                   searchLabel,

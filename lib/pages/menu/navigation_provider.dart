@@ -49,7 +49,17 @@ class NavigationBarController extends Notifier<NavigationBarStateData> {
   }
 }
 
-final navigationBarControllerProvider =
+/// 底部导航栏 Provider
+///
+/// 管理底部导航栏的选中状态、显示/隐藏和位置。
+/// 用于控制应用的主要导航逻辑。
+///
+/// 示例:
+/// ```dart
+/// final controller = ref.read(navigationProvider.notifier);
+/// controller.updateSelectedIndex(1);
+/// ```
+final navigationProvider =
     NotifierProvider<NavigationBarController, NavigationBarStateData>(
   NavigationBarController.new,
 );

@@ -8,6 +8,9 @@ import 'package:kazumi/providers/translations_provider.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 
+/// Provider for password visibility toggle
+final webdavPasswordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
+
 class WebDavEditorPage extends ConsumerStatefulWidget {
   const WebDavEditorPage({
     super.key,
@@ -24,7 +27,6 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
   final TextEditingController webDavPasswordController =
       TextEditingController();
   Box setting = GStorage.setting;
-  bool passwordVisible = false;
 
   @override
   void initState() {
@@ -48,6 +50,8 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
   @override
   Widget build(BuildContext context) {
     final t = ref.watch(translationsProvider);
+    final passwordVisible = ref.watch(webdavPasswordVisibleProvider);
+
     return Scaffold(
       appBar: SysAppBar(
         title: Text(t.settings.webdav.editor.title),
@@ -83,9 +87,7 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       onPressed: () {
-                        setState(() {
-                          passwordVisible = !passwordVisible;
-                        });
+                        ref.read(webdavPasswordVisibleProvider.notifier).state = !passwordVisible;
                       },
                       icon: Icon(passwordVisible
                           ? Icons.visibility_rounded
@@ -121,7 +123,7 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
             );
             await setting.put(SettingBoxKey.webDavEnable, false);
             await ref
-                .read(webDavSettingsControllerProvider.notifier)
+                .read(webDavSettingsProvider.notifier)
                 .refreshFromStorage();
             return;
           }
@@ -141,7 +143,7 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
             await setting.put(SettingBoxKey.webDavEnable, false);
           }
           await ref
-              .read(webDavSettingsControllerProvider.notifier)
+              .read(webDavSettingsProvider.notifier)
               .refreshFromStorage();
         },
       ),

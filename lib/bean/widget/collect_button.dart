@@ -81,8 +81,8 @@ class _CollectButtonState extends ConsumerState<CollectButton> {
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(collectControllerProvider);
-    final collectController = ref.read(collectControllerProvider.notifier);
+    ref.watch(collectionsProvider);
+    final collectController = ref.read(collectionsProvider.notifier);
     final collectType = collectController.getCollectType(widget.bangumiItem);
     return MenuAnchor(
   consumeOutsideTap: true,

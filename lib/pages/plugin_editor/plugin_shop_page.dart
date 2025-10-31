@@ -20,11 +20,7 @@ class PluginShopPage extends ConsumerStatefulWidget {
 
 class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   final Box setting = GStorage.setting;
-  bool timeout = false;
-  bool loading = false;
   late bool enableGitProxy;
-
-  bool sortByName = false;
   late final PluginsController pluginsController;
 
   void onBackPressed(BuildContext context) {
@@ -37,7 +33,7 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   @override
   void initState() {
     super.initState();
-    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
     enableGitProxy =
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false);
 
@@ -52,14 +48,15 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   }
 
   Future<void> _handleRefresh() async {
+    // ✅ Read loading state from provider
+    final loading = ref.read(pluginShopUIProvider).isLoading;
     if (loading) {
       return;
     }
 
-    setState(() {
-      loading = true;
-      timeout = false;
-    });
+
+    ref.read(pluginShopUIProvider.notifier).setLoading(true);
+    ref.read(pluginShopUIProvider.notifier).setTimeout(false);
 
     enableGitProxy =
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false);
@@ -69,25 +66,24 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       if (!mounted) {
         return;
       }
-      setState(() {
-        loading = false;
-        timeout = pluginsController.pluginHTTPList.isEmpty;
-      });
+
+      ref.read(pluginShopUIProvider.notifier).setLoading(false);
+      ref.read(pluginShopUIProvider.notifier).setTimeout(
+          pluginsController.pluginHTTPList.isEmpty);
     } catch (_) {
       if (!mounted) {
         return;
       }
-      setState(() {
-        loading = false;
-        timeout = true;
-      });
+
+      ref.read(pluginShopUIProvider.notifier).setLoading(false);
+      ref.read(pluginShopUIProvider.notifier).setTimeout(true);
     }
   }
 
   void _toggleSort() {
-    setState(() {
-      sortByName = !sortByName;
-    });
+
+    final currentSort = ref.read(pluginShopUIProvider).sortByName;
+    ref.read(pluginShopUIProvider.notifier).setSortByName(!currentSort);
   }
 
   Widget buildPluginHTTPListBody(
@@ -95,6 +91,9 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     final pluginTexts = context.t.settings.plugins;
     final shopTexts = pluginTexts.shop;
     final sortedList = List<PluginHTTPItem>.from(pluginHTTPList);
+
+    // ✅ Read sort mode from provider
+    final sortByName = ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
 
     if (sortByName) {
       sortedList.sort(
@@ -225,10 +224,15 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pluginsState = ref.watch(pluginsControllerProvider);
+    final pluginsState = ref.watch(pluginsProvider);
     final pluginHTTPList = pluginsState.pluginHTTPList;
     final pluginTexts = context.t.settings.plugins;
     final shopTexts = pluginTexts.shop;
+
+    // ✅ Watch state from providers
+    final loading = ref.watch(pluginShopUIProvider.select((s) => s.isLoading));
+    final timeout = ref.watch(pluginShopUIProvider.select((s) => s.isTimeout));
+    final sortByName = ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
 
     return PopScope(
       canPop: true,

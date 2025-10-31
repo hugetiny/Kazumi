@@ -7,21 +7,6 @@ import 'package:kazumi/bean/card/episode_comments_card.dart';
 import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
-class EpisodeInfo extends InheritedWidget {
-  /// This widget receives changes of episode and notify it's child,
-  /// trigger [didChangeDependencies] of it's child.
-  const EpisodeInfo({super.key, required this.episode, required super.child});
-
-  final int episode;
-
-  @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => true;
-
-  static EpisodeInfo? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<EpisodeInfo>();
-  }
-}
-
 class EpisodeCommentsSheet extends ConsumerStatefulWidget {
   const EpisodeCommentsSheet({super.key});
 
@@ -34,21 +19,21 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
-  /// episode input by [showEpisodeSelection]
-  int? ep;
-
-  /// Current episode from context
-  int get currentEpisode => EpisodeInfo.of(context)!.episode;
+  /// Current episode from Riverpod provider (replaces EpisodeInfo InheritedWidget)
+  int get currentEpisode => ref.read(currentEpisodeNumberProvider);
 
   /// Episode to query (manual selection or current)
-  int get targetEpisode => ep ?? currentEpisode;
+  int get targetEpisode {
+    final selectedEp = ref.read(selectedEpisodeProvider);
+    return selectedEp ?? currentEpisode;
+  }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    ep = null;
-    // wait until currentState is not null
+  void initState() {
+    super.initState();
+    // ✅ Reset selected episode via Riverpod provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(selectedEpisodeProvider.notifier).state = null;
       _refreshIndicatorKey.currentState?.show();
     });
   }
@@ -161,15 +146,12 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
       builder: (context) {
         return AlertDialog(
           title: Text(t.playback.comments.dialogTitle),
-          content: StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-            return TextField(
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.digitsOnly
-              ],
-              controller: textController,
-            );
-          }),
+          content: TextField(
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly
+            ],
+            controller: textController,
+          ),
           actions: [
             TextButton(
               onPressed: () => KazumiDialog.dismiss(),
@@ -190,9 +172,8 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
                 if (newEp == null || newEp <= 0) {
                   return;
                 }
-                setState(() {
-                  ep = newEp;
-                });
+                // ✅ Update selected episode via Riverpod provider
+                ref.read(selectedEpisodeProvider.notifier).state = newEp;
                 _refreshIndicatorKey.currentState?.show();
                 KazumiDialog.dismiss();
               },
@@ -206,7 +187,7 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final videoState = ref.watch(videoControllerProvider);
+    final videoState = ref.watch(videoProvider);
     final bangumiId = videoState.bangumiItem?.id;
 
     if (bangumiId == null) {

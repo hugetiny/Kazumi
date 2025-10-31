@@ -1,77 +1,15 @@
-import 'package:kazumi/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kazumi/utils/storage.dart';
-import 'package:hive/hive.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
+import 'package:kazumi/pages/settings/danmaku/providers.dart';
+import 'package:kazumi/utils/utils.dart';
 
-class DanmakuSettingsPage extends StatefulWidget {
+class DanmakuSettingsPage extends ConsumerWidget {
   const DanmakuSettingsPage({super.key});
-
-  @override
-  State<DanmakuSettingsPage> createState() => _DanmakuSettingsPageState();
-}
-
-class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
-  Box setting = GStorage.setting;
-  late dynamic defaultDanmakuArea;
-  late dynamic defaultDanmakuOpacity;
-  late dynamic defaultDanmakuFontSize;
-  late int defaultDanmakuFontWeight;
-  late bool danmakuEnabledByDefault;
-  late bool danmakuBorder;
-  late bool danmakuTop;
-  late bool danmakuBottom;
-  late bool danmakuScroll;
-  late bool danmakuColor;
-  late bool danmakuMassive;
-  late bool danmakuBiliBiliSource;
-  late bool danmakuGamerSource;
-  late bool danmakuDanDanSource;
-  late String danDanAppIdOverride;
-  late String danDanApiKeyOverride;
-
-  @override
-  void initState() {
-    super.initState();
-    defaultDanmakuArea =
-        setting.get(SettingBoxKey.danmakuArea, defaultValue: 1.0);
-    defaultDanmakuOpacity =
-        setting.get(SettingBoxKey.danmakuOpacity, defaultValue: 1.0);
-    defaultDanmakuFontSize = setting.get(SettingBoxKey.danmakuFontSize,
-        defaultValue: (Utils.isCompact()) ? 16.0 : 25.0);
-    defaultDanmakuFontWeight =
-        setting.get(SettingBoxKey.danmakuFontWeight, defaultValue: 4);
-    danmakuEnabledByDefault =
-        setting.get(SettingBoxKey.danmakuEnabledByDefault, defaultValue: false);
-    danmakuBorder =
-        setting.get(SettingBoxKey.danmakuBorder, defaultValue: true);
-    danmakuTop = setting.get(SettingBoxKey.danmakuTop, defaultValue: true);
-    danmakuBottom =
-        setting.get(SettingBoxKey.danmakuBottom, defaultValue: false);
-    danmakuScroll =
-        setting.get(SettingBoxKey.danmakuScroll, defaultValue: true);
-    danmakuColor = setting.get(SettingBoxKey.danmakuColor, defaultValue: true);
-    danmakuMassive =
-        setting.get(SettingBoxKey.danmakuMassive, defaultValue: false);
-    danmakuBiliBiliSource =
-        setting.get(SettingBoxKey.danmakuBiliBiliSource, defaultValue: true);
-    danmakuGamerSource =
-        setting.get(SettingBoxKey.danmakuGamerSource, defaultValue: true);
-    danmakuDanDanSource =
-        setting.get(SettingBoxKey.danmakuDanDanSource, defaultValue: true);
-    danDanAppIdOverride =
-        (setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)
-                ?.trim() ??
-            '';
-    danDanApiKeyOverride =
-        (setting.get(SettingBoxKey.danDanApiKey, defaultValue: '') as String?)
-                ?.trim() ??
-            '';
-  }
 
   void onBackPressed(BuildContext context) {
     if (KazumiDialog.observer.hasKazumiDialog) {
@@ -80,35 +18,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
     }
   }
 
-  void updateDanmakuArea(double i) async {
-    await setting.put(SettingBoxKey.danmakuArea, i);
-    setState(() {
-      defaultDanmakuArea = i;
-    });
-  }
-
-  void updateDanmakuOpacity(double i) async {
-    await setting.put(SettingBoxKey.danmakuOpacity, i);
-    setState(() {
-      defaultDanmakuOpacity = i;
-    });
-  }
-
-  void updateDanmakuFontSize(double i) async {
-    await setting.put(SettingBoxKey.danmakuFontSize, i);
-    setState(() {
-      defaultDanmakuFontSize = i;
-    });
-  }
-
-  void updateDanmakuFontWeight(int i) async {
-    await setting.put(SettingBoxKey.danmakuFontWeight, i);
-    setState(() {
-      defaultDanmakuFontWeight = i;
-    });
-  }
-
-  String _maskSecret(String secret) {
+  String _maskSecret(BuildContext context, String secret) {
     if (secret.isEmpty) {
       return context.t.settings.player.danmakuCredentialNotConfigured;
     }
@@ -118,28 +28,23 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
     return '${secret.substring(0, 2)}****${secret.substring(secret.length - 2)}';
   }
 
-  String get _credentialModeLabel {
+  String _credentialModeLabel(BuildContext context, String appId, String apiKey) {
     final playerTexts = context.t.settings.player;
-    return danDanAppIdOverride.isEmpty && danDanApiKeyOverride.isEmpty
+    return appId.isEmpty && apiKey.isEmpty
         ? playerTexts.danmakuCredentialModeBuiltIn
         : playerTexts.danmakuCredentialModeCustom;
   }
 
-  Future<void> _showDanDanCredentialDialog() async {
+  Future<void> _showDanDanCredentialDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String currentAppId,
+    String currentApiKey,
+  ) async {
     final TextEditingController appIdController =
-        TextEditingController(text: danDanAppIdOverride);
+        TextEditingController(text: currentAppId);
     final TextEditingController apiKeyController =
-        TextEditingController(text: danDanApiKeyOverride);
-
-    Future<void> save(String appId, String apiKey) async {
-      await setting.put(SettingBoxKey.danDanAppId, appId);
-      await setting.put(SettingBoxKey.danDanApiKey, apiKey);
-      if (!mounted) return;
-      setState(() {
-        danDanAppIdOverride = appId;
-        danDanApiKeyOverride = apiKey;
-      });
-    }
+        TextEditingController(text: currentApiKey);
 
     final playerTexts = context.t.settings.player;
     final appTexts = context.t.app;
@@ -180,8 +85,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
             TextButton(
               onPressed: () async {
                 final NavigatorState navigator = Navigator.of(dialogContext);
-                await save('', '');
-                if (!mounted) return;
+                await ref.read(danmakuSettingsProvider.notifier).setDanDanCredentials('', '');
                 navigator.pop();
                 KazumiDialog.showToast(
                   message: toastTexts.danmakuCredentialsRestored,
@@ -194,8 +98,7 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                 final String appId = appIdController.text.trim();
                 final String apiKey = apiKeyController.text.trim();
                 final NavigatorState navigator = Navigator.of(dialogContext);
-                await save(appId, apiKey);
-                if (!mounted) return;
+                await ref.read(danmakuSettingsProvider.notifier).setDanDanCredentials(appId, apiKey);
                 navigator.pop();
                 KazumiDialog.showToast(
                   message: toastTexts.danmakuCredentialsUpdated,
@@ -213,16 +116,18 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final translations = context.t;
     final playerTexts = translations.settings.player;
     final sourcesTexts = playerTexts.danmakuSources;
-    final String effectiveDanDanAppId = GStorage.readDanDanAppId();
-    final String effectiveDanDanApiKey = GStorage.readDanDanApiKey();
-    final String maskedApiKey = _maskSecret(effectiveDanDanApiKey);
-    final String displayAppId = effectiveDanDanAppId.isEmpty
+
+    // ✅ Watch danmaku settings from Riverpod provider
+    final danmakuSettings = ref.watch(danmakuSettingsProvider);
+
+    final String maskedApiKey = _maskSecret(context, danmakuSettings.danDanApiKeyOverride);
+    final String displayAppId = danmakuSettings.danDanAppIdOverride.isEmpty
         ? playerTexts.danmakuCredentialNotConfigured
-        : effectiveDanDanAppId;
+        : danmakuSettings.danDanAppIdOverride;
     final String credentialSummary = playerTexts.danmakuCredentialsSummary
         .replaceFirst('{appId}', displayAppId)
         .replaceFirst('{apiKey}', maskedApiKey);
@@ -241,14 +146,12 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuEnabledByDefault = value ?? !danmakuEnabledByDefault;
-                    await setting.put(SettingBoxKey.danmakuEnabledByDefault,
-                        danmakuEnabledByDefault);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuEnabledByDefault(value ?? !danmakuSettings.danmakuEnabledByDefault);
                   },
                   title: Text(playerTexts.danmakuDefaultOn),
                   description: Text(playerTexts.danmakuDefaultOnDesc),
-                  initialValue: danmakuEnabledByDefault,
+                  initialValue: danmakuSettings.danmakuEnabledByDefault,
                 ),
               ],
             ),
@@ -257,33 +160,27 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuBiliBiliSource = value ?? !danmakuBiliBiliSource;
-                    await setting.put(SettingBoxKey.danmakuBiliBiliSource,
-                        danmakuBiliBiliSource);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBiliBiliSource(value ?? !danmakuSettings.danmakuBiliBiliSource);
                   },
                   title: Text(sourcesTexts.bilibili),
-                  initialValue: danmakuBiliBiliSource,
+                  initialValue: danmakuSettings.danmakuBiliBiliSource,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuGamerSource = value ?? !danmakuGamerSource;
-                    await setting.put(
-                        SettingBoxKey.danmakuGamerSource, danmakuGamerSource);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuGamerSource(value ?? !danmakuSettings.danmakuGamerSource);
                   },
                   title: Text(sourcesTexts.gamer),
-                  initialValue: danmakuGamerSource,
+                  initialValue: danmakuSettings.danmakuGamerSource,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuDanDanSource = value ?? !danmakuDanDanSource;
-                    await setting.put(
-                        SettingBoxKey.danmakuDanDanSource, danmakuDanDanSource);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuDanDanSource(value ?? !danmakuSettings.danmakuDanDanSource);
                   },
                   title: Text(sourcesTexts.dandan),
-                  initialValue: danmakuDanDanSource,
+                  initialValue: danmakuSettings.danmakuDanDanSource,
                 ),
               ],
             ),
@@ -292,11 +189,20 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) async {
-                    await _showDanDanCredentialDialog();
+                    await _showDanDanCredentialDialog(
+                      context,
+                      ref,
+                      danmakuSettings.danDanAppIdOverride,
+                      danmakuSettings.danDanApiKeyOverride,
+                    );
                   },
                   title: Text(playerTexts.danmakuDanDanCredentials),
                   description: Text(credentialSummary),
-                  value: Text(_credentialModeLabel),
+                  value: Text(_credentialModeLabel(
+                    context,
+                    danmakuSettings.danDanAppIdOverride,
+                    danmakuSettings.danDanApiKeyOverride,
+                  )),
                 ),
               ],
             ),
@@ -317,55 +223,48 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
                 SettingsTile(
                   title: Text(playerTexts.danmakuArea),
                   description: Slider(
-                    value: defaultDanmakuArea,
+                    value: danmakuSettings.danmakuArea,
                     min: 0,
                     max: 1,
                     divisions: 4,
-                    label: '${(defaultDanmakuArea * 100).round()}%',
+                    label: '${(danmakuSettings.danmakuArea * 100).round()}%',
                     onChanged: (value) {
-                      updateDanmakuArea(value);
+                      ref.read(danmakuSettingsProvider.notifier).setDanmakuArea(value);
                     },
                   ),
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuTop = value ?? !danmakuTop;
-                    await setting.put(SettingBoxKey.danmakuTop, danmakuTop);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuTop(value ?? !danmakuSettings.danmakuTop);
                   },
                   title: Text(playerTexts.danmakuTopDisplay),
-                  initialValue: danmakuTop,
+                  initialValue: danmakuSettings.danmakuTop,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuBottom = value ?? !danmakuBottom;
-                    await setting.put(
-                        SettingBoxKey.danmakuBottom, danmakuBottom);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBottom(value ?? !danmakuSettings.danmakuBottom);
                   },
                   title: Text(playerTexts.danmakuBottomDisplay),
-                  initialValue: danmakuBottom,
+                  initialValue: danmakuSettings.danmakuBottom,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuScroll = value ?? !danmakuScroll;
-                    await setting.put(
-                        SettingBoxKey.danmakuScroll, danmakuScroll);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuScroll(value ?? !danmakuSettings.danmakuScroll);
                   },
                   title: Text(playerTexts.danmakuScrollDisplay),
-                  initialValue: danmakuScroll,
+                  initialValue: danmakuSettings.danmakuScroll,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuMassive = value ?? !danmakuMassive;
-                    await setting.put(
-                        SettingBoxKey.danmakuMassive, danmakuMassive);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuMassive(value ?? !danmakuSettings.danmakuMassive);
                   },
                   title: Text(playerTexts.danmakuMassiveDisplay),
                   description: Text(playerTexts.danmakuMassiveDescription),
-                  initialValue: danmakuMassive,
+                  initialValue: danmakuSettings.danmakuMassive,
                 ),
               ],
             ),
@@ -374,58 +273,57 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuBorder = value ?? !danmakuBorder;
-                    await setting.put(
-                        SettingBoxKey.danmakuBorder, danmakuBorder);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBorder(value ?? !danmakuSettings.danmakuBorder);
                   },
                   title: Text(playerTexts.danmakuOutline),
-                  initialValue: danmakuBorder,
+                  initialValue: danmakuSettings.danmakuBorder,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    danmakuColor = value ?? !danmakuColor;
-                    await setting.put(SettingBoxKey.danmakuColor, danmakuColor);
-                    setState(() {});
+                    await ref.read(danmakuSettingsProvider.notifier)
+                        .setDanmakuColor(value ?? !danmakuSettings.danmakuColor);
                   },
                   title: Text(playerTexts.danmakuColor),
-                  initialValue: danmakuColor,
+                  initialValue: danmakuSettings.danmakuColor,
                 ),
                 SettingsTile(
                   title: Text(playerTexts.danmakuFontSize),
                   description: Slider(
-                    value: defaultDanmakuFontSize,
+                    value: danmakuSettings.danmakuFontSize,
                     min: 10,
                     max: Utils.isCompact() ? 32 : 48,
-                    label: '${defaultDanmakuFontSize.floorToDouble()}',
+                    label: '${danmakuSettings.danmakuFontSize.floorToDouble()}',
                     onChanged: (value) {
-                      updateDanmakuFontSize(value.floorToDouble());
+                      ref.read(danmakuSettingsProvider.notifier)
+                          .setDanmakuFontSize(value.floorToDouble());
                     },
                   ),
                 ),
                 SettingsTile(
                   title: Text(playerTexts.danmakuFontWeight),
                   description: Slider(
-                    value: defaultDanmakuFontWeight.toDouble(),
+                    value: danmakuSettings.danmakuFontWeight.toDouble(),
                     min: 1,
                     max: 9,
                     divisions: 8,
-                    label: '$defaultDanmakuFontWeight',
+                    label: '${danmakuSettings.danmakuFontWeight}',
                     onChanged: (value) {
-                      updateDanmakuFontWeight(value.toInt());
+                      ref.read(danmakuSettingsProvider.notifier)
+                          .setDanmakuFontWeight(value.toInt());
                     },
                   ),
                 ),
                 SettingsTile(
                   title: Text(playerTexts.danmakuOpacity),
                   description: Slider(
-                    value: defaultDanmakuOpacity,
+                    value: danmakuSettings.danmakuOpacity,
                     min: 0.1,
                     max: 1,
-                    label: '${(defaultDanmakuOpacity * 100).round()}%',
+                    label: '${(danmakuSettings.danmakuOpacity * 100).round()}%',
                     onChanged: (value) {
-                      updateDanmakuOpacity(
-                          double.parse(value.toStringAsFixed(2)));
+                      ref.read(danmakuSettingsProvider.notifier)
+                          .setDanmakuOpacity(double.parse(value.toStringAsFixed(2)));
                     },
                   ),
                 ),

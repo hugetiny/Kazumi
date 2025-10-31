@@ -221,33 +221,30 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
     KazumiDialog.show(builder: (context) {
       return AlertDialog(
         title: Text(t.playback.controls.speed.title),
-        content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-          return Wrap(
-            spacing: 8,
-            runSpacing: Utils.isDesktop() ? 8 : 0,
-            children: [
-              for (final double i in defaultPlaySpeedList) ...<Widget>[
-                if (i == currentSpeed)
-                  FilledButton(
-                    onPressed: () async {
-                      await widget.setPlaybackSpeed(i);
-                      KazumiDialog.dismiss();
-                    },
-                    child: Text(i.toString()),
-                  )
-                else
-                  FilledButton.tonal(
-                    onPressed: () async {
-                      await widget.setPlaybackSpeed(i);
-                      KazumiDialog.dismiss();
-                    },
-                    child: Text(i.toString()),
-                  ),
-              ]
-            ],
-          );
-        }),
+        content: Wrap(
+          spacing: 8,
+          runSpacing: Utils.isDesktop() ? 8 : 0,
+          children: [
+            for (final double i in defaultPlaySpeedList) ...<Widget>[
+              if (i == currentSpeed)
+                FilledButton(
+                  onPressed: () async {
+                    await widget.setPlaybackSpeed(i);
+                    KazumiDialog.dismiss();
+                  },
+                  child: Text(i.toString()),
+                )
+              else
+                FilledButton.tonal(
+                  onPressed: () async {
+                    await widget.setPlaybackSpeed(i);
+                    KazumiDialog.dismiss();
+                  },
+                  child: Text(i.toString()),
+                ),
+            ]
+          ],
+        ),
         actions: <Widget>[
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
@@ -274,22 +271,19 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
       String input = "";
       return AlertDialog(
         title: Text(t.playback.controls.skip.title),
-        content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-          return TextField(
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly, // 只允许输入数字
-            ],
-            decoration: InputDecoration(
-              floatingLabelBehavior:
-                  FloatingLabelBehavior.never, // 控制label的显示方式
-              labelText: playerController.forwardTime.toString(),
-            ),
-            onChanged: (value) {
-              input = value;
-            },
-          );
-        }),
+        content: TextField(
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly, // 只允许输入数字
+          ],
+          decoration: InputDecoration(
+            floatingLabelBehavior:
+                FloatingLabelBehavior.never, // 控制label的显示方式
+            labelText: playerController.forwardTime.toString(),
+          ),
+          onChanged: (value) {
+            input = value;
+          },
+        ),
         actions: <Widget>[
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
@@ -317,8 +311,8 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
   @override
   void initState() {
     super.initState();
-    playerController = ref.read(playerControllerProvider.notifier);
-    videoPageController = ref.read(videoControllerProvider.notifier);
+    playerController = ref.read(playerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
     topOffsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.0),
       end: const Offset(0.0, 0.0),
@@ -365,8 +359,8 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(playerControllerProvider);
-    final videoState = ref.watch(videoControllerProvider);
+    final playerState = ref.watch(playerProvider);
+    final videoState = ref.watch(videoProvider);
     final t = context.t;
     return Stack(
       alignment: Alignment.center,

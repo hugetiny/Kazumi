@@ -36,16 +36,16 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       KazumiDialog.dismiss();
       return;
     }
-    ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go('/tab/popular');
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.t; // Get translations
-    final webDavState = ref.watch(webDavSettingsControllerProvider);
+    final webDavState = ref.watch(webDavSettingsProvider);
     final webDavController =
-        ref.read(webDavSettingsControllerProvider.notifier);
+        ref.read(webDavSettingsProvider.notifier);
     final metadataState = ref.watch(metadataSettingsProvider);
     final metadataController = ref.read(metadataSettingsProvider.notifier);
     final localeState = ref.watch(localeSettingsProvider);

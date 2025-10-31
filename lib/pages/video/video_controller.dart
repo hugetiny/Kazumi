@@ -25,7 +25,7 @@ class VideoPageController extends Notifier<VideoPageState> {
 
   @override
   VideoPageState build() {
-    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
     webviewController = ref.read(webviewItemControllerProvider);
     ref.onDispose(cancelQueryRoads);
     return VideoPageState.initial();
@@ -57,7 +57,7 @@ class VideoPageController extends Notifier<VideoPageState> {
   }
 
   void clearEpisodeComments() {
-    state = state.copyWith(resetEpisodeComments: true);
+     state = state.copyWith(episodeComments: []);
   }
 
   void addEpisodeComments(Iterable<EpisodeCommentItem> comments) {

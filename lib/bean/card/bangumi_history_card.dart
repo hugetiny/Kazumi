@@ -44,9 +44,9 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
   @override
   void initState() {
     super.initState();
-    videoPageController = ref.read(videoControllerProvider.notifier);
-    pluginsController = ref.read(pluginsControllerProvider.notifier);
-    historyController = ref.read(historyControllerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
+    historyController = ref.read(historyProvider.notifier);
   }
 
   Widget propertyChip({

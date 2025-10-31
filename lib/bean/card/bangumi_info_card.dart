@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
@@ -7,8 +8,11 @@ import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+/// Provider for chart touched index
+final chartTouchedIndexProvider = StateProvider.autoDispose<int>((ref) => -1);
+
 // 视频卡片 - 水平布局
-class BangumiInfoCardV extends StatefulWidget {
+class BangumiInfoCardV extends ConsumerStatefulWidget {
   const BangumiInfoCardV({
     super.key,
     required this.bangumiItem,
@@ -19,15 +23,16 @@ class BangumiInfoCardV extends StatefulWidget {
   final bool isLoading;
 
   @override
-  State<BangumiInfoCardV> createState() => _BangumiInfoCardVState();
+  ConsumerState<BangumiInfoCardV> createState() => _BangumiInfoCardVState();
 }
 
-class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
-  int touchedIndex = -1;
+class _BangumiInfoCardVState extends ConsumerState<BangumiInfoCardV> {
 
   Widget get voteBarChart {
     final List<int> voteCounts = _normalizedVoteCounts();
     final int totalVotes = _resolveTotalVotes(voteCounts);
+    final touchedIndex = ref.watch(chartTouchedIndexProvider);
+
     if (totalVotes == 0) {
       return const SizedBox.shrink();
     }
@@ -49,16 +54,14 @@ class _BangumiInfoCardVState extends State<BangumiInfoCardV> {
                 gridData: FlGridData(show: false),
                 barTouchData: BarTouchData(
                   touchCallback: (FlTouchEvent event, barTouchResponse) {
-                    setState(() {
-                      if (!event.isInterestedForInteractions ||
-                          barTouchResponse == null ||
-                          barTouchResponse.spot == null) {
-                        touchedIndex = -1;
-                        return;
-                      }
-                      touchedIndex =
-                          barTouchResponse.spot!.touchedBarGroupIndex;
-                    });
+                    if (!event.isInterestedForInteractions ||
+                        barTouchResponse == null ||
+                        barTouchResponse.spot == null) {
+                      ref.read(chartTouchedIndexProvider.notifier).state = -1;
+                      return;
+                    }
+                    ref.read(chartTouchedIndexProvider.notifier).state =
+                        barTouchResponse.spot!.touchedBarGroupIndex;
                   },
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) =>

@@ -14,6 +14,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
+/// ✅ Provider for cache size in MB
+final cacheSizeMBProvider = StateProvider.autoDispose<double>((ref) => -1);
+
+/// ✅ Provider for auto update setting
+final autoUpdateProvider = StateProvider.autoDispose<bool>((ref) {
+  final setting = GStorage.setting;
+  return setting.get(SettingBoxKey.autoUpdate, defaultValue: true);
+});
+
 class AboutPage extends ConsumerStatefulWidget {
   const AboutPage({super.key});
 
@@ -26,15 +35,12 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   late dynamic defaultThemeMode;
   late dynamic defaultThemeColor;
   Box setting = GStorage.setting;
-  late bool autoUpdate;
-  double _cacheSizeMB = -1;
   late final MyController myController;
 
   @override
   void initState() {
     super.initState();
     myController = ref.read(myControllerProvider.notifier);
-    autoUpdate = setting.get(SettingBoxKey.autoUpdate, defaultValue: true);
     _getCacheSize();
   }
 
@@ -58,15 +64,13 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       double totalSizeMB = (totalSizeBytes / (1024 * 1024));
 
       if (mounted) {
-        setState(() {
-          _cacheSizeMB = totalSizeMB;
-        });
+
+        ref.read(cacheSizeMBProvider.notifier).state = totalSizeMB;
       }
     } else {
       if (mounted) {
-        setState(() {
-          _cacheSizeMB = 0.0;
-        });
+
+        ref.read(cacheSizeMBProvider.notifier).state = 0.0;
       }
     }
   }
@@ -137,6 +141,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
     final updates = sections.updates;
     final formattedDanmakuId = links.danmakuId
         .replaceFirst('{id}', danDanAppId.isEmpty ? '-' : danDanAppId);
+
+    // ✅ Watch providers
+    final cacheSizeMB = ref.watch(cacheSizeMBProvider);
+    final autoUpdate = ref.watch(autoUpdateProvider);
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) async {
@@ -211,12 +219,12 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     _showCacheDialog();
                   },
                   title: Text(cache.clearAction),
-                  value: _cacheSizeMB == -1
+                  value: cacheSizeMB == -1
                       ? Text(cache.sizePending)
                       : Text(
                           cache.sizeLabel.replaceFirst(
                             '{size}',
-                            _cacheSizeMB.toStringAsFixed(2),
+                            cacheSizeMB.toStringAsFixed(2),
                           ),
                         ),
                 ),
@@ -227,9 +235,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    autoUpdate = value ?? !autoUpdate;
-                    await setting.put(SettingBoxKey.autoUpdate, autoUpdate);
-                    setState(() {});
+
+                    final newValue = value ?? !autoUpdate;
+                    await setting.put(SettingBoxKey.autoUpdate, newValue);
+                    ref.read(autoUpdateProvider.notifier).state = newValue;
                   },
                   title: Text(updates.autoUpdate),
                   initialValue: autoUpdate,

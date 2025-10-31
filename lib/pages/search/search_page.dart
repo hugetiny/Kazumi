@@ -43,14 +43,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   }
 
   void scrollListener() {
-    final state = ref.read(searchControllerProvider);
+    final state = ref.read(searchProvider);
     if (scrollController.position.pixels >=
             scrollController.position.maxScrollExtent - 200 &&
         !state.isLoading &&
         searchController.text.isNotEmpty &&
         state.bangumiList.length >= 20) {
       ref
-          .read(searchControllerProvider.notifier)
+          .read(searchProvider.notifier)
           .searchBangumi(searchController.text, type: 'add');
     }
   }
@@ -71,10 +71,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .attachSortParams(searchController.text, 'heat');
                     ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .searchBangumi(searchController.text, type: 'init');
                   },
                 ),
@@ -83,10 +83,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .attachSortParams(searchController.text, 'rank');
                     ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .searchBangumi(searchController.text, type: 'init');
                   },
                 ),
@@ -95,10 +95,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   onTap: () {
                     Navigator.pop(context);
                     searchController.text = ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .attachSortParams(searchController.text, 'match');
                     ref
-                        .read(searchControllerProvider.notifier)
+                        .read(searchProvider.notifier)
                         .searchBangumi(searchController.text, type: 'init');
                   },
                 ),
@@ -121,7 +121,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       Future.microtask(() {
         if (mounted) {
           ref
-              .read(searchControllerProvider.notifier)
+              .read(searchProvider.notifier)
               .searchBangumi(tagString, type: 'init');
         }
       });
@@ -157,7 +157,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 suggestionsBuilder: (context, controller) {
                   return [
                     Consumer(builder: (context, ref, _) {
-                      final state = ref.watch(searchControllerProvider);
+                      final state = ref.watch(searchProvider);
                       final query = controller.text.trim();
                       final histories = state.searchHistories;
                       final filtered = query.isEmpty
@@ -184,7 +184,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                               onTap: () {
                                 controller.text = history.keyword;
                                 ref
-                                    .read(searchControllerProvider.notifier)
+                                    .read(searchProvider.notifier)
                                     .searchBangumi(controller.text.trim(), type: 'init');
                                 if (searchController.isOpen) {
                                   searchController.closeView(history.keyword);
@@ -194,7 +194,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                                 icon: const Icon(Icons.close),
                                 onPressed: () async {
                                   await ref
-                                      .read(searchControllerProvider.notifier)
+                                      .read(searchProvider.notifier)
                                       .deleteSearchHistory(history);
                                 },
                               ),
@@ -206,7 +206,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 },
                 onSubmitted: (value) {
                   ref
-                      .read(searchControllerProvider.notifier)
+                      .read(searchProvider.notifier)
                       .searchBangumi(value.trim(), type: 'init');
                   if (searchController.isOpen) {
                     searchController.closeView(value);
@@ -217,7 +217,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           ),
           Expanded(
             child: Consumer(builder: (context, ref, _) {
-              final state = ref.watch(searchControllerProvider);
+              final state = ref.watch(searchProvider);
               if (state.isTimeOut) {
                 return Center(
                   child: SizedBox(
@@ -228,7 +228,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                         GeneralErrorButton(
                           onPressed: () {
                             ref
-                                .read(searchControllerProvider.notifier)
+                                .read(searchProvider.notifier)
                                 .searchBangumi(searchController.text, type: 'init');
                           },
                           text: t.library.common.retry,

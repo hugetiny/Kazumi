@@ -35,14 +35,11 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
   final TextEditingController refererController = TextEditingController();
   bool muliSources = true;
   bool useWebview = true;
-  bool useNativePlayer = true;
-  bool usePost = false;
-  bool useLegacyParser = false;
 
   @override
   void initState() {
     super.initState();
-    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
     final Plugin plugin = widget.plugin;
     apiController.text = plugin.api;
     typeController.text = plugin.type;
@@ -59,9 +56,11 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
     refererController.text = plugin.referer;
     muliSources = plugin.muliSources;
     useWebview = plugin.useWebview;
-    useNativePlayer = plugin.useNativePlayer;
-    usePost = plugin.usePost;
-    useLegacyParser = plugin.useLegacyParser;
+
+    // ✅ Initialize providers with plugin values
+    ref.read(pluginEditorUIProvider.notifier).setUseNativePlayer(plugin.useNativePlayer);
+    ref.read(pluginEditorUIProvider.notifier).setUsePost(plugin.usePost);
+    ref.read(pluginEditorUIProvider.notifier).setUseLegacyParser(plugin.useLegacyParser);
   }
 
   @override
@@ -155,36 +154,48 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
                 ExpansionTile(
                   title: Text(editorTexts.advanced.title),
                   children: [
-                    SwitchListTile(
-                      title: Text(editorTexts.advanced.legacyParser.title),
-                      subtitle:
-                          Text(editorTexts.advanced.legacyParser.subtitle),
-                      value: useLegacyParser,
-                      onChanged: (bool value) {
-                        setState(() {
-                          useLegacyParser = value;
-                        });
+                    // ✅ Use provider for useLegacyParser
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final useLegacyParser = ref.watch(pluginEditorUIProvider.select((s) => s.useLegacyParser));
+                        return SwitchListTile(
+                          title: Text(editorTexts.advanced.legacyParser.title),
+                          subtitle:
+                              Text(editorTexts.advanced.legacyParser.subtitle),
+                          value: useLegacyParser,
+                          onChanged: (bool value) {
+                            ref.read(pluginEditorUIProvider.notifier).setUseLegacyParser(value);
+                          },
+                        );
                       },
                     ),
-                    SwitchListTile(
-                      title: Text(editorTexts.advanced.httpPost.title),
-                      subtitle: Text(editorTexts.advanced.httpPost.subtitle),
-                      value: usePost,
-                      onChanged: (bool value) {
-                        setState(() {
-                          usePost = value;
-                        });
+                    // ✅ Use provider for usePost
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final usePost = ref.watch(pluginEditorUIProvider.select((s) => s.usePost));
+                        return SwitchListTile(
+                          title: Text(editorTexts.advanced.httpPost.title),
+                          subtitle: Text(editorTexts.advanced.httpPost.subtitle),
+                          value: usePost,
+                          onChanged: (bool value) {
+                            ref.read(pluginEditorUIProvider.notifier).setUsePost(value);
+                          },
+                        );
                       },
                     ),
-                    SwitchListTile(
-                      title: Text(editorTexts.advanced.nativePlayer.title),
-                      subtitle:
-                          Text(editorTexts.advanced.nativePlayer.subtitle),
-                      value: useNativePlayer,
-                      onChanged: (bool value) {
-                        setState(() {
-                          useNativePlayer = value;
-                        });
+                    // ✅ Use provider for useNativePlayer
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final useNativePlayer = ref.watch(pluginEditorUIProvider.select((s) => s.useNativePlayer));
+                        return SwitchListTile(
+                          title: Text(editorTexts.advanced.nativePlayer.title),
+                          subtitle:
+                              Text(editorTexts.advanced.nativePlayer.subtitle),
+                          value: useNativePlayer,
+                          onChanged: (bool value) {
+                            ref.read(pluginEditorUIProvider.notifier).setUseNativePlayer(value);
+                          },
+                        );
                       },
                     ),
                     const SizedBox(height: 20),
@@ -227,9 +238,10 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
           plugin.chapterResult = chapterResultController.text;
           plugin.muliSources = muliSources;
           plugin.useWebview = useWebview;
-          plugin.useNativePlayer = useNativePlayer;
-          plugin.usePost = usePost;
-          plugin.useLegacyParser = useLegacyParser;
+          // ✅ Read values from providers
+          plugin.useNativePlayer = ref.read(pluginEditorUIProvider).useNativePlayer;
+          plugin.usePost = ref.read(pluginEditorUIProvider).usePost;
+          plugin.useLegacyParser = ref.read(pluginEditorUIProvider).useLegacyParser;
           plugin.referer = refererController.text;
           pluginsController.updatePlugin(plugin);
           Navigator.of(context).pop();

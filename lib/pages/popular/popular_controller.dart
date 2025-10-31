@@ -1,43 +1,22 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 
+part 'popular_controller.freezed.dart';
+
 /// Popular 页面所需的全部状态
-class PopularState {
-  final String currentTag;
-  final List<BangumiItem> bangumiList; // 按标签获取的番组
-  final List<BangumiItem> trendList; // 热门趋势番组
-  final double scrollOffset;
-  final bool isLoadingMore;
-  final bool isTimeOut;
-
-  const PopularState({
-    this.currentTag = '',
-    this.bangumiList = const [],
-    this.trendList = const [],
-    this.scrollOffset = 0.0,
-    this.isLoadingMore = false,
-    this.isTimeOut = false,
-  });
-
-  PopularState copyWith({
-    String? currentTag,
-    List<BangumiItem>? bangumiList,
-    List<BangumiItem>? trendList,
-    double? scrollOffset,
-    bool? isLoadingMore,
-    bool? isTimeOut,
-  }) {
-    return PopularState(
-      currentTag: currentTag ?? this.currentTag,
-      bangumiList: bangumiList ?? this.bangumiList,
-      trendList: trendList ?? this.trendList,
-      scrollOffset: scrollOffset ?? this.scrollOffset,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      isTimeOut: isTimeOut ?? this.isTimeOut,
-    );
-  }
+@freezed
+class PopularState with _$PopularState {
+  const factory PopularState({
+    @Default('') String currentTag,
+    @Default([]) List<BangumiItem> bangumiList, // 按标签获取的番组
+    @Default([]) List<BangumiItem> trendList, // 热门趋势番组
+    @Default(0.0) double scrollOffset,
+    @Default(false) bool isLoadingMore,
+    @Default(false) bool isTimeOut,
+  }) = _PopularState;
 }
 
 /// 负责处理热门番组/标签番组的加载逻辑

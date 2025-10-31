@@ -27,14 +27,13 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
 
   late final CollectController collectController;
   late final TabController tabController;
-  bool showDelete = false;
-  bool syncing = false;
+  // ✅ showDelete and syncing moved to Riverpod StateProvider
   late final Box setting;
 
   @override
   void initState() {
     super.initState();
-    collectController = ref.read(collectControllerProvider.notifier);
+    collectController = ref.read(collectionsProvider.notifier);
     tabController = TabController(vsync: this, length: _visibleTypes.length);
     setting = GStorage.setting;
   }
@@ -50,7 +49,7 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
       KazumiDialog.dismiss();
       return;
     }
-    ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go('/tab/popular');
   }
 
@@ -58,9 +57,14 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
   Widget build(BuildContext context) {
     final t = context.t;
     final favoritesTexts = t.library.my.favorites;
-    final collectibles = ref.watch(collectControllerProvider).collectibles
+    final collectibles = ref.watch(collectionsProvider).collectibles
         .where((item) => _visibleTypes.contains(item.type))
         .toList();
+
+    // ✅ Watch Riverpod state providers
+    final showDelete = ref.watch(favoritesShowDeleteProvider);
+    final syncing = ref.watch(favoritesSyncingProvider);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -82,9 +86,8 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
           actions: [
             IconButton(
               onPressed: () {
-                setState(() {
-                  showDelete = !showDelete;
-                });
+                // ✅ Update state via Riverpod provider
+                ref.read(favoritesShowDeleteProvider.notifier).state = !showDelete;
               },
               icon: showDelete
                   ? const Icon(Icons.edit_outlined)
@@ -113,14 +116,11 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
             if (syncing) {
               return;
             }
-            setState(() {
-              syncing = true;
-            });
+            // ✅ Update state via Riverpod provider
+            ref.read(favoritesSyncingProvider.notifier).state = true;
             await collectController.syncCollectibles();
             if (mounted) {
-              setState(() {
-                syncing = false;
-              });
+              ref.read(favoritesSyncingProvider.notifier).state = false;
             }
           },
           child: syncing
@@ -181,6 +181,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
     }
 
     final crossCount = _resolveCrossCount(MediaQuery.sizeOf(context).width);
+
+    // ✅ Watch showDelete state from Riverpod provider
+    final showDelete = ref.watch(favoritesShowDeleteProvider);
 
     return CustomScrollView(
       slivers: [

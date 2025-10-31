@@ -95,9 +95,9 @@ class SourceSearchController
 
     _keyword = keyword;
     _activeKeyword = keyword;
-    _pluginsController = ref.read(pluginsControllerProvider.notifier);
+    _pluginsController = ref.read(pluginsProvider.notifier);
 
-    final pluginState = ref.read(pluginsControllerProvider);
+    final pluginState = ref.read(pluginsProvider);
     final initialNames =
         pluginState.pluginList.map((plugin) => plugin.name).toList();
 
@@ -108,7 +108,7 @@ class SourceSearchController
     }
 
     _pluginSubscription = ref.listen<PluginsState>(
-      pluginsControllerProvider,
+      pluginsProvider,
       (previous, next) {
         if (_isDisposed) {
           return;

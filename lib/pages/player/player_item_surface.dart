@@ -8,8 +8,8 @@ class PlayerItemSurface extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerController = ref.watch(playerControllerProvider.notifier);
-    final playerState = ref.watch(playerControllerProvider);
+    final playerController = ref.watch(playerProvider.notifier);
+    final playerState = ref.watch(playerProvider);
     final videoController = playerController.videoController;
 
     if (videoController == null) {

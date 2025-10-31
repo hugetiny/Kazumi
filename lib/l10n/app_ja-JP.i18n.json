@@ -1,157 +1,61 @@
 {
-  "@@locale": "ja-JP",
-  "app": {
-    "title": "Kazumi",
-    "loading": "読み込み中…",
-    "retry": "再試行",
-    "confirm": "確認",
-    "cancel": "キャンセル",
-    "delete": "削除"
-  },
-  "metadata": {
-    "sectionTitle": "作品情報",
-    "refresh": "メタデータを更新",
-    "source": {
-      "bangumi": "Bangumi",
-      "tmdb": "TMDb"
-    },
-    "lastSynced": "最終同期: {timestamp}"
-  },
-  "downloads": {
-    "sectionTitle": "ダウンロードキュー",
-    "aria2Offline": "aria2未接続",
-    "queued": "待機中",
-    "running": "ダウンロード中",
-    "completed": "完了"
-  },
-  "torrent": {
-    "consent": {
-      "title": "BitTorrent使用に関する注意",
-      "description": "BTダウンロードを有効にする前に、現地の法律を遵守し、リスクを理解していることを確認してください。",
-      "agree": "理解しました、続行",
-      "decline": "今はしない"
-    },
-    "error": {
-      "submit": "マグネットリンクを送信できません。後でもう一度お試しください"
-    }
-  },
-  "settings": {
-    "title": "設定",
-    "downloads": "ダウンロード設定",
-    "playback": "再生設定",
-    "general": {
-      "title": "一般",
-      "appearance": "外観",
-      "appearanceDesc": "アプリのテーマとリフレッシュレートを設定",
-      "language": "アプリの言語",
-      "languageDesc": "アプリインターフェースの表示言語を選択",
-      "followSystem": "システムに従う",
-      "exitBehavior": "終了時",
-      "exitApp": "Kazumiを終了",
-      "minimizeToTray": "トレイに最小化",
-      "askEveryTime": "毎回確認する"
-    },
-    "appearancePage": {
-      "title": "外観設定",
-      "mode": {
-        "title": "テーマモード",
-        "system": "システムに合わせる",
-        "light": "ライト",
-        "dark": "ダーク"
-      },
-      "colorScheme": {
-        "title": "アクセントカラー",
-        "dialogTitle": "アクセントカラーを選択",
-        "dynamicColor": "ダイナミックカラーを使用",
-        "dynamicColorInfo": "対応デバイスでは壁紙からカラーパレットを生成します（Android 12+/Windows 11）。",
-        "labels": {
-          "defaultLabel": "デフォルト",
-          "teal": "ティール",
-          "blue": "ブルー",
-          "indigo": "インディゴ",
-          "violet": "バイオレット",
-          "pink": "ピンク",
-          "yellow": "イエロー",
-          "orange": "オレンジ",
-          "deepOrange": "ディープオレンジ"
-        }
-      },
-      "oled": {
-        "title": "OLEDコントラスト",
-        "description": "OLEDディスプレイ向けにより深い黒を適用します。"
-      },
-      "window": {
-        "title": "ウィンドウボタン",
-        "description": "タイトルバーにウィンドウ操作ボタンを表示します。"
-      },
-      "refreshRate": {
-        "title": "リフレッシュレート"
-      }
-    },
-    "source": {
-      "title": "ソース",
-      "ruleManagement": "ルール管理",
-      "ruleManagementDesc": "アニメリソースルールを管理",
-      "githubProxy": "GitHubプロキシ",
-      "githubProxyDesc": "プロキシを使用してルールリポジトリにアクセス"
-    },
     "plugins": {
-      "title": "Rule Management",
-      "empty": "No rules available",
+      "title": "ルール管理",
+      "empty": "利用可能なルールはありません",
       "tooltip": {
-        "updateAll": "Update all",
-        "addRule": "Add rule"
+        "updateAll": "すべて更新",
+        "addRule": "ルールを追加"
       },
       "multiSelect": {
-        "selectedCount": "{count} selected"
+        "selectedCount": "{count} 選択中"
       },
       "loading": {
-        "updating": "Updating rules…",
-        "updatingSingle": "Updating…",
-        "importing": "Importing…"
+        "updating": "ルールを更新しています…",
+        "updatingSingle": "更新中…",
+        "importing": "インポート中…"
       },
       "labels": {
-        "version": "Version: {version}",
-        "statusUpdatable": "Update available",
-        "statusSearchValid": "Search valid"
+        "version": "バージョン: {version}",
+        "statusUpdatable": "更新可能",
+        "statusSearchValid": "検索が有効"
       },
       "actions": {
-        "newRule": "Create rule",
-        "importFromRepo": "Import from repository",
-        "importFromClipboard": "Import from clipboard",
-        "cancel": "Cancel",
-        "import": "Import",
-        "update": "Update",
-        "edit": "Edit",
-        "copyToClipboard": "Copy to clipboard",
-        "share": "Share",
-        "delete": "Delete"
+        "newRule": "ルールを作成",
+        "importFromRepo": "リポジトリからインポート",
+        "importFromClipboard": "クリップボードからインポート",
+        "cancel": "キャンセル",
+        "import": "インポート",
+        "update": "更新",
+        "edit": "編集",
+        "copyToClipboard": "クリップボードにコピー",
+        "share": "共有",
+        "delete": "削除"
       },
       "dialogs": {
-        "deleteTitle": "Delete rules",
-        "deleteMessage": "Delete {count} selected rule(s)?",
-        "importTitle": "Import rule",
-        "shareTitle": "Rule link"
+        "deleteTitle": "ルールを削除",
+        "deleteMessage": "選択した {count} 件のルールを削除しますか？",
+        "importTitle": "ルールをインポート",
+        "shareTitle": "ルールリンク"
       },
       "toast": {
-        "allUpToDate": "All rules are up to date.",
-        "updateCount": "Updated {count} rule(s).",
-        "importSuccess": "Import successful.",
-        "importFailed": "Import failed: {error}",
-        "repoMissing": "The repository does not contain this rule.",
-        "alreadyLatest": "Rule is already the latest.",
-        "updateSuccess": "Update successful.",
-        "updateIncompatible": "Kazumi is too old; this rule is incompatible.",
-        "updateFailed": "Failed to update rule.",
-        "copySuccess": "Copied to clipboard."
+        "allUpToDate": "すべてのルールは最新です。",
+        "updateCount": "{count} 件のルールを更新しました。",
+        "importSuccess": "インポートが成功しました。",
+        "importFailed": "インポートに失敗しました: {error}",
+        "repoMissing": "リポジトリにこのルールは含まれていません。",
+        "alreadyLatest": "ルールは既に最新です。",
+        "updateSuccess": "更新に成功しました。",
+        "updateIncompatible": "Kazumi のバージョンが古いため、このルールは互換性がありません。",
+        "updateFailed": "ルールの更新に失敗しました。",
+        "copySuccess": "クリップボードにコピーしました。"
       },
       "editor": {
         "title": "ルールを編集",
         "fields": {
           "name": "ルール名",
           "version": "バージョン",
-          "baseUrl": "ベースURL",
-          "searchUrl": "検索URL",
+          "baseUrl": "ベース URL",
+          "searchUrl": "検索 URL",
           "searchList": "検索リスト XPath",
           "searchName": "検索タイトル XPath",
           "searchResult": "検索結果 XPath",
@@ -167,47 +71,47 @@
             "subtitle": "互換性のために旧式の XPath パーサーを使用します。"
           },
           "httpPost": {
-            "title": "検索リクエストをPOSTで送信",
+            "title": "検索リクエストを POST で送信",
             "subtitle": "検索リクエストを HTTP POST で送信します。"
           },
           "nativePlayer": {
-            "title": "ネイティブプレーヤーを強制",
+            "title": "ネイティブプレーヤーを優先",
             "subtitle": "再生時に内蔵プレーヤーを優先します。"
           }
         }
       },
       "shop": {
-        "title": "Rule Repository",
+        "title": "ルールリポジトリ",
         "tooltip": {
-          "sortByName": "Sort by name",
-          "sortByUpdate": "Sort by last update",
-          "refresh": "Refresh rule list"
+          "sortByName": "名前で並べ替え",
+          "sortByUpdate": "最終更新で並べ替え",
+          "refresh": "リストを更新"
         },
         "labels": {
           "playerType": {
-            "native": "native",
-            "webview": "webview"
+            "native": "ネイティブ",
+            "webview": "WebView"
           },
-          "lastUpdated": "Last updated: {timestamp}"
+          "lastUpdated": "最終更新: {timestamp}"
         },
         "buttons": {
-          "install": "Add",
-          "installed": "Added",
-          "update": "Update",
-          "toggleMirrorEnable": "Enable mirror",
-          "toggleMirrorDisable": "Disable mirror",
-          "refresh": "Refresh"
+          "install": "追加",
+          "installed": "追加済み",
+          "update": "更新",
+          "toggleMirrorEnable": "ミラーを有効化",
+          "toggleMirrorDisable": "ミラーを無効化",
+          "refresh": "更新"
         },
         "toast": {
-          "importFailed": "Failed to import rule."
+          "importFailed": "ルールのインポートに失敗しました。"
         },
         "error": {
-          "unreachable": "Unable to reach the repository\n{status}",
-          "mirrorEnabled": "Mirror enabled",
-          "mirrorDisabled": "Mirror disabled"
+          "unreachable": "リポジトリに接続できません\\n{status}",
+          "mirrorEnabled": "ミラーを有効化しました",
+          "mirrorDisabled": "ミラーを無効化しました"
         }
-      }
-    },
+        }
+      },
     "metadata": {
       "title": "情報ソース",
       "enableBangumi": "Bangumi情報ソースを有効化",
@@ -237,8 +141,8 @@
       "superResolution": "超解像度",
       "autoJump": "自動ジャンプ",
       "autoJumpDesc": "前回の再生位置にジャンプ",
-      "disableAnimations": "アニメーションを無効化",
-      "disableAnimationsDesc": "プレーヤー内のトランジションアニメーションを無効化",
+  "disableAnimations": "ビデオを無効化",
+  "disableAnimationsDesc": "プレーヤー内のトランジションビデオを無効化",
       "errorPrompt": "エラープロンプト",
       "errorPromptDesc": "プレーヤー内部エラープロンプトを表示",
       "debugMode": "デバッグモード",
@@ -530,55 +434,55 @@
   },
   "library": {
     "common": {
-      "emptyState": "No content found",
-      "retry": "Tap to retry",
-      "backHint": "Press again to exit Kazumi",
+      "emptyState": "コンテンツが見つかりません",
+      "retry": "タップして再試行",
+      "backHint": "もう一度押すと Kazumi を終了します",
       "toast": {
-        "editMode": "Edit mode is active."
+        "editMode": "編集モードが有効です。"
       }
     },
     "popular": {
-      "title": "Trending Anime",
-      "allTag": "Trending",
+      "title": "注目のアニメ",
+      "allTag": "注目",
       "toast": {
-        "backPress": "Press again to exit Kazumi"
+        "backPress": "もう一度押すと Kazumi を終了します"
       }
     },
     "timeline": {
       "weekdays": {
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        "sat": "Sat",
-        "sun": "Sun"
+        "mon": "月",
+        "tue": "火",
+        "wed": "水",
+        "thu": "木",
+        "fri": "金",
+        "sat": "土",
+        "sun": "日"
       },
       "seasonPicker": {
-        "title": "Time Machine",
+        "title": "シーズン選択",
         "yearLabel": "{year}"
       },
       "season": {
         "title": "{season} {year}",
-        "loading": "Loading…",
+        "loading": "読み込み中…",
         "names": {
-          "winter": "Winter",
-          "spring": "Spring",
-          "summer": "Summer",
-          "autumn": "Autumn"
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋"
         },
         "short": {
-          "winter": "Winter",
-          "spring": "Spring",
-          "summer": "Summer",
-          "autumn": "Autumn"
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋"
         }
       },
       "sort": {
-        "title": "Sort order",
-        "byHeat": "Sort by popularity",
-        "byRating": "Sort by rating",
-        "byTime": "Sort by schedule"
+        "title": "並び替え",
+        "byHeat": "人気順",
+        "byRating": "評価順",
+        "byTime": "放送順"
       }
     },
     "search": {
@@ -591,21 +495,21 @@
       "noHistory": "検索履歴はありません"
     },
     "history": {
-      "title": "Watch History",
-      "empty": "No watch history found",
+      "title": "視聴履歴",
+      "empty": "視聴履歴はありません",
       "chips": {
-        "source": "Source",
-        "progress": "Progress",
-        "episodeNumber": "Episode {number}"
+        "source": "ソース",
+        "progress": "進捗",
+        "episodeNumber": "第{number}話"
       },
       "toast": {
-        "sourceMissing": "Associated source not found."
+        "sourceMissing": "関連するソースが見つかりません。"
       },
       "manage": {
-        "title": "History Management",
-        "confirmClear": "Clear all watch history?",
-        "cancel": "Cancel",
-        "confirm": "Confirm"
+        "title": "履歴管理",
+        "confirmClear": "すべての視聴履歴を消去しますか？",
+        "cancel": "キャンセル",
+        "confirm": "確認"
       }
     },
     "info": {
@@ -700,266 +604,266 @@
       }
     },
     "my": {
-      "title": "My",
+      "title": "マイページ",
       "sections": {
-        "video": "Video"
+        "video": "ビデオ"
       },
       "favorites": {
-        "title": "Collections",
-        "description": "View watching, planning, and completed lists",
-        "empty": "No favorites yet.",
+        "title": "コレクション",
+        "description": "視聴中・視聴予定・視聴済みの一覧を表示します",
+        "empty": "お気に入りはまだありません。",
         "tabs": {
-          "watching": "Watching",
-          "planned": "Plan to Watch",
-          "completed": "Completed",
-          "empty": "No entries yet."
+          "watching": "視聴中",
+          "planned": "視聴予定",
+          "completed": "視聴済み",
+          "empty": "まだ項目がありません。"
         },
         "sync": {
-          "disabled": "WebDAV sync is disabled.",
-          "editing": "Cannot sync while in edit mode."
+          "disabled": "WebDAV 同期は無効です。",
+          "editing": "編集モード中は同期できません。"
         }
       },
       "history": {
-        "title": "Playback History",
-        "description": "See shows you've watched"
+        "title": "再生履歴",
+        "description": "視聴した作品を表示します"
       }
     }
   },
   "playback": {
     "toast": {
-      "screenshotProcessing": "Capturing screenshot…",
-      "screenshotSaved": "Screenshot saved to gallery",
-      "screenshotSaveFailed": "Failed to save screenshot: {error}",
-      "screenshotError": "Screenshot failed: {error}",
-      "playlistEmpty": "Playlist is empty",
-      "episodeLatest": "Already at the latest episode",
-      "loadingEpisode": "Loading {identifier}",
-      "danmakuUnsupported": "Danmaku sending is unavailable for this episode",
-      "danmakuEmpty": "Danmaku content cannot be empty",
-      "danmakuTooLong": "Danmaku content is too long",
-      "waitForVideo": "Please wait until the video finishes loading",
-      "enableDanmakuFirst": "Turn on danmaku first",
-      "danmakuSearchError": "Danmaku search failed: {error}",
-      "danmakuSearchEmpty": "No matching results found",
-      "danmakuSwitching": "Switching danmaku",
-      "clipboardCopied": "Copied to clipboard",
-      "internalError": "Player internal error: {details}"
+      "screenshotProcessing": "スクリーンショットを取得中…",
+      "screenshotSaved": "スクリーンショットをギャラリーに保存しました",
+      "screenshotSaveFailed": "スクリーンショットの保存に失敗しました: {error}",
+      "screenshotError": "スクリーンショットに失敗しました: {error}",
+      "playlistEmpty": "プレイリストが空です",
+      "episodeLatest": "既に最新のエピソードです",
+      "loadingEpisode": "{identifier} を読み込み中",
+      "danmakuUnsupported": "この話では弾幕送信が利用できません",
+      "danmakuEmpty": "弾幕の内容は空にできません",
+      "danmakuTooLong": "弾幕が長すぎます",
+      "waitForVideo": "動画の読み込みが完了するまでお待ちください",
+      "enableDanmakuFirst": "先に弾幕を有効にしてください",
+      "danmakuSearchError": "弾幕検索エラー: {error}",
+      "danmakuSearchEmpty": "一致する結果が見つかりません",
+      "danmakuSwitching": "弾幕を切り替えています",
+      "clipboardCopied": "クリップボードにコピーしました",
+      "internalError": "プレーヤー内部エラー: {details}"
     },
     "danmaku": {
-      "inputHint": "Share a friendly danmaku in the moment",
-      "inputDisabled": "Danmaku is turned off",
-      "send": "Send",
-      "mobileButton": "Tap to send danmaku",
-      "mobileButtonDisabled": "Danmaku disabled"
+      "inputHint": "良い弾幕をシェアしよう",
+      "inputDisabled": "弾幕はオフです",
+      "send": "送信",
+      "mobileButton": "タップして弾幕を送信",
+      "mobileButtonDisabled": "弾幕が無効です"
     },
     "externalPlayer": {
-      "launching": "Trying to open external player",
-      "launchFailed": "Unable to open external player",
-      "unavailable": "External player is not available",
-      "unsupportedDevice": "This device is not supported yet",
-      "unsupportedPlugin": "This plugin is not supported yet"
+      "launching": "外部プレーヤーを開いています",
+      "launchFailed": "外部プレーヤーを開けません",
+      "unavailable": "外部プレーヤーは利用できません",
+      "unsupportedDevice": "この端末はまだサポートされていません",
+      "unsupportedPlugin": "このプラグインはまだサポートされていません"
     },
     "controls": {
       "speed": {
-        "title": "Playback speed",
-        "reset": "Default speed"
+        "title": "再生速度",
+        "reset": "デフォルト速度"
       },
       "skip": {
-        "title": "Skip duration",
-        "tooltip": "Long press to change duration"
+        "title": "スキップ時間",
+        "tooltip": "長押しで時間を変更"
       },
       "status": {
-        "fastForward": "Fast forward {seconds} s",
-        "rewind": "Rewind {seconds} s",
-        "speed": "Speed playback"
+        "fastForward": "早送り {seconds} 秒",
+        "rewind": "巻き戻し {seconds} 秒",
+        "speed": "再生速度"
       },
       "superResolution": {
-        "label": "Super resolution",
-        "off": "Off",
-        "balanced": "Balanced",
-        "quality": "Quality"
+        "label": "超解像度",
+        "off": "オフ",
+        "balanced": "バランス",
+        "quality": "画質"
       },
       "speedMenu": {
-        "label": "Speed"
+        "label": "速度"
       },
       "aspectRatio": {
-        "label": "Aspect ratio",
+        "label": "アスペクト比",
         "options": {
-          "auto": "Auto",
-          "crop": "Crop to fill",
-          "stretch": "Stretch to fill"
+          "auto": "自動",
+          "crop": "クロップ表示",
+          "stretch": "全画面表示"
         }
       },
       "tooltips": {
-        "danmakuOn": "Turn off danmaku (d)",
-        "danmakuOff": "Turn on danmaku (d)"
+        "danmakuOn": "弾幕をオフにする (d)",
+        "danmakuOff": "弾幕をオンにする (d)"
       },
       "menu": {
-        "danmakuToggle": "Danmaku switch",
-        "videoInfo": "Video info",
-        "cast": "Remote cast",
-        "external": "Open in external player"
+        "danmakuToggle": "弾幕切替",
+        "videoInfo": "動画情報",
+        "cast": "キャスト",
+        "external": "外部プレーヤーで開く"
       },
       "syncplay": {
         "label": "SyncPlay",
-        "room": "Current room: {name}",
-        "roomEmpty": "Not joined",
-        "latency": "Latency: {ms} ms",
-        "join": "Join room",
-        "switchServer": "Switch server",
-        "disconnect": "Disconnect"
+        "room": "現在のルーム: {name}",
+        "roomEmpty": "未参加",
+        "latency": "レイテンシ: {ms} ms",
+        "join": "参加",
+        "switchServer": "サーバー切替",
+        "disconnect": "切断"
       }
     },
     "loading": {
-      "parsing": "Parsing video source…",
-      "player": "Video source parsed, loading player",
-      "danmakuSearch": "Searching danmaku…"
+      "parsing": "動画ソースを解析中…",
+      "player": "動画ソース解析完了、再生準備中",
+      "danmakuSearch": "弾幕を検索中…"
     },
     "danmakuSearch": {
-      "title": "Danmaku search",
-      "hint": "Series title",
-      "submit": "Submit"
+      "title": "弾幕検索",
+      "hint": "シリーズ名",
+      "submit": "送信"
     },
     "remote": {
-      "title": "Remote cast",
+      "title": "リモート再生",
       "toast": {
-        "searching": "Searching…",
-        "casting": "Attempting to cast to {device}",
-        "error": "DLNA error: {details}\nTry reopening the DLNA panel or choosing another device."
+        "searching": "検索中…",
+        "casting": "{device} にキャストを試行中",
+        "error": "DLNA エラー: {details}\nDLNA パネルを再度開くか別のデバイスを選択してください。"
       }
     },
     "debug": {
-      "title": "Debug info",
-      "closeTooltip": "Close debug info",
+      "title": "デバッグ情報",
+      "closeTooltip": "デバッグ情報を閉じる",
       "tabs": {
-        "status": "Status",
-        "logs": "Logs"
+        "status": "状態",
+        "logs": "ログ"
       },
       "sections": {
-        "source": "Playback source",
-        "playback": "Player status",
-        "timing": "Timing & metrics",
-        "media": "Media tracks"
+        "source": "再生ソース",
+        "playback": "プレーヤー状態",
+        "timing": "タイミング & メトリクス",
+        "media": "メディアトラック"
       },
       "labels": {
-        "series": "Series",
-        "plugin": "Plugin",
-        "route": "Route",
-        "episode": "Episode",
-        "routeCount": "Route count",
-        "sourceTitle": "Source title",
-        "parsedUrl": "Parsed URL",
-        "playUrl": "Playback URL",
+        "series": "シリーズ",
+        "plugin": "プラグイン",
+        "route": "ルート",
+        "episode": "エピソード",
+        "routeCount": "ルート数",
+        "sourceTitle": "ソースタイトル",
+        "parsedUrl": "解析済み URL",
+        "playUrl": "再生 URL",
         "danmakuId": "DanDan ID",
-        "syncRoom": "SyncPlay room",
+        "syncRoom": "SyncPlay ルーム",
         "syncLatency": "SyncPlay RTT",
-        "nativePlayer": "Native player",
-        "parsing": "Parsing",
-        "playerLoading": "Player loading",
-        "playerInitializing": "Player initializing",
-        "playing": "Playing",
-        "buffering": "Buffering",
-        "completed": "Playback completed",
-        "bufferFlag": "Buffer flag",
-        "currentPosition": "Current position",
-        "bufferProgress": "Buffer progress",
-        "duration": "Duration",
-        "speed": "Playback speed",
-        "volume": "Volume",
-        "brightness": "Brightness",
-        "resolution": "Resolution",
-        "aspectRatio": "Aspect ratio",
-        "superResolution": "Super resolution",
-        "videoParams": "Video params",
-        "audioParams": "Audio params",
-        "playlist": "Playlist",
-        "audioTracks": "Audio tracks",
-        "videoTracks": "Video tracks",
-        "audioBitrate": "Audio bitrate"
+        "nativePlayer": "ネイティブプレーヤー",
+        "parsing": "解析中",
+        "playerLoading": "プレーヤー読み込み中",
+        "playerInitializing": "プレーヤー初期化中",
+        "playing": "再生中",
+        "buffering": "バッファリング",
+        "completed": "再生完了",
+        "bufferFlag": "バッファフラグ",
+        "currentPosition": "現在の位置",
+        "bufferProgress": "バッファ進捗",
+        "duration": "再生時間",
+        "speed": "再生速度",
+        "volume": "音量",
+        "brightness": "明るさ",
+        "resolution": "解像度",
+        "aspectRatio": "アスペクト比",
+        "superResolution": "超解像度",
+        "videoParams": "ビデオパラメータ",
+        "audioParams": "オーディオパラメータ",
+        "playlist": "プレイリスト",
+        "audioTracks": "オーディオトラック",
+        "videoTracks": "ビデオトラック",
+        "audioBitrate": "オーディオビットレート"
       },
       "values": {
-        "yes": "Yes",
-        "no": "No"
+        "yes": "はい",
+        "no": "いいえ"
       },
       "logs": {
-        "playerEmpty": "Player log (0)",
-        "playerSummary": "Player log ({count} entries, showing {displayed})",
-        "webviewEmpty": "WebView log (0)",
-        "webviewSummary": "WebView log ({count} entries, showing {displayed})"
+        "playerEmpty": "プレーヤーログ (0)",
+        "playerSummary": "プレーヤーログ ({count} 件、表示 {displayed})",
+        "webviewEmpty": "WebView ログ (0)",
+        "webviewSummary": "WebView ログ ({count} 件、表示 {displayed})"
       }
     },
     "syncplay": {
-      "invalidEndpoint": "SyncPlay: Invalid server address {endpoint}",
-      "disconnected": "SyncPlay: Connection interrupted {reason}",
-      "actionReconnect": "Reconnect",
-      "alone": "SyncPlay: You are the only user in this room",
-      "followUser": "SyncPlay: Using {username}'s progress",
-      "userLeft": "SyncPlay: {username} left the room",
-      "userJoined": "SyncPlay: {username} joined the room",
-      "switchEpisode": "SyncPlay: {username} switched to episode {episode}",
-      "chat": "SyncPlay: {username} said: {message}",
-      "paused": "SyncPlay: {username} paused playback",
-      "resumed": "SyncPlay: {username} resumed playback",
-      "unknownUser": "unknown",
-      "switchServerBlocked": "SyncPlay: Exit the current room before switching servers",
-      "defaultCustomEndpoint": "Custom server",
+      "invalidEndpoint": "SyncPlay: 無効なサーバーアドレス {endpoint}",
+      "disconnected": "SyncPlay: 接続が中断されました {reason}",
+      "actionReconnect": "再接続",
+      "alone": "SyncPlay: このルームにあなたしかいません",
+      "followUser": "SyncPlay: {username} の進捗に追従しています",
+      "userLeft": "SyncPlay: {username} が退室しました",
+      "userJoined": "SyncPlay: {username} が入室しました",
+      "switchEpisode": "SyncPlay: {username} がエピソード {episode} に切り替えました",
+      "chat": "SyncPlay: {username} さんの発言: {message}",
+      "paused": "SyncPlay: {username} が一時停止しました",
+      "resumed": "SyncPlay: {username} が再開しました",
+      "unknownUser": "不明",
+      "switchServerBlocked": "SyncPlay: サーバーを切り替える前に現在のルームを退出してください",
+      "defaultCustomEndpoint": "カスタムサーバー",
       "selectServer": {
-        "title": "Choose server",
-        "customTitle": "Custom server",
-        "customHint": "Enter server URL",
-        "duplicateOrEmpty": "Server URL must be unique and non-empty"
+        "title": "サーバーを選択",
+        "customTitle": "カスタムサーバー",
+        "customHint": "サーバー URL を入力",
+        "duplicateOrEmpty": "サーバー URL は重複せず空であってはなりません"
       },
       "join": {
-        "title": "Join room",
-        "roomLabel": "Room ID",
-        "roomEmpty": "Enter a room ID",
-        "roomInvalid": "Room ID must be 6 to 10 digits",
-        "usernameLabel": "Username",
-        "usernameEmpty": "Enter a username",
-        "usernameInvalid": "Username must be 4 to 12 letters"
+        "title": "ルームに参加",
+        "roomLabel": "ルーム ID",
+        "roomEmpty": "ルーム ID を入力してください",
+        "roomInvalid": "ルーム ID は6〜10桁である必要があります",
+        "usernameLabel": "ユーザー名",
+        "usernameEmpty": "ユーザー名を入力してください",
+        "usernameInvalid": "ユーザー名は4〜12文字の英字である必要があります"
       }
     },
     "playlist": {
-      "collection": "Collection",
-      "list": "Playlist {index}"
+      "collection": "コレクション",
+      "list": "プレイリスト {index}"
     },
     "tabs": {
-      "episodes": "Episodes",
-      "comments": "Comments"
+      "episodes": "エピソード",
+      "comments": "コメント"
     },
     "comments": {
-      "sectionTitle": "Episode title",
-      "manualSwitch": "Switch manually",
-      "dialogTitle": "Enter episode number",
-      "dialogEmpty": "Please enter an episode number",
-      "dialogConfirm": "Refresh"
+      "sectionTitle": "エピソードタイトル",
+      "manualSwitch": "手動で切り替え",
+      "dialogTitle": "エピソード番号を入力",
+      "dialogEmpty": "エピソード番号を入力してください",
+      "dialogConfirm": "更新"
     },
     "superResolution": {
       "warning": {
-        "title": "Performance warning",
-        "message": "Enabling super resolution (quality) may cause stutter. Continue?",
-        "dontAskAgain": "Don't ask again"
+        "title": "パフォーマンス警告",
+        "message": "超解像度（画質優先）を有効にすると再生がカクつく可能性があります。続行しますか？",
+        "dontAskAgain": "次回から表示しない"
       }
     }
   },
   "network": {
     "error": {
-      "badCertificate": "Certificate error.",
-      "badResponse": "Server error. Please try again later.",
-      "cancel": "Request was cancelled. Please retry.",
-      "connection": "Connection error. Check your network settings.",
-      "connectionTimeout": "Connection timed out. Check your network settings.",
-      "receiveTimeout": "Response timed out. Please try again.",
-      "sendTimeout": "Request timed out. Check your network settings.",
-      "unknown": "{status} network issue."
+      "badCertificate": "証明書エラー。",
+      "badResponse": "サーバーエラーが発生しました。後でもう一度お試しください。",
+      "cancel": "リクエストがキャンセルされました。再試行してください。",
+      "connection": "接続エラー。ネットワーク設定を確認してください。",
+      "connectionTimeout": "接続がタイムアウトしました。ネットワーク設定を確認してください。",
+      "receiveTimeout": "応答がタイムアウトしました。もう一度お試しください。",
+      "sendTimeout": "送信がタイムアウトしました。ネットワーク設定を確認してください。",
+      "unknown": "{status} のネットワーク問題。"
     },
     "status": {
-      "mobile": "Using mobile data",
-      "wifi": "Using Wi-Fi",
-      "ethernet": "Using Ethernet",
-      "vpn": "Using VPN connection",
-      "other": "Using another network",
-      "none": "No network connection"
+      "mobile": "モバイルデータを使用中",
+      "wifi": "Wi‑Fiを使用中",
+      "ethernet": "有線 LAN を使用中",
+      "vpn": "VPN接続を使用中",
+      "other": "別のネットワークを使用中",
+      "none": "ネットワークに接続されていません"
     }
   }
 }

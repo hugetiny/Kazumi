@@ -37,8 +37,8 @@ class _InitPageState extends ConsumerState<InitPage> {
   @override
   void initState() {
     super.initState();
-  pluginsController = ref.read(pluginsControllerProvider.notifier);
-    collectController = ref.read(collectControllerProvider.notifier);
+  pluginsController = ref.read(pluginsProvider.notifier);
+    collectController = ref.read(collectionsProvider.notifier);
     shadersController = ref.read(shadersControllerProvider);
     myController = ref.read(myControllerProvider.notifier);
     setting = GStorage.setting;

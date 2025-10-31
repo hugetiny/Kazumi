@@ -20,6 +20,11 @@ import 'package:logger/logger.dart';
 
 enum SourceSortOption { original, nameAsc, nameDesc }
 
+/// Provider for source sort option
+final sourceSortOptionProvider = StateProvider.autoDispose<SourceSortOption>(
+  (ref) => SourceSortOption.original,
+);
+
 class SourceSheet extends ConsumerStatefulWidget {
   const SourceSheet({
     super.key,
@@ -36,13 +41,12 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   late final VideoPageController videoPageController;
   late final CollectController collectController;
   late final String _originalKeyword;
-  SourceSortOption _sortOption = SourceSortOption.original;
 
   @override
   void initState() {
     super.initState();
-    videoPageController = ref.read(videoControllerProvider.notifier);
-    collectController = ref.read(collectControllerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
+    collectController = ref.read(collectionsProvider.notifier);
     _originalKeyword = widget.infoController.bangumiItem.nameCn.isEmpty
         ? widget.infoController.bangumiItem.name
         : widget.infoController.bangumiItem.nameCn;
@@ -157,8 +161,8 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     }
   }
 
-  List<_SourceEntry> _sortedEntries(List<_SourceEntry> entries) {
-    switch (_sortOption) {
+  List<_SourceEntry> _sortedEntries(List<_SourceEntry> entries, SourceSortOption sortOption) {
+    switch (sortOption) {
       case SourceSortOption.original:
         return entries;
       case SourceSortOption.nameAsc:
@@ -281,18 +285,18 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
 
   PopupMenuButton<SourceSortOption> _buildSortMenu() {
     final sortTexts = context.t.library.info.sourceSheet.sort;
+    final sortOption = ref.watch(sourceSortOptionProvider);
+
     return PopupMenuButton<SourceSortOption>(
       tooltip: sortTexts.tooltip
-          .replaceFirst('{label}', _sortOptionLabel(_sortOption)),
+          .replaceFirst('{label}', _sortOptionLabel(sortOption)),
       icon: const Icon(Icons.sort_rounded),
       onSelected: (option) {
-        setState(() {
-          _sortOption = option;
-        });
+        ref.read(sourceSortOptionProvider.notifier).state = option;
       },
       itemBuilder: (context) {
         return SourceSortOption.values.map((option) {
-          final selected = option == _sortOption;
+          final selected = option == sortOption;
           return PopupMenuItem<SourceSortOption>(
             value: option,
             child: Row(
@@ -464,7 +468,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
               onPressed: () async {
                 KazumiDialog.dismiss();
                 await ref
-                    .read(pluginsControllerProvider.notifier)
+                    .read(pluginsProvider.notifier)
                     .removePlugin(plugin);
                 KazumiDialog.showToast(
                   message: dialogContext
@@ -482,7 +486,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final pluginState = ref.watch(pluginsControllerProvider);
+    final pluginState = ref.watch(pluginsProvider);
     final plugins = pluginState.pluginList;
 
     if (plugins.isEmpty) {
@@ -494,9 +498,10 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     final searchState = ref.watch(sourceSearchProvider(_originalKeyword));
     final searchController =
         ref.read(sourceSearchProvider(_originalKeyword).notifier);
+    final sortOption = ref.watch(sourceSortOptionProvider);
 
     final aggregation = _aggregateResults(plugins, searchState);
-    final sortedEntries = _sortedEntries(aggregation.entries);
+    final sortedEntries = _sortedEntries(aggregation.entries, sortOption);
     final statusCards = _buildStatusCards(
       pending: aggregation.pending,
       errors: aggregation.errors,

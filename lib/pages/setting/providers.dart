@@ -92,7 +92,17 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 }
 
-final themeNotifierProvider =
+/// 主题设置 Provider
+///
+/// 管理应用主题模式、动态取色、种子色和 OLED 增强。
+/// 支持跟随系统、浅色、深色三种主题模式。
+///
+/// 示例:
+/// ```dart
+/// final controller = ref.read(themeProvider.notifier);
+/// await controller.updateThemeMode(ThemeMode.dark);
+/// ```
+final themeProvider =
     NotifierProvider<ThemeNotifier, ThemeState>(ThemeNotifier.new);
 
 class PlayerSettingsState {
@@ -375,3 +385,9 @@ final localeSettingsProvider =
     NotifierProvider<LocaleSettingsNotifier, LocaleSettingsState>(
   LocaleSettingsNotifier.new,
 );
+
+/// ✅ Provider for show window button setting
+final showWindowButtonProvider = StateProvider<bool>((ref) {
+  final setting = GStorage.setting;
+  return setting.get(SettingBoxKey.showWindowButton, defaultValue: false);
+});

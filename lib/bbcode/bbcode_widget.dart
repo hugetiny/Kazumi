@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:antlr4/antlr4.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,17 +11,19 @@ import 'bbcode_elements.dart';
 import 'generated/BBCodeParser.dart';
 import 'generated/BBCodeLexer.dart';
 
-class BBCodeWidget extends StatefulWidget {
+/// Provider for BBCode masked content visibility
+final bbcodeMaskedVisibilityProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+class BBCodeWidget extends ConsumerStatefulWidget {
   const BBCodeWidget({super.key, required this.bbcode});
 
   final String bbcode;
 
   @override
-  State<StatefulWidget> createState() => _BBCodeWidgetState();
+  ConsumerState<BBCodeWidget> createState() => _BBCodeWidgetState();
 }
 
-class _BBCodeWidgetState extends State<BBCodeWidget> {
-  bool _isVisible = false;
+class _BBCodeWidgetState extends ConsumerState<BBCodeWidget> {
 
   /// color 可以为三种表现形式
   ///
@@ -70,13 +73,15 @@ class _BBCodeWidgetState extends State<BBCodeWidget> {
     ParseTreeWalker.DEFAULT.walk(bbcodeBaseListener, tree);
     bbCodeTag.clear();
 
+    final isVisible = ref.watch(bbcodeMaskedVisibilityProvider);
+
     return Wrap(
       children: [
         SelectableText.rich(
           TextSpan(
             children: bbcodeBaseListener.bbcode.map((e) {
               if (e is BBCodeText) {
-                Color? textColor = (!_isVisible && e.masked)
+                Color? textColor = (!isVisible && e.masked)
                     ? Colors.transparent
                     : (e.link != null)
                         ? Colors.blue
@@ -93,12 +98,10 @@ class _BBCodeWidgetState extends State<BBCodeWidget> {
                   recognizer: TapGestureRecognizer()
                     ..onTap = (e.link != null || e.masked)
                         ? () {
-                            if ((!e.masked || _isVisible) && e.link != null) {
+                            if ((!e.masked || isVisible) && e.link != null) {
                               launchUrl(Uri.parse(e.link!));
                             } else if (e.masked) {
-                              setState(() {
-                                _isVisible = !_isVisible;
-                              });
+                              ref.read(bbcodeMaskedVisibilityProvider.notifier).state = !isVisible;
                             }
                           }
                         : null,
@@ -114,7 +117,7 @@ class _BBCodeWidgetState extends State<BBCodeWidget> {
                     fontSize: e.size.toDouble(),
                     color: textColor,
                     backgroundColor:
-                        (!_isVisible && e.masked) ? Color(0xFF555555) : null,
+                        (!isVisible && e.masked) ? Color(0xFF555555) : null,
                     fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 );

@@ -6,7 +6,17 @@ import 'package:kazumi/request/bangumi.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:logger/logger.dart';
 
-final videoControllerProvider =
+/// 视频播放页面 Provider
+///
+/// 管理番剧剧集列表、播放线路和 WebView 抓取。
+/// 协调播放器控制和剧集切换逻辑。
+///
+/// 示例:
+/// ```dart
+/// final controller = ref.read(videoProvider.notifier);
+/// await controller.changeEpisode(episodeIndex, roadIndex);
+/// ```
+final videoProvider =
     NotifierProvider<VideoPageController, VideoPageState>(
   VideoPageController.new,
 );
@@ -54,3 +64,19 @@ final episodeCommentsProvider = AsyncNotifierProvider.autoDispose
     .family<EpisodeCommentsNotifier, List<EpisodeCommentItem>, (int, int)>(
   EpisodeCommentsNotifier.new,
 );
+
+// ✅ Episode Comments Sheet UI State
+// Stores manually selected episode number (null means use current episode)
+final selectedEpisodeProvider = StateProvider.autoDispose<int?>((ref) => null);
+
+// ✅ Video Page UI State Providers
+final showDebugLogProvider = StateProvider.autoDispose<bool>((ref) => false);
+final webviewLogLinesProvider = StateProvider.autoDispose<List<String>>((ref) => []);
+final currentRoadProvider = StateProvider.autoDispose<int>((ref) => 0);
+
+/// Provider for current episode number (replaces EpisodeInfo InheritedWidget)
+/// This is computed from videoState and used by EpisodeCommentsSheet
+final currentEpisodeNumberProvider = Provider.autoDispose<int>((ref) {
+  final videoState = ref.watch(videoProvider);
+  return videoState.currentEpisode;
+});

@@ -45,10 +45,10 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       length: _weekdayCount,
       initialIndex: initialIndex,
     );
-    timelineController = ref.read(timelineControllerProvider.notifier);
+    timelineController = ref.read(timelineProvider.notifier);
 
     // Use Future.microtask instead of PostFrameCallback for initial load
-    final state = ref.read(timelineControllerProvider);
+    final state = ref.read(timelineProvider);
     if (state.bangumiCalendar.isEmpty) {
       Future.microtask(() {
         if (mounted) {
@@ -69,7 +69,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       KazumiDialog.dismiss();
       return;
     }
-  ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+  ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go('/tab/popular');
   }
 
@@ -240,7 +240,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
   Widget buildSeasonSegmentedButton(
       BuildContext context, List<DateTime> availableSeasons) {
     DateTime? selectedSeason;
-    final state = ref.read(timelineControllerProvider);
+    final state = ref.read(timelineProvider);
     for (final season in availableSeasons) {
       if (Utils.isSameSeason(state.selectedDate, season)) {
         selectedSeason = season;
@@ -350,7 +350,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
 
   void onSeasonSelected(DateTime date) async {
     final currDate = DateTime.now();
-    final state = ref.read(timelineControllerProvider);
+    final state = ref.read(timelineProvider);
     timelineController.tryEnterSeason(date);
     if (Utils.isSameSeason(state.selectedDate, currDate)) {
       await timelineController.getSchedules();
@@ -402,7 +402,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(timelineControllerProvider);
+    final state = ref.watch(timelineProvider);
     final translations = context.t;
     final timelineTexts = translations.library.timeline;
     final commonTexts = translations.library.common;

@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_windows/webview_windows.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 
-class WebviewWindowsItemImpel extends StatefulWidget {
+/// Provider for webview windows initialization state
+final webviewWindowsInitializedProvider = StateProvider.autoDispose<int>((ref) => 0);
+
+class WebviewWindowsItemImpel extends ConsumerStatefulWidget {
   const WebviewWindowsItemImpel({
     super.key,
     required this.webviewController,
@@ -16,11 +20,11 @@ class WebviewWindowsItemImpel extends StatefulWidget {
   final VideoPageController videoPageController;
 
   @override
-  State<WebviewWindowsItemImpel> createState() =>
+  ConsumerState<WebviewWindowsItemImpel> createState() =>
       _WebviewWindowsItemImpelState();
 }
 
-class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
+class _WebviewWindowsItemImpelState extends ConsumerState<WebviewWindowsItemImpel> {
   final List<StreamSubscription> _subscriptions = [];
 
   @override
@@ -56,7 +60,7 @@ class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
     }
     if (!mounted) return;
 
-    setState(() {});
+    ref.read(webviewWindowsInitializedProvider.notifier).state++;
   }
 
   Widget get compositeView {
@@ -76,6 +80,8 @@ class _WebviewWindowsItemImpelState extends State<WebviewWindowsItemImpel> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the provider to trigger rebuild when webview is initialized
+    ref.watch(webviewWindowsInitializedProvider);
     return compositeView;
   }
 }

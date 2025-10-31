@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/bean/card/comments_card.dart';
@@ -10,56 +11,37 @@ import 'package:skeletonizer/skeletonizer.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
-import 'package:kazumi/modules/characters/character_item.dart';
 import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
-import 'package:kazumi/modules/staff/staff_item.dart';
+import 'package:kazumi/pages/info/providers.dart';
 
-class InfoTabView extends StatefulWidget {
+class InfoTabView extends ConsumerStatefulWidget {
   const InfoTabView({
     super.key,
-    required this.commentsQueryTimeout,
-    required this.charactersQueryTimeout,
-    required this.staffQueryTimeout,
     required this.tabController,
-    required this.loadMoreComments,
-    required this.loadCharacters,
-    required this.loadStaff,
     required this.bangumiItem,
     required this.commentsList,
-    required this.characterList,
-    required this.staffList,
     required this.isLoading,
     required this.metadataRecord,
     required this.metadataLoading,
     this.onRefreshMetadata,
   });
 
-  final bool commentsQueryTimeout;
-  final bool charactersQueryTimeout;
-  final bool staffQueryTimeout;
   final TabController tabController;
-  final Future<void> Function({int offset}) loadMoreComments;
-  final Future<void> Function() loadCharacters;
-  final Future<void> Function() loadStaff;
   final BangumiItem bangumiItem;
   final List<CommentItem> commentsList;
-  final List<CharacterItem> characterList;
-  final List<StaffFullItem> staffList;
   final bool isLoading;
   final MetadataRecord? metadataRecord;
   final bool metadataLoading;
   final VoidCallback? onRefreshMetadata;
 
   @override
-  State<InfoTabView> createState() => _InfoTabViewState();
+  ConsumerState<InfoTabView> createState() => _InfoTabViewState();
 }
 
-class _InfoTabViewState extends State<InfoTabView>
+class _InfoTabViewState extends ConsumerState<InfoTabView>
     with SingleTickerProviderStateMixin {
   final maxWidth = 950.0;
-  bool fullIntro = false;
-  bool fullTag = false;
-  bool showAllEpisodes = false;
+  // ✅ fullIntro, fullTag, showAllEpisodes moved to Riverpod StateProvider
 
   Widget get infoBody {
     final infoTexts = context.t.library.info;
@@ -100,6 +82,9 @@ class _InfoTabViewState extends State<InfoTabView>
 
   Widget _buildSummarySection() {
     final summaryTexts = context.t.library.info.summary;
+    // ✅ Watch fullIntro state from Riverpod provider
+    final fullIntro = ref.watch(infoUIProvider.select((s) => s.fullIntro));
+
     return LayoutBuilder(builder: (context, constraints) {
       final TextSpan span = TextSpan(text: widget.bangumiItem.summary);
       final TextPainter painter =
@@ -125,9 +110,8 @@ class _InfoTabViewState extends State<InfoTabView>
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  fullIntro = !fullIntro;
-                });
+                // ✅ Update state via Riverpod provider
+                ref.read(infoUIProvider.notifier).toggleFullIntro();
               },
               child: Text(
                 fullIntro ? summaryTexts.collapse : summaryTexts.expand,
@@ -147,6 +131,9 @@ class _InfoTabViewState extends State<InfoTabView>
 
   Widget _buildTagsSection() {
     final tagsTexts = context.t.library.info.tags;
+    // ✅ Watch fullTag state from Riverpod provider
+    final fullTag = ref.watch(infoUIProvider.select((s) => s.fullTag));
+
     return Wrap(
       spacing: 8.0,
       runSpacing: Utils.isDesktop() ? 8 : 0,
@@ -163,9 +150,8 @@ class _InfoTabViewState extends State<InfoTabView>
               ),
             ),
             onPressed: () {
-              setState(() {
-                fullTag = !fullTag;
-              });
+              // ✅ Update state via Riverpod provider
+              ref.read(infoUIProvider.notifier).toggleFullTag();
             },
           );
         }
@@ -300,6 +286,8 @@ class _InfoTabViewState extends State<InfoTabView>
 
     final episodesTexts = context.t.library.info.episodes;
     final List<EpisodeMetadata> episodes = record.episodes;
+    // ✅ Watch showAllEpisodes state from Riverpod provider
+    final showAllEpisodes = ref.watch(infoUIProvider.select((s) => s.showAllEpisodes));
     final List<EpisodeMetadata> visibleEpisodes = showAllEpisodes
         ? episodes
         : episodes.take(10).toList(growable: false);
@@ -319,9 +307,8 @@ class _InfoTabViewState extends State<InfoTabView>
           if (episodes.length > visibleEpisodes.length)
             TextButton(
               onPressed: () {
-                setState(() {
-                  showAllEpisodes = !showAllEpisodes;
-                });
+                // ✅ Update state via Riverpod provider
+                ref.read(infoUIProvider.notifier).toggleShowAllEpisodes();
               },
               child: Text(
                 showAllEpisodes
@@ -466,89 +453,65 @@ class _InfoTabViewState extends State<InfoTabView>
   Widget get commentsListBody {
     return Builder(
       builder: (BuildContext context) {
-        final infoTexts = context.t.library.info;
-        final errorsTexts = infoTexts.errors;
-        final appTexts = context.t.app;
-        return NotificationListener<ScrollEndNotification>(
-          onNotification: (scrollEnd) {
-            final metrics = scrollEnd.metrics;
-            if (metrics.pixels >= metrics.maxScrollExtent - 200) {
-              widget.loadMoreComments(offset: widget.commentsList.length);
-            }
-            return true;
-          },
-          child: CustomScrollView(
-            scrollBehavior: const ScrollBehavior().copyWith(
-              scrollbars: false,
+        // TODO: 评论区分页加载需要使用不同的 provider 模式
+        // 当前保留使用 info_controller 的 commentsList
+        return CustomScrollView(
+          scrollBehavior: const ScrollBehavior().copyWith(
+            scrollbars: false,
+          ),
+          key: const PageStorageKey<String>('comments'),
+          slivers: <Widget>[
+            SliverOverlapInjector(
+              handle:
+                  NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             ),
-            key: const PageStorageKey<String>('comments'),
-            slivers: <Widget>[
-              SliverOverlapInjector(
-                handle:
-                    NestedScrollView.sliverOverlapAbsorberHandleFor(context),
-              ),
-              SliverLayoutBuilder(builder: (context, _) {
-                if (widget.commentsList.isNotEmpty) {
-                  return SliverList.separated(
-                    addAutomaticKeepAlives: false,
-                    itemCount: widget.commentsList.length,
-                    itemBuilder: (context, index) {
-                      return SafeArea(
-                        top: false,
-                        bottom: false,
-                        child: Center(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: SizedBox(
-                              width: MediaQuery.sizeOf(context).width > maxWidth
-                                  ? maxWidth
-                                  : MediaQuery.sizeOf(context).width - 32,
-                              child: CommentsCard(
-                                commentItem: widget.commentsList[index],
-                              ),
+            SliverLayoutBuilder(builder: (context, _) {
+              if (widget.commentsList.isNotEmpty) {
+                return SliverList.separated(
+                  addAutomaticKeepAlives: false,
+                  itemCount: widget.commentsList.length,
+                  itemBuilder: (context, index) {
+                    return SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: Center(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width > maxWidth
+                                ? maxWidth
+                                : MediaQuery.sizeOf(context).width - 32,
+                            child: CommentsCard(
+                              commentItem: widget.commentsList[index],
                             ),
                           ),
                         ),
-                      );
-                    },
-                    separatorBuilder: (BuildContext context, int index) {
-                      return SafeArea(
-                        top: false,
-                        bottom: false,
-                        child: Center(
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: SizedBox(
-                              width: MediaQuery.sizeOf(context).width > maxWidth
-                                  ? maxWidth
-                                  : MediaQuery.sizeOf(context).width - 32,
-                              child: Divider(
-                                  thickness: 0.5, indent: 10, endIndent: 10),
-                            ),
+                      ),
+                    );
+                  },
+                  separatorBuilder: (BuildContext context, int index) {
+                    return SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: Center(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width > maxWidth
+                                ? maxWidth
+                                : MediaQuery.sizeOf(context).width - 32,
+                            child: Divider(
+                                thickness: 0.5, indent: 10, endIndent: 10),
                           ),
                         ),
-                      );
-                    },
-                  );
-                }
-                if (widget.commentsQueryTimeout) {
-                  return SliverFillRemaining(
-                    child: GeneralErrorWidget(
-                      errMsg: errorsTexts.fetchFailed,
-                      actions: [
-                        GeneralErrorButton(
-                          onPressed: () {
-                            widget.loadMoreComments(
-                                offset: widget.commentsList.length);
-                          },
-                          text: appTexts.retry,
-                        ),
-                      ],
-                    ),
-                  );
-                }
+                      ),
+                    );
+                  },
+                );
+              }
+              if (widget.isLoading) {
                 return SliverList.builder(
                   itemCount: 4,
                   itemBuilder: (context, _) {
@@ -569,9 +532,14 @@ class _InfoTabViewState extends State<InfoTabView>
                     );
                   },
                 );
-              })
-            ],
-          ),
+              }
+              return SliverFillRemaining(
+                child: Center(
+                  child: Text(context.t.library.common.emptyState),
+                ),
+              );
+            })
+          ],
         );
       },
     );
@@ -583,6 +551,10 @@ class _InfoTabViewState extends State<InfoTabView>
         final infoTexts = context.t.library.info;
         final errorsTexts = infoTexts.errors;
         final appTexts = context.t.app;
+
+        // ✅ Use Riverpod provider for staff
+        final staffAsync = ref.watch(bangumiStaffsProvider(widget.bangumiItem.id));
+
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
             scrollbars: false,
@@ -593,60 +565,67 @@ class _InfoTabViewState extends State<InfoTabView>
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             ),
             SliverLayoutBuilder(builder: (context, _) {
-              if (widget.staffList.isNotEmpty) {
-                return SliverList.builder(
-                  itemCount: widget.staffList.length,
-                  itemBuilder: (context, index) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: SizedBox(
-                          width: MediaQuery.sizeOf(context).width > maxWidth
-                              ? maxWidth
-                              : MediaQuery.sizeOf(context).width - 32,
-                          child: StaffCard(
-                            staffFullItem: widget.staffList[index],
+              return staffAsync.when(
+                data: (staffList) {
+                  if (staffList.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(context.t.library.common.emptyState),
+                      ),
+                    );
+                  }
+                  return SliverList.builder(
+                    itemCount: staffList.length,
+                    itemBuilder: (context, index) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width > maxWidth
+                                ? maxWidth
+                                : MediaQuery.sizeOf(context).width - 32,
+                            child: StaffCard(
+                              staffFullItem: staffList[index],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                loading: () => SliverList.builder(
+                  itemCount: 8,
+                  itemBuilder: (context, _) {
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: MediaQuery.sizeOf(context).width > maxWidth
+                            ? maxWidth
+                            : MediaQuery.sizeOf(context).width - 32,
+                        child: Skeletonizer.zone(
+                          child: ListTile(
+                            leading: Bone.circle(size: 36),
+                            title: Bone.text(width: 100),
+                            subtitle: Bone.text(width: 80),
                           ),
                         ),
                       ),
                     );
                   },
-                );
-              }
-              if (widget.staffQueryTimeout) {
-                return SliverFillRemaining(
+                ),
+                error: (error, stack) => SliverFillRemaining(
                   child: GeneralErrorWidget(
                     errMsg: errorsTexts.fetchFailed,
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
-                          widget.loadStaff();
+                          ref.invalidate(bangumiStaffsProvider(widget.bangumiItem.id));
                         },
                         text: appTexts.retry,
                       ),
                     ],
                   ),
-                );
-              }
-              return SliverList.builder(
-                itemCount: 8,
-                itemBuilder: (context, _) {
-                  return Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: MediaQuery.sizeOf(context).width > maxWidth
-                          ? maxWidth
-                          : MediaQuery.sizeOf(context).width - 32,
-                      child: Skeletonizer.zone(
-                        child: ListTile(
-                          leading: Bone.circle(size: 36),
-                          title: Bone.text(width: 100),
-                          subtitle: Bone.text(width: 80),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                ),
               );
             }),
           ],
@@ -661,6 +640,10 @@ class _InfoTabViewState extends State<InfoTabView>
         final infoTexts = context.t.library.info;
         final errorsTexts = infoTexts.errors;
         final appTexts = context.t.app;
+
+        // ✅ Use Riverpod provider for characters
+        final charactersAsync = ref.watch(bangumiCharactersProvider(widget.bangumiItem.id));
+
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
             scrollbars: false,
@@ -671,60 +654,67 @@ class _InfoTabViewState extends State<InfoTabView>
               handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             ),
             SliverLayoutBuilder(builder: (context, _) {
-              if (widget.characterList.isNotEmpty) {
-                return SliverList.builder(
-                  itemCount: widget.characterList.length,
-                  itemBuilder: (context, index) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        child: SizedBox(
-                          width: MediaQuery.sizeOf(context).width > maxWidth
-                              ? maxWidth
-                              : MediaQuery.sizeOf(context).width - 32,
-                          child: CharacterCard(
-                            characterItem: widget.characterList[index],
+              return charactersAsync.when(
+                data: (characters) {
+                  if (characters.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(context.t.library.common.emptyState),
+                      ),
+                    );
+                  }
+                  return SliverList.builder(
+                    itemCount: characters.length,
+                    itemBuilder: (context, index) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: SizedBox(
+                            width: MediaQuery.sizeOf(context).width > maxWidth
+                                ? maxWidth
+                                : MediaQuery.sizeOf(context).width - 32,
+                            child: CharacterCard(
+                              characterItem: characters[index],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+                loading: () => SliverList.builder(
+                  itemCount: 4,
+                  itemBuilder: (context, _) {
+                    return Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(
+                        width: MediaQuery.sizeOf(context).width > maxWidth
+                            ? maxWidth
+                            : MediaQuery.sizeOf(context).width - 32,
+                        child: Skeletonizer.zone(
+                          child: ListTile(
+                            leading: Bone.circle(size: 36),
+                            title: Bone.text(width: 100),
+                            subtitle: Bone.text(width: 80),
                           ),
                         ),
                       ),
                     );
                   },
-                );
-              }
-              if (widget.charactersQueryTimeout) {
-                return SliverFillRemaining(
+                ),
+                error: (error, stack) => SliverFillRemaining(
                   child: GeneralErrorWidget(
                     errMsg: errorsTexts.fetchFailed,
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
-                          widget.loadCharacters();
+                          ref.invalidate(bangumiCharactersProvider(widget.bangumiItem.id));
                         },
                         text: appTexts.retry,
                       ),
                     ],
                   ),
-                );
-              }
-              return SliverList.builder(
-                itemCount: 4,
-                itemBuilder: (context, _) {
-                  return Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: MediaQuery.sizeOf(context).width > maxWidth
-                          ? maxWidth
-                          : MediaQuery.sizeOf(context).width - 32,
-                      child: Skeletonizer.zone(
-                        child: ListTile(
-                          leading: Bone.circle(size: 36),
-                          title: Bone.text(width: 100),
-                          subtitle: Bone.text(width: 80),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                ),
               );
             }),
           ],

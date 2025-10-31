@@ -1,12 +1,12 @@
 import 'dart:ui' as ui;
 
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/modules/comments/comment_item.dart';
 import 'package:kazumi/modules/characters/character_item.dart';
 import 'package:kazumi/modules/metadata_sync/metadata_sync_controller.dart';
 import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
-import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/modules/staff/staff_item.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
 import 'package:kazumi/pages/my/providers.dart';
@@ -18,44 +18,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
-class InfoState {
-  final bool isLoading;
-  final bool metadataLoading;
-  final List<CommentItem> commentsList;
-  final List<CharacterItem> characterList;
-  final List<StaffFullItem> staffList;
-  final BangumiItem? bangumiItem;
-  final MetadataRecord? metadataRecord;
+part 'info_controller.freezed.dart';
 
-  const InfoState({
-    this.isLoading = false,
-    this.metadataLoading = false,
-    this.commentsList = const [],
-    this.characterList = const [],
-    this.staffList = const [],
-    this.bangumiItem,
-    this.metadataRecord,
-  });
-
-  InfoState copyWith({
-    bool? isLoading,
-    bool? metadataLoading,
-    List<CommentItem>? commentsList,
-    List<CharacterItem>? characterList,
-    List<StaffFullItem>? staffList,
+@freezed
+class InfoState with _$InfoState {
+  const factory InfoState({
+    @Default(false) bool isLoading,
+    @Default(false) bool metadataLoading,
+    @Default([]) List<CommentItem> commentsList,
+    @Default([]) List<CharacterItem> characterList,
+    @Default([]) List<StaffFullItem> staffList,
     BangumiItem? bangumiItem,
     MetadataRecord? metadataRecord,
-  }) {
-    return InfoState(
-      isLoading: isLoading ?? this.isLoading,
-      metadataLoading: metadataLoading ?? this.metadataLoading,
-      commentsList: commentsList ?? this.commentsList,
-      characterList: characterList ?? this.characterList,
-      staffList: staffList ?? this.staffList,
-      bangumiItem: bangumiItem ?? this.bangumiItem,
-      metadataRecord: metadataRecord ?? this.metadataRecord,
-    );
-  }
+  }) = _InfoState;
 }
 
 class InfoController extends Notifier<InfoState> {
@@ -64,12 +39,10 @@ class InfoController extends Notifier<InfoState> {
 
   @override
   InfoState build() {
-    collectController = ref.read(collectControllerProvider.notifier);
+    collectController = ref.read(collectionsProvider.notifier);
     _metadataSyncController = ref.read(metadataSyncControllerProvider);
     return const InfoState();
   }
-  final List<PluginSearchResponse> _legacyPluginSearchResponses = [];
-  final Map<String, String> _legacyPluginSearchStatus = {};
 
   BangumiItem get bangumiItem => state.bangumiItem ?? _emptyBangumiItem;
 
@@ -106,8 +79,6 @@ class InfoController extends Notifier<InfoState> {
       characterList: const [],
       staffList: const [],
     );
-    _legacyPluginSearchResponses.clear();
-    _legacyPluginSearchStatus.clear();
   }
 
   Future<void> queryBangumiInfoByID(int id, {String type = 'init'}) async {
@@ -221,12 +192,6 @@ class InfoController extends Notifier<InfoState> {
     state = state.copyWith(staffList: staff);
     KazumiLogger().log(Level.info, '已加载制作人员列表长度 ${staff.length}');
   }
-
-  // Legacy accessors retained to avoid breakages; search functionality has moved
-  // to dedicated Riverpod providers.
-  List<PluginSearchResponse> get pluginSearchResponseList =>
-      _legacyPluginSearchResponses;
-  Map<String, String> get pluginSearchStatus => _legacyPluginSearchStatus;
 
   static final BangumiItem _emptyBangumiItem = BangumiItem(
     id: 0,

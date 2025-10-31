@@ -1,25 +1,24 @@
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/storage.dart';
 
-class DecoderSettings extends StatefulWidget {
+/// Provider for hardware decoder setting
+final hardwareDecoderProvider = StateProvider.autoDispose<String>((ref) {
+  final setting = GStorage.setting;
+  return setting.get(SettingBoxKey.hardwareDecoder, defaultValue: 'auto-safe');
+});
+
+class DecoderSettings extends ConsumerWidget {
   const DecoderSettings({super.key});
 
   @override
-  State<DecoderSettings> createState() => _DecoderSettingsState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final setting = GStorage.setting;
+    final decoder = ref.watch(hardwareDecoderProvider);
 
-class _DecoderSettingsState extends State<DecoderSettings> {
-  late final Box setting = GStorage.setting;
-  late final ValueNotifier<String> decoder = ValueNotifier<String>(
-    setting.get(SettingBoxKey.hardwareDecoder, defaultValue: 'auto-safe'),
-  );
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: const SysAppBar(
         title: Text('硬件解码器'),
@@ -35,15 +34,13 @@ class _DecoderSettingsState extends State<DecoderSettings> {
                     title: Text(entry.key),
                     description: Text(entry.value),
                     radioValue: entry.key,
-                    groupValue: decoder.value,
+                    groupValue: decoder,
                     onChanged: (String? value) {
                       if (value == null) {
                         return;
                       }
                       setting.put(SettingBoxKey.hardwareDecoder, value);
-                      setState(() {
-                        decoder.value = value;
-                      });
+                      ref.read(hardwareDecoderProvider.notifier).state = value;
                     },
                   ),
                 )

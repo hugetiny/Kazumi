@@ -21,12 +21,6 @@ class PluginViewPage extends ConsumerStatefulWidget {
 class _PluginViewPageState extends ConsumerState<PluginViewPage> {
   late final PluginsController pluginsController;
 
-  // 是否处于多选模式
-  bool isMultiSelectMode = false;
-
-  // 已选中的规则名称集合
-  final Set<String> selectedNames = {};
-
   Future<void> _handleUpdate() async {
     final pluginTexts = context.t.settings.plugins;
     KazumiDialog.showLoading(msg: pluginTexts.loading.updating);
@@ -91,12 +85,9 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
       final pluginTexts = context.t.settings.plugins;
       return AlertDialog(
         title: Text(pluginTexts.dialogs.importTitle),
-        content: StatefulBuilder(
-            builder: (BuildContext context, StateSetter setState) {
-          return TextField(
-            controller: textController,
-          );
-        }),
+        content: TextField(
+          controller: textController,
+        ),
         actions: [
           TextButton(
             onPressed: () => KazumiDialog.dismiss(),
@@ -105,28 +96,25 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
-          StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-            return TextButton(
-              onPressed: () async {
-                final String msg = textController.text;
-                try {
-                  pluginsController.updatePlugin(Plugin.fromJson(
-                      json.decode(Utils.kazumiBase64ToJson(msg))));
-                  KazumiDialog.showToast(
-                      message: pluginTexts.toast.importSuccess);
-                } catch (e) {
-                  KazumiDialog.dismiss();
-                  KazumiDialog.showToast(
-                    message: pluginTexts.toast.importFailed
-                        .replaceFirst('{error}', e.toString()),
-                  );
-                }
+          TextButton(
+            onPressed: () async {
+              final String msg = textController.text;
+              try {
+                pluginsController.updatePlugin(Plugin.fromJson(
+                    json.decode(Utils.kazumiBase64ToJson(msg))));
+                KazumiDialog.showToast(
+                    message: pluginTexts.toast.importSuccess);
+              } catch (e) {
                 KazumiDialog.dismiss();
-              },
-              child: Text(pluginTexts.actions.import),
-            );
-          })
+                KazumiDialog.showToast(
+                  message: pluginTexts.toast.importFailed
+                      .replaceFirst('{error}', e.toString()),
+                );
+              }
+              KazumiDialog.dismiss();
+            },
+            child: Text(pluginTexts.actions.import),
+          ),
         ],
       );
     });
@@ -142,22 +130,25 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
   @override
   void initState() {
     super.initState();
-    pluginsController = ref.read(pluginsControllerProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
   }
 
   @override
   Widget build(BuildContext context) {
-    final pluginsState = ref.watch(pluginsControllerProvider);
+    final pluginsState = ref.watch(pluginsProvider);
     final pluginList = pluginsState.pluginList;
     final pluginTexts = context.t.settings.plugins;
+
+    // ✅ Watch multi-select mode and selected names from Riverpod providers
+    final isMultiSelectMode = ref.watch(pluginSelectionProvider.select((s) => s.multiSelectMode));
+    final selectedNames = ref.watch(pluginSelectionProvider.select((s) => s.selectedNames));
+
     return PopScope(
       canPop: !isMultiSelectMode,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (isMultiSelectMode) {
-          setState(() {
-            isMultiSelectMode = false;
-            selectedNames.clear();
-          });
+
+          ref.read(pluginSelectionProvider.notifier).disableMultiSelect();
           return;
         }
         onBackPressed(context);
@@ -176,10 +167,8 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
               ? IconButton(
                   icon: const Icon(Icons.close),
                   onPressed: () {
-                    setState(() {
-                      isMultiSelectMode = false;
-                      selectedNames.clear();
-                    });
+
+                    ref.read(pluginSelectionProvider.notifier).disableMultiSelect();
                   },
                 )
               : null,
@@ -213,10 +202,8 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                                 onPressed: () {
                                   pluginsController
                                       .removePlugins(selectedNames);
-                                  setState(() {
-                                    isMultiSelectMode = false;
-                                    selectedNames.clear();
-                                  });
+
+                                  ref.read(pluginSelectionProvider.notifier).disableMultiSelect();
                                   KazumiDialog.dismiss();
                                 },
                                 child: Text(pluginTexts.actions.delete),
@@ -278,24 +265,20 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                               borderRadius: BorderRadius.circular(12)),
                           onLongPress: () {
                             if (!isMultiSelectMode) {
-                              setState(() {
-                                isMultiSelectMode = true;
-                                selectedNames.add(plugin.name);
-                              });
+
+                              ref.read(pluginSelectionProvider.notifier).enableMultiSelect();
+                              ref.read(pluginSelectionProvider.notifier).toggleSelection(plugin.name);
                             }
                           },
                           onTap: () {
                             if (isMultiSelectMode) {
-                              setState(() {
-                                if (selectedNames.contains(plugin.name)) {
-                                  selectedNames.remove(plugin.name);
-                                  if (selectedNames.isEmpty) {
-                                    isMultiSelectMode = false;
-                                  }
-                                } else {
-                                  selectedNames.add(plugin.name);
-                                }
-                              });
+
+                              ref.read(pluginSelectionProvider.notifier).toggleSelection(plugin.name);
+                              // Check if we should exit multi-select mode
+                              final currentState = ref.read(pluginSelectionProvider);
+                              if (currentState.selectedNames.isEmpty) {
+                                ref.read(pluginSelectionProvider.notifier).disableMultiSelect();
+                              }
                             }
                           },
                           selected: selectedNames.contains(plugin.name),
@@ -376,21 +359,22 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
 
   Widget pluginCardTrailing(
       BuildContext context, int index, Plugin plugin) {
+    // ✅ Read providers in the method
+    final isMultiSelectMode = ref.watch(pluginSelectionProvider.select((s) => s.multiSelectMode));
+    final selectedNames = ref.watch(pluginSelectionProvider.select((s) => s.selectedNames));
+
     return Row(mainAxisSize: MainAxisSize.min, children: [
       isMultiSelectMode
           ? Checkbox(
               value: selectedNames.contains(plugin.name),
               onChanged: (bool? value) {
-                setState(() {
-                  if (value == true) {
-                    selectedNames.add(plugin.name);
-                  } else {
-                    selectedNames.remove(plugin.name);
-                    if (selectedNames.isEmpty) {
-                      isMultiSelectMode = false;
-                    }
-                  }
-                });
+
+                ref.read(pluginSelectionProvider.notifier).toggleSelection(plugin.name);
+                // Check if we should exit multi-select mode
+                final currentState = ref.read(pluginSelectionProvider);
+                if (currentState.selectedNames.isEmpty) {
+                  ref.read(pluginSelectionProvider.notifier).disableMultiSelect();
+                }
               },
             )
           : popupMenuButton(context, index, plugin),
@@ -539,9 +523,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
         MenuItemButton(
           requestFocusOnHover: false,
           onPressed: () async {
-            setState(() {
-              pluginsController.removePlugin(plugin);
-            });
+            pluginsController.removePlugin(plugin);
           },
           child: Container(
             height: 48,

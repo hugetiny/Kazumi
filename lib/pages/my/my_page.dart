@@ -20,7 +20,7 @@ class _MyPageState extends ConsumerState<MyPage> {
       KazumiDialog.dismiss();
       return;
     }
-    ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go('/tab/popular');
   }
 

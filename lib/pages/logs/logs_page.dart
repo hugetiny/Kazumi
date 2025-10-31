@@ -1,21 +1,23 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
-class LogsPage extends StatefulWidget {
+/// Provider for log file content
+final logFileContentProvider = StateProvider.autoDispose<String>((ref) => '');
+
+class LogsPage extends ConsumerStatefulWidget {
   const LogsPage({super.key});
 
   @override
-  State<LogsPage> createState() => _LogsPageState();
+  ConsumerState<LogsPage> createState() => _LogsPageState();
 }
 
-class _LogsPageState extends State<LogsPage> {
-  String fileContent = '';
-
+class _LogsPageState extends ConsumerState<LogsPage> {
   @override
   void initState() {
     super.initState();
@@ -27,9 +29,7 @@ class _LogsPageState extends State<LogsPage> {
     if (await file.exists()) {
       final content = await file.readAsString();
       if (!mounted) return;
-      setState(() {
-        fileContent = content;
-      });
+      ref.read(logFileContentProvider.notifier).state = content;
     }
   }
 
@@ -44,9 +44,7 @@ class _LogsPageState extends State<LogsPage> {
       final file = await _getLogsFile();
       await file.writeAsString('');
       if (!mounted) return;
-      setState(() {
-        fileContent = '';
-      });
+      ref.read(logFileContentProvider.notifier).state = '';
       KazumiDialog.showToast(
         message: context.t.settings.about.logs.toast.cleared,
       );
@@ -59,6 +57,7 @@ class _LogsPageState extends State<LogsPage> {
   }
 
   Future<void> _copyLogs() async {
+    final fileContent = ref.read(logFileContentProvider);
     await Clipboard.setData(ClipboardData(text: fileContent));
     if (!mounted) return;
     KazumiDialog.showToast(
@@ -68,6 +67,8 @@ class _LogsPageState extends State<LogsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final fileContent = ref.watch(logFileContentProvider);
+
     return SelectionArea(
         child: Scaffold(
       appBar: SysAppBar(

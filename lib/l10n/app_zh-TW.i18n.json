@@ -45,7 +45,7 @@
       "appearanceDesc": "設定應用程式主題和更新率",
       "language": "應用程式語言",
       "languageDesc": "選擇應用程式介面顯示語言",
-      "followSystem": "依系統",
+      "followSystem": "系統",
       "exitBehavior": "關閉時",
       "exitApp": "結束 Kazumi",
       "minimizeToTray": "最小化至系統匣",
@@ -55,7 +55,7 @@
       "title": "外觀設定",
       "mode": {
         "title": "主題模式",
-        "system": "依系統",
+        "system": "系統",
         "light": "淺色",
         "dark": "深色"
       },
@@ -89,61 +89,61 @@
       }
     },
     "source": {
-      "title": "Source",
-      "ruleManagement": "Rule Management",
-      "ruleManagementDesc": "Manage anime resource rules",
-      "githubProxy": "GitHub Proxy",
-      "githubProxyDesc": "Use proxy to access rule repository"
+      "title": "資訊來源",
+      "ruleManagement": "規則管理",
+      "ruleManagementDesc": "管理動畫資源規則與來源",
+      "githubProxy": "GitHub 代理",
+      "githubProxyDesc": "使用代理以存取規則倉庫"
     },
     "plugins": {
-      "title": "Rule Management",
-      "empty": "No rules available",
+      "title": "規則管理",
+      "empty": "目前沒有可用的規則",
       "tooltip": {
-        "updateAll": "Update all",
-        "addRule": "Add rule"
+        "updateAll": "全部更新",
+        "addRule": "新增規則"
       },
       "multiSelect": {
-        "selectedCount": "{count} selected"
+        "selectedCount": "已選取 {count} 項"
       },
       "loading": {
-        "updating": "Updating rules…",
-        "updatingSingle": "Updating…",
-        "importing": "Importing…"
+        "updating": "正在更新規則…",
+        "updatingSingle": "更新中…",
+        "importing": "匯入中…"
       },
       "labels": {
-        "version": "Version: {version}",
-        "statusUpdatable": "Update available",
-        "statusSearchValid": "Search valid"
+        "version": "版本: {version}",
+        "statusUpdatable": "可更新",
+        "statusSearchValid": "搜尋有效"
       },
       "actions": {
-        "newRule": "Create rule",
-        "importFromRepo": "Import from repository",
-        "importFromClipboard": "Import from clipboard",
-        "cancel": "Cancel",
-        "import": "Import",
-        "update": "Update",
-        "edit": "Edit",
-        "copyToClipboard": "Copy to clipboard",
-        "share": "Share",
-        "delete": "Delete"
+        "newRule": "建立規則",
+        "importFromRepo": "從倉庫匯入",
+        "importFromClipboard": "從剪貼簿匯入",
+        "cancel": "取消",
+        "import": "匯入",
+        "update": "更新",
+        "edit": "編輯",
+        "copyToClipboard": "複製到剪貼簿",
+        "share": "分享",
+        "delete": "刪除"
       },
       "dialogs": {
-        "deleteTitle": "Delete rules",
-        "deleteMessage": "Delete {count} selected rule(s)?",
-        "importTitle": "Import rule",
-        "shareTitle": "Rule link"
+        "deleteTitle": "刪除規則",
+        "deleteMessage": "要刪除已選取的 {count} 項規則嗎？",
+        "importTitle": "匯入規則",
+        "shareTitle": "規則連結"
       },
       "toast": {
-        "allUpToDate": "All rules are up to date.",
-        "updateCount": "Updated {count} rule(s).",
-        "importSuccess": "Import successful.",
-        "importFailed": "Import failed: {error}",
-        "repoMissing": "The repository does not contain this rule.",
-        "alreadyLatest": "Rule is already the latest.",
-        "updateSuccess": "Update successful.",
-        "updateIncompatible": "Kazumi is too old; this rule is incompatible.",
-        "updateFailed": "Failed to update rule.",
-        "copySuccess": "Copied to clipboard."
+        "allUpToDate": "所有規則皆為最新。",
+        "updateCount": "已更新 {count} 項規則。",
+        "importSuccess": "匯入成功。",
+        "importFailed": "匯入失敗: {error}",
+        "repoMissing": "倉庫中不包含此規則。",
+        "alreadyLatest": "規則已為最新。",
+        "updateSuccess": "更新成功。",
+        "updateIncompatible": "Kazumi 版本過舊，此規則不相容。",
+        "updateFailed": "更新規則失敗。",
+        "copySuccess": "已複製到剪貼簿。"
       },
       "editor": {
         "title": "編輯規則",
@@ -177,146 +177,146 @@
         }
       },
       "shop": {
-        "title": "Rule Repository",
+        "title": "規則倉庫",
         "tooltip": {
-          "sortByName": "Sort by name",
-          "sortByUpdate": "Sort by last update",
-          "refresh": "Refresh rule list"
+          "sortByName": "依名稱排序",
+          "sortByUpdate": "依更新時間排序",
+          "refresh": "重新整理規則清單"
         },
         "labels": {
           "playerType": {
-            "native": "native",
-            "webview": "webview"
+            "native": "原生",
+            "webview": "WebView"
           },
-          "lastUpdated": "Last updated: {timestamp}"
+          "lastUpdated": "最後更新：{timestamp}"
         },
         "buttons": {
-          "install": "Add",
-          "installed": "Added",
-          "update": "Update",
-          "toggleMirrorEnable": "Enable mirror",
-          "toggleMirrorDisable": "Disable mirror",
-          "refresh": "Refresh"
+          "install": "新增",
+          "installed": "已新增",
+          "update": "更新",
+          "toggleMirrorEnable": "啟用鏡像",
+          "toggleMirrorDisable": "停用鏡像",
+          "refresh": "重新整理"
         },
         "toast": {
-          "importFailed": "Failed to import rule."
+          "importFailed": "匯入規則失敗。"
         },
         "error": {
-          "unreachable": "Unable to reach the repository\n{status}",
-          "mirrorEnabled": "Mirror enabled",
-          "mirrorDisabled": "Mirror disabled"
+          "unreachable": "無法連線至倉庫\n{status}",
+          "mirrorEnabled": "已啟用鏡像",
+          "mirrorDisabled": "已停用鏡像"
         }
       }
     },
     "metadata": {
       "title": "資訊來源",
       "enableBangumi": "啟用 Bangumi 資訊來源",
-      "enableBangumiDesc": "從 Bangumi 拉取番劇資訊",
+      "enableBangumiDesc": "從 Bangumi 取得番劇資訊",
       "enableTmdb": "啟用 TMDb 資訊來源",
-      "enableTmdbDesc": "從 TMDb 補充多語言資料",
-      "preferredLanguage": "Preferred Language",
-      "preferredLanguageDesc": "Set the language for metadata synchronization",
-      "followSystemLanguage": "Follow System Language",
-      "simplifiedChinese": "Simplified Chinese (zh-CN)",
-      "traditionalChinese": "Traditional Chinese (zh-TW)",
-      "japanese": "Japanese (ja-JP)",
-      "english": "English (en-US)",
-      "custom": "Custom"
+      "enableTmdbDesc": "從 TMDb 補充多語系資料",
+      "preferredLanguage": "優先語言",
+      "preferredLanguageDesc": "設定中繼資料同步時要使用的語言",
+      "followSystemLanguage": "跟隨系統語言",
+      "simplifiedChinese": "簡體中文 (zh-CN)",
+      "traditionalChinese": "繁體中文 (zh-TW)",
+      "japanese": "日語 (ja-JP)",
+      "english": "英語 (en-US)",
+      "custom": "自訂"
     },
     "player": {
-      "title": "Player Settings",
-      "playerSettings": "Player Settings",
-      "playerSettingsDesc": "Configure player parameters",
-      "hardwareDecoding": "Hardware Decoding",
-      "hardwareDecoder": "Hardware Decoder",
-      "hardwareDecoderDesc": "Only takes effect when hardware decoding is enabled",
-      "lowMemoryMode": "Low Memory Mode",
-      "lowMemoryModeDesc": "Disable advanced caching to reduce memory usage",
-      "lowLatencyAudio": "Low Latency Audio",
-      "lowLatencyAudioDesc": "Enable OpenSLES audio output to reduce latency",
-      "superResolution": "Super Resolution",
-      "autoJump": "Auto Jump",
-      "autoJumpDesc": "Jump to last playback position",
-      "disableAnimations": "Disable Animations",
-      "disableAnimationsDesc": "Disable transition animations in the player",
-      "errorPrompt": "Error Prompt",
-      "errorPromptDesc": "Show player internal error prompts",
-      "debugMode": "Debug Mode",
-      "debugModeDesc": "Log player internal logs",
-      "privateMode": "Private Mode",
-      "privateModeDesc": "Don't keep viewing history",
-      "defaultPlaySpeed": "Default Playback Speed",
-      "defaultVideoAspectRatio": "Default Video Aspect Ratio",
+      "title": "播放器設定",
+      "playerSettings": "播放器設定",
+      "playerSettingsDesc": "設定播放器參數",
+      "hardwareDecoding": "硬體解碼",
+      "hardwareDecoder": "硬體解碼器",
+      "hardwareDecoderDesc": "僅在啟用硬體解碼時生效",
+      "lowMemoryMode": "低記憶體模式",
+      "lowMemoryModeDesc": "停用進階快取以降低記憶體使用",
+      "lowLatencyAudio": "低延遲音訊",
+      "lowLatencyAudioDesc": "啟用 OpenSLES 音訊輸出以降低延遲",
+      "superResolution": "超解析度",
+      "autoJump": "自動跳轉",
+      "autoJumpDesc": "跳轉至上次播放位置",
+  "disableAnimations": "禁用影片",
+  "disableAnimationsDesc": "禁用播放器內的過渡影片",
+      "errorPrompt": "錯誤提示",
+      "errorPromptDesc": "顯示播放器內部錯誤提示",
+      "debugMode": "除錯模式",
+      "debugModeDesc": "記錄播放器內部日誌",
+      "privateMode": "私人模式",
+      "privateModeDesc": "不保留觀看紀錄",
+      "defaultPlaySpeed": "預設播放速度",
+      "defaultVideoAspectRatio": "預設影片長寬比",
       "aspectRatio": {
         "auto": "自動",
         "crop": "裁切填滿",
         "stretch": "拉伸填滿"
       },
-      "danmakuSettings": "Danmaku Settings",
-      "danmakuSettingsDesc": "Configure danmaku parameters",
-      "danmaku": "Danmaku",
-      "danmakuDefaultOn": "Default On",
-      "danmakuDefaultOnDesc": "Whether to play danmaku with video by default",
-      "danmakuSource": "Danmaku Source",
+      "danmakuSettings": "彈幕設定",
+      "danmakuSettingsDesc": "設定彈幕參數",
+      "danmaku": "彈幕",
+      "danmakuDefaultOn": "預設開啟",
+      "danmakuDefaultOnDesc": "是否預設與影片一同顯示彈幕",
+      "danmakuSource": "彈幕來源",
       "danmakuSources": {
         "bilibili": "Bilibili",
         "gamer": "Gamer",
         "dandan": "DanDan"
       },
-      "danmakuCredentials": "Credentials",
-      "danmakuDanDanCredentials": "DanDan API Credentials",
-      "danmakuDanDanCredentialsDesc": "Customize DanDan credentials",
-      "danmakuCredentialModeBuiltIn": "Built-in",
-      "danmakuCredentialModeCustom": "Custom",
-      "danmakuCredentialHint": "Leave blank to use built-in credentials",
-      "danmakuCredentialNotConfigured": "Not configured",
+      "danmakuCredentials": "憑證",
+      "danmakuDanDanCredentials": "DanDan API 憑證",
+      "danmakuDanDanCredentialsDesc": "自訂 DanDan 憑證",
+      "danmakuCredentialModeBuiltIn": "內建",
+      "danmakuCredentialModeCustom": "自訂",
+      "danmakuCredentialHint": "留空以使用內建憑證",
+      "danmakuCredentialNotConfigured": "未設定",
       "danmakuCredentialsSummary": "App ID: {appId}\nAPI Key: {apiKey}",
-      "danmakuShield": "Danmaku Shield",
-      "danmakuKeywordShield": "Keyword Shield",
-      "danmakuShieldInputHint": "Enter a keyword or regular expression",
-      "danmakuShieldDescription": "Text starting and ending with \"/\" will be treated as regular expressions, e.g. \"/\\\\d+/\" blocks all numbers",
-      "danmakuShieldCount": "Added {count} keywords",
-      "danmakuStyle": "Danmaku Style",
-      "danmakuDisplay": "Danmaku Display",
-      "danmakuArea": "Danmaku Area",
-      "danmakuTopDisplay": "Top Danmaku",
-      "danmakuBottomDisplay": "Bottom Danmaku",
-      "danmakuScrollDisplay": "Scrolling Danmaku",
-      "danmakuMassiveDisplay": "Massive Danmaku",
-      "danmakuMassiveDescription": "Overlay rendering when the screen is crowded",
-      "danmakuOutline": "Danmaku Outline",
-      "danmakuColor": "Danmaku Color",
-      "danmakuFontSize": "Font Size",
-      "danmakuFontWeight": "Font Weight",
-      "danmakuOpacity": "Danmaku Opacity",
-      "add": "Add",
-      "save": "Save",
-      "restoreDefault": "Restore Default",
-      "superResolutionTitle": "Super Resolution",
-      "superResolutionHint": "Choose the default upscaling profile",
+      "danmakuShield": "彈幕屏蔽",
+      "danmakuKeywordShield": "關鍵字屏蔽",
+      "danmakuShieldInputHint": "輸入關鍵字或正則表達式",
+  "danmakuShieldDescription": "以 \"/\" 包裹的文字會被視為正則表示式，例如 \"/\\d+/\" 可屏蔽所有數字",
+      "danmakuShieldCount": "已新增 {count} 筆關鍵字",
+      "danmakuStyle": "彈幕樣式",
+      "danmakuDisplay": "彈幕顯示",
+      "danmakuArea": "彈幕顯示區域",
+      "danmakuTopDisplay": "頂部彈幕",
+      "danmakuBottomDisplay": "底部彈幕",
+      "danmakuScrollDisplay": "滾動彈幕",
+      "danmakuMassiveDisplay": "大量彈幕",
+      "danmakuMassiveDescription": "畫面人多時以覆蓋方式渲染",
+      "danmakuOutline": "彈幕描邊",
+      "danmakuColor": "彈幕顏色",
+      "danmakuFontSize": "字型大小",
+      "danmakuFontWeight": "字重",
+      "danmakuOpacity": "彈幕不透明度",
+      "add": "新增",
+      "save": "儲存",
+      "restoreDefault": "還原預設",
+      "superResolutionTitle": "超解析度",
+      "superResolutionHint": "選擇預設的放大方案",
       "superResolutionOptions": {
         "off": {
-          "label": "Off",
-          "description": "Disable all upscaling enhancements."
+          "label": "關閉",
+          "description": "停用所有放大增強。"
         },
         "efficiency": {
-          "label": "Balanced",
-          "description": "Balance performance usage and picture quality."
+          "label": "均衡",
+          "description": "在效能與畫質間取得平衡。"
         },
         "quality": {
-          "label": "Quality First",
-          "description": "Maximize visual quality at the cost of resources."
+          "label": "畫質優先",
+          "description": "以資源換取最佳畫質。"
         }
       },
-      "superResolutionDefaultBehavior": "Default Behavior",
-      "superResolutionClosePrompt": "Close Prompt",
-      "superResolutionClosePromptDesc": "Close the prompt when enabling super resolution",
+      "superResolutionDefaultBehavior": "預設行為",
+      "superResolutionClosePrompt": "關閉提示",
+      "superResolutionClosePromptDesc": "啟用超解析度時關閉提示",
       "toast": {
-        "danmakuKeywordEmpty": "Enter a keyword.",
-        "danmakuKeywordTooLong": "Keyword is too long.",
-        "danmakuKeywordExists": "Keyword already exists.",
-        "danmakuCredentialsRestored": "Reverted to built-in credentials.",
-        "danmakuCredentialsUpdated": "Credentials updated."
+        "danmakuKeywordEmpty": "請輸入關鍵字。",
+        "danmakuKeywordTooLong": "關鍵字過長。",
+        "danmakuKeywordExists": "關鍵字已存在。",
+        "danmakuCredentialsRestored": "已恢復為內建憑證。",
+        "danmakuCredentialsUpdated": "憑證已更新。"
       }
     },
     "webdav": {
@@ -530,55 +530,55 @@
   },
   "library": {
     "common": {
-      "emptyState": "No content found",
-      "retry": "Tap to retry",
-      "backHint": "Press again to exit Kazumi",
+      "emptyState": "找不到內容",
+      "retry": "點擊重試",
+      "backHint": "再按一次以結束 Kazumi",
       "toast": {
-        "editMode": "Edit mode is active."
+        "editMode": "編輯模式已啟用。"
       }
     },
     "popular": {
-      "title": "Trending Anime",
-      "allTag": "Trending",
+      "title": "熱門番組",
+      "allTag": "全部",
       "toast": {
-        "backPress": "Press again to exit Kazumi"
+        "backPress": "再按一次以結束 Kazumi"
       }
     },
     "timeline": {
       "weekdays": {
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        "sat": "Sat",
-        "sun": "Sun"
+        "mon": "一",
+        "tue": "二",
+        "wed": "三",
+        "thu": "四",
+        "fri": "五",
+        "sat": "六",
+        "sun": "日"
       },
       "seasonPicker": {
-        "title": "Time Machine",
+        "title": "時光機",
         "yearLabel": "{year}"
       },
       "season": {
         "title": "{season} {year}",
-        "loading": "Loading…",
+        "loading": "載入中…",
         "names": {
-          "winter": "Winter",
-          "spring": "Spring",
-          "summer": "Summer",
-          "autumn": "Autumn"
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋"
         },
         "short": {
-          "winter": "Winter",
-          "spring": "Spring",
-          "summer": "Summer",
-          "autumn": "Autumn"
+          "winter": "冬",
+          "spring": "春",
+          "summer": "夏",
+          "autumn": "秋"
         }
       },
       "sort": {
-        "title": "Sort order",
-        "byHeat": "Sort by popularity",
-        "byRating": "Sort by rating",
-        "byTime": "Sort by schedule"
+        "title": "排序方式",
+        "byHeat": "依人氣排序",
+        "byRating": "依評分排序",
+        "byTime": "依播出時間排序"
       }
     },
     "search": {
@@ -592,7 +592,7 @@
     },
     "history": {
       "title": "Watch History",
-      "empty": "No watch history found",
+  "empty": "尚無觀看紀錄",
       "chips": {
         "source": "Source",
         "progress": "Progress",
@@ -705,9 +705,9 @@
         "video": "Video"
       },
       "favorites": {
-        "title": "Collections",
-        "description": "View watching, planning, and completed lists",
-        "empty": "No favorites yet.",
+  "title": "收藏",
+  "description": "查看追看、計畫與已看清單",
+  "empty": "尚無收藏項目。",
         "tabs": {
           "watching": "Watching",
           "planned": "Plan to Watch",
@@ -737,7 +737,7 @@
       "danmakuUnsupported": "Danmaku sending is unavailable for this episode",
       "danmakuEmpty": "Danmaku content cannot be empty",
       "danmakuTooLong": "Danmaku content is too long",
-      "waitForVideo": "Please wait until the video finishes loading",
+  "waitForVideo": "請等待影片載入完成",
       "enableDanmakuFirst": "Turn on danmaku first",
       "danmakuSearchError": "Danmaku search failed: {error}",
       "danmakuSearchEmpty": "No matching results found",
@@ -944,22 +944,22 @@
   },
   "network": {
     "error": {
-      "badCertificate": "Certificate error.",
-      "badResponse": "Server error. Please try again later.",
-      "cancel": "Request was cancelled. Please retry.",
-      "connection": "Connection error. Check your network settings.",
-      "connectionTimeout": "Connection timed out. Check your network settings.",
-      "receiveTimeout": "Response timed out. Please try again.",
-      "sendTimeout": "Request timed out. Check your network settings.",
-      "unknown": "{status} network issue."
+      "badCertificate": "憑證錯誤。",
+      "badResponse": "伺服器錯誤，請稍後再試。",
+      "cancel": "請求已取消，請重試。",
+      "connection": "連線錯誤，請檢查網路設定。",
+      "connectionTimeout": "連線逾時，請檢查網路設定。",
+      "receiveTimeout": "接收回應逾時，請稍後再試。",
+      "sendTimeout": "傳送逾時，請檢查網路設定。",
+      "unknown": "{status} 網路問題。"
     },
     "status": {
-      "mobile": "Using mobile data",
-      "wifi": "Using Wi-Fi",
-      "ethernet": "Using Ethernet",
-      "vpn": "Using VPN connection",
-      "other": "Using another network",
-      "none": "No network connection"
+      "mobile": "使用行動數據",
+      "wifi": "使用 Wi‑Fi",
+      "ethernet": "使用有線網路",
+      "vpn": "使用 VPN 連線",
+      "other": "使用其他網路",
+      "none": "無網路連線"
     }
   }
 }

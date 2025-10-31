@@ -18,9 +18,9 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final navigationState = ref.watch(navigationBarControllerProvider);
+    final navigationState = ref.watch(navigationProvider);
     final navigationController =
-        ref.read(navigationBarControllerProvider.notifier);
+        ref.read(navigationProvider.notifier);
 
     return OrientationBuilder(builder: (context, orientation) {
       final bool isPortrait = orientation == Orientation.portrait;

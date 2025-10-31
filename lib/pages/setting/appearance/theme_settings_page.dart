@@ -22,26 +22,8 @@ class ThemeSettingsPage extends ConsumerStatefulWidget {
 
 class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
   final Box setting = GStorage.setting;
-  late dynamic defaultThemeMode;
   late dynamic defaultThemeColor;
-  late bool oledEnhance;
-  late bool useDynamicColor;
-  late bool showWindowButton;
   final MenuController menuController = MenuController();
-
-  @override
-  void initState() {
-    super.initState();
-    defaultThemeMode =
-        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
-    defaultThemeColor =
-        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
-    oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    useDynamicColor =
-        setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
-    showWindowButton =
-        setting.get(SettingBoxKey.showWindowButton, defaultValue: false);
-  }
 
   void onBackPressed(BuildContext context) {
     if (KazumiDialog.observer.hasKazumiDialog) {
@@ -51,40 +33,43 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
 
   void setTheme(Color? color) {
     final seed = color ?? Colors.green;
-    ref.read(themeNotifierProvider.notifier).setSeedColor(seed);
-    defaultThemeColor = color?.value.toRadixString(16) ?? 'default';
+    ref.read(themeProvider.notifier).setSeedColor(seed);
+    defaultThemeColor = color != null ? color.toARGB32().toRadixString(16) : 'default';
     setting.put(SettingBoxKey.themeColor, defaultThemeColor);
   }
 
   void resetTheme() {
-    ref.read(themeNotifierProvider.notifier).setSeedColor(Colors.green);
+    ref.read(themeProvider.notifier).setSeedColor(Colors.green);
     defaultThemeColor = 'default';
     setting.put(SettingBoxKey.themeColor, 'default');
   }
 
   Future<void> updateTheme(String theme) async {
     if (theme == 'dark') {
-      ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.dark);
+      ref.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
     } else if (theme == 'light') {
-      ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.light);
+      ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
     } else {
-      ref.read(themeNotifierProvider.notifier).setThemeMode(ThemeMode.system);
+      ref.read(themeProvider.notifier).setThemeMode(ThemeMode.system);
     }
     await setting.put(SettingBoxKey.themeMode, theme);
-    setState(() {
-      defaultThemeMode = theme;
-    });
   }
 
   void updateOledEnhance() {
-    oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    ref.read(themeNotifierProvider.notifier).setOledEnhance(oledEnhance);
+    final oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
+    ref.read(themeProvider.notifier).setOledEnhance(oledEnhance);
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    ref.watch(themeNotifierProvider);
+    final themeState = ref.watch(themeProvider);
+    final showWindowButton = ref.watch(showWindowButtonProvider);
+
+    // ✅ Get theme mode string from ThemeState
+    final defaultThemeMode = setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
+    final useDynamicColor = themeState.useDynamicColor;
+    final oledEnhance = themeState.oledEnhance;
     String colorLabel(String key) {
       final labels = t.settings.appearancePage.colorScheme.labels;
       switch (key) {
@@ -247,47 +232,43 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                   enabled: !useDynamicColor,
                   onPressed: (_) async {
                     KazumiDialog.show(builder: (context) {
+                      final colorThemes = colorThemeTypes;
                       return AlertDialog(
                         title:
                             Text(t.settings.appearancePage.colorScheme.dialogTitle),
-                        content: StatefulBuilder(
-                          builder: (BuildContext context, StateSetter setState) {
-                            final colorThemes = colorThemeTypes;
-                            return Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 8,
-                              runSpacing: Utils.isDesktop() ? 8 : 0,
-                              children: [
-                                for (final theme in colorThemes)
-                                  GestureDetector(
-                                    onTap: () {
-                                      final index = colorThemes.indexOf(theme);
-                                      if (index == 0) {
-                                        resetTheme();
-                                      } else {
-                                        setTheme(theme['color']);
-                                      }
-                                      KazumiDialog.dismiss();
-                                    },
-                                    child: Column(
-                                      children: [
-                                        PaletteCard(
-                                          color: theme['color'] as Color,
-                                          selected: (theme['color']
-                                                      .value
-                                                      .toRadixString(16) ==
-                                                  defaultThemeColor ||
-                                              (defaultThemeColor == 'default' &&
-                                                  colorThemes.indexOf(theme) ==
-                                                      0)),
-                                        ),
-                                        Text(colorLabel(theme['label'] as String)),
-                                      ],
+                        content: Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: Utils.isDesktop() ? 8 : 0,
+                          children: [
+                            for (final theme in colorThemes)
+                              GestureDetector(
+                                onTap: () {
+                                  final index = colorThemes.indexOf(theme);
+                                  if (index == 0) {
+                                    resetTheme();
+                                  } else {
+                                    setTheme(theme['color']);
+                                  }
+                                  KazumiDialog.dismiss();
+                                },
+                                child: Column(
+                                  children: [
+                                    PaletteCard(
+                                      color: theme['color'] as Color,
+                                      selected: (theme['color']
+                                                  .value
+                                                  .toRadixString(16) ==
+                                              defaultThemeColor ||
+                                          (defaultThemeColor == 'default' &&
+                                              colorThemes.indexOf(theme) ==
+                                                  0)),
                                     ),
-                                  ),
-                              ],
-                            );
-                          },
+                                    Text(colorLabel(theme['label'] as String)),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       );
                     });
@@ -297,15 +278,15 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                 SettingsTile.switchTile(
                   enabled: !Platform.isIOS,
                   onToggle: (value) async {
-                    useDynamicColor = value ?? !useDynamicColor;
+
+                    final newValue = value ?? !useDynamicColor;
                     await setting.put(
                       SettingBoxKey.useDynamicColor,
-                      useDynamicColor,
+                      newValue,
                     );
                     ref
-                        .read(themeNotifierProvider.notifier)
-                        .setUseDynamicColor(useDynamicColor);
-                    setState(() {});
+                        .read(themeProvider.notifier)
+                        .setUseDynamicColor(newValue);
                   },
                   title: Text(
                     t.settings.appearancePage.colorScheme.dynamicColor,
@@ -320,10 +301,10 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    oledEnhance = value ?? !oledEnhance;
-                    await setting.put(SettingBoxKey.oledEnhance, oledEnhance);
-                    updateOledEnhance();
-                    setState(() {});
+
+                    final newValue = value ?? !oledEnhance;
+                    await setting.put(SettingBoxKey.oledEnhance, newValue);
+                    ref.read(themeProvider.notifier).setOledEnhance(newValue);
                   },
                   title: Text(t.settings.appearancePage.oled.title),
                   description:
@@ -337,12 +318,13 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                 tiles: [
                   SettingsTile.switchTile(
                     onToggle: (value) async {
-                      showWindowButton = value ?? !showWindowButton;
+
+                      final newValue = value ?? !showWindowButton;
                       await setting.put(
                         SettingBoxKey.showWindowButton,
-                        showWindowButton,
+                        newValue,
                       );
-                      setState(() {});
+                      ref.read(showWindowButtonProvider.notifier).state = newValue;
                     },
                     title: Text(t.settings.appearancePage.window.title),
                     description:

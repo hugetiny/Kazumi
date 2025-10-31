@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 
-class WebviewItemImpel extends StatefulWidget {
+/// Provider for webview initialization state
+final webviewInitializedProvider = StateProvider.autoDispose<int>((ref) => 0);
+
+class WebviewItemImpel extends ConsumerStatefulWidget {
   const WebviewItemImpel({
     super.key,
     required this.webviewController,
@@ -11,10 +15,10 @@ class WebviewItemImpel extends StatefulWidget {
   final WebviewItemController webviewController;
 
   @override
-  State<WebviewItemImpel> createState() => _WebviewItemImpelState();
+  ConsumerState<WebviewItemImpel> createState() => _WebviewItemImpelState();
 }
 
-class _WebviewItemImpelState extends State<WebviewItemImpel> {
+class _WebviewItemImpelState extends ConsumerState<WebviewItemImpel> {
   @override
   void initState() {
     super.initState();
@@ -29,6 +33,8 @@ class _WebviewItemImpelState extends State<WebviewItemImpel> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch the provider to trigger rebuild when webview is initialized
+    ref.watch(webviewInitializedProvider);
     return compositeView;
   }
 
@@ -38,7 +44,7 @@ class _WebviewItemImpelState extends State<WebviewItemImpel> {
       await widget.webviewController.init();
     }
     if (!mounted) return;
-    setState(() {});
+    ref.read(webviewInitializedProvider.notifier).state++;
   }
 
   Widget get compositeView {

@@ -45,7 +45,7 @@
       "appearanceDesc": "Configure app theme and refresh rate",
       "language": "App Language",
       "languageDesc": "Choose the display language for the app interface",
-      "followSystem": "Follow System",
+      "followSystem": "System",
       "exitBehavior": "On Close",
       "exitApp": "Exit Kazumi",
       "minimizeToTray": "Minimize to Tray",
@@ -55,7 +55,7 @@
       "title": "Appearance",
       "mode": {
         "title": "Theme mode",
-        "system": "Follow system",
+        "system": "system",
         "light": "Light",
         "dark": "Dark"
       },
@@ -237,8 +237,8 @@
       "superResolution": "Super Resolution",
       "autoJump": "Auto Jump",
       "autoJumpDesc": "Jump to last playback position",
-      "disableAnimations": "Disable Animations",
-      "disableAnimationsDesc": "Disable transition animations in the player",
+  "disableAnimations": "Disable Videos",
+  "disableAnimationsDesc": "Disable transition videos in the player",
       "errorPrompt": "Error Prompt",
       "errorPromptDesc": "Show player internal error prompts",
       "debugMode": "Debug Mode",

@@ -3,17 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
 
-class SetDisplayMode extends StatefulWidget {
+/// Provider for display mode refresh trigger
+final displayModeRefreshProvider = StateProvider.autoDispose<int>((ref) => 0);
+
+class SetDisplayMode extends ConsumerStatefulWidget {
   const SetDisplayMode({super.key});
 
   @override
-  State<SetDisplayMode> createState() => _SetDisplayModeState();
+  ConsumerState<SetDisplayMode> createState() => _SetDisplayModeState();
 }
 
-class _SetDisplayModeState extends State<SetDisplayMode> {
+class _SetDisplayModeState extends ConsumerState<SetDisplayMode> {
   List<DisplayMode> modes = <DisplayMode>[];
   DisplayMode? active;
   DisplayMode? preferred;
@@ -38,7 +42,7 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
     preferred = await FlutterDisplayMode.preferred;
     active = await FlutterDisplayMode.active;
     await setting.put(SettingBoxKey.displayMode, preferred.toString());
-    setState(() {});
+    ref.read(displayModeRefreshProvider.notifier).state++;
   }
 
   Future<void> init() async {

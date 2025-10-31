@@ -58,7 +58,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          popularControllerProvider
+          popularProvider
               .overrideWith(() => _FakePopularController(initialState)),
         ],
         child: TranslationProvider(

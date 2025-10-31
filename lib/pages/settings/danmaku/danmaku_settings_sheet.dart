@@ -1,23 +1,22 @@
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
-import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_shield_settings.dart';
+import 'package:kazumi/pages/settings/danmaku/providers.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
 
-class DanmakuSettingsSheet extends StatefulWidget {
+class DanmakuSettingsSheet extends ConsumerStatefulWidget {
   final DanmakuController danmakuController;
 
   const DanmakuSettingsSheet({super.key, required this.danmakuController});
 
   @override
-  State<DanmakuSettingsSheet> createState() => _DanmakuSettingsSheetState();
+  ConsumerState<DanmakuSettingsSheet> createState() => _DanmakuSettingsSheetState();
 }
 
-class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
-  Box setting = GStorage.setting;
+class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
 
   void showDanmakuShieldSheet() {
     showModalBottomSheet(
@@ -62,13 +61,15 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                 label:
                     '${widget.danmakuController.option.fontSize.floorToDouble()}',
                 onChanged: (value) {
-                  setState(() => widget.danmakuController.updateOption(
-                        widget.danmakuController.option.copyWith(
-                          fontSize: value.floorToDouble(),
-                        ),
-                      ));
-                  setting.put(
-                      SettingBoxKey.danmakuFontSize, value.floorToDouble());
+                  // ✅ Update DanmakuController immediately for real-time preview
+                  widget.danmakuController.updateOption(
+                    widget.danmakuController.option.copyWith(
+                      fontSize: value.floorToDouble(),
+                    ),
+                  );
+                  // ✅ Save to Riverpod provider (which persists to storage)
+                  ref.read(danmakuSettingsProvider.notifier)
+                      .setDanmakuFontSize(value.floorToDouble());
                 },
               ),
             ),
@@ -81,13 +82,15 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                 label:
                     '${(widget.danmakuController.option.opacity * 100).round()}%',
                 onChanged: (value) {
-                  setState(() => widget.danmakuController.updateOption(
-                        widget.danmakuController.option.copyWith(
-                          opacity: value,
-                        ),
-                      ));
-                  setting.put(SettingBoxKey.danmakuOpacity,
-                      double.parse(value.toStringAsFixed(2)));
+                  // ✅ Update DanmakuController immediately for real-time preview
+                  widget.danmakuController.updateOption(
+                    widget.danmakuController.option.copyWith(
+                      opacity: value,
+                    ),
+                  );
+                  // ✅ Save to Riverpod provider (which persists to storage)
+                  ref.read(danmakuSettingsProvider.notifier)
+                      .setDanmakuOpacity(double.parse(value.toStringAsFixed(2)));
                 },
               ),
             ),
@@ -106,24 +109,28 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
                 label:
                     '${(widget.danmakuController.option.area * 100).round()}%',
                 onChanged: (value) {
-                  setState(() => widget.danmakuController.updateOption(
-                        widget.danmakuController.option.copyWith(
-                          area: value,
-                        ),
-                      ));
-                  setting.put(SettingBoxKey.danmakuArea, value);
+                  // ✅ Update DanmakuController immediately for real-time preview
+                  widget.danmakuController.updateOption(
+                    widget.danmakuController.option.copyWith(
+                      area: value,
+                    ),
+                  );
+                  // ✅ Save to Riverpod provider (which persists to storage)
+                  ref.read(danmakuSettingsProvider.notifier).setDanmakuArea(value);
                 },
               ),
             ),
             SettingsTile.switchTile(
               onToggle: (value) async {
                 bool show = value ?? widget.danmakuController.option.hideTop;
-                setState(() => widget.danmakuController.updateOption(
-                      widget.danmakuController.option.copyWith(
-                        hideTop: !show,
-                      ),
-                    ));
-                setting.put(SettingBoxKey.danmakuTop, show);
+                // ✅ Update DanmakuController immediately for real-time preview
+                widget.danmakuController.updateOption(
+                  widget.danmakuController.option.copyWith(
+                    hideTop: !show,
+                  ),
+                );
+                // ✅ Save to Riverpod provider (which persists to storage)
+                await ref.read(danmakuSettingsProvider.notifier).setDanmakuTop(show);
               },
               title: Text(playerTexts.danmakuTopDisplay),
               initialValue: !widget.danmakuController.option.hideTop,
@@ -131,12 +138,14 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
             SettingsTile.switchTile(
               onToggle: (value) async {
                 bool show = value ?? widget.danmakuController.option.hideBottom;
-                setState(() => widget.danmakuController.updateOption(
-                      widget.danmakuController.option.copyWith(
-                        hideBottom: !show,
-                      ),
-                    ));
-                setting.put(SettingBoxKey.danmakuBottom, show);
+                // ✅ Update DanmakuController immediately for real-time preview
+                widget.danmakuController.updateOption(
+                  widget.danmakuController.option.copyWith(
+                    hideBottom: !show,
+                  ),
+                );
+                // ✅ Save to Riverpod provider (which persists to storage)
+                await ref.read(danmakuSettingsProvider.notifier).setDanmakuBottom(show);
               },
               title: Text(playerTexts.danmakuBottomDisplay),
               initialValue: !widget.danmakuController.option.hideBottom,
@@ -144,12 +153,14 @@ class _DanmakuSettingsSheetState extends State<DanmakuSettingsSheet> {
             SettingsTile.switchTile(
               onToggle: (value) async {
                 bool show = value ?? widget.danmakuController.option.hideScroll;
-                setState(() => widget.danmakuController.updateOption(
-                      widget.danmakuController.option.copyWith(
-                        hideScroll: !show,
-                      ),
-                    ));
-                setting.put(SettingBoxKey.danmakuScroll, show);
+                // ✅ Update DanmakuController immediately for real-time preview
+                widget.danmakuController.updateOption(
+                  widget.danmakuController.option.copyWith(
+                    hideScroll: !show,
+                  ),
+                );
+                // ✅ Save to Riverpod provider (which persists to storage)
+                await ref.read(danmakuSettingsProvider.notifier).setDanmakuScroll(show);
               },
               title: Text(playerTexts.danmakuScrollDisplay),
               initialValue: !widget.danmakuController.option.hideScroll,

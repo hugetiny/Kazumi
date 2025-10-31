@@ -46,8 +46,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
   late final HistoryController historyController;
   late final WebviewItemController webviewItemController;
   late bool playResume;
-  bool showDebugLog = false;
-  List<String> webviewLogLines = [];
+  // ✅ showDebugLog, webviewLogLines, currentRoad moved to Riverpod StateProvider
   final FocusNode keyboardFocus = FocusNode();
 
   ScrollController scrollController = ScrollController();
@@ -56,9 +55,6 @@ class _VideoPageState extends ConsumerState<VideoPage>
   late Animation<Offset> _rightOffsetAnimation;
   late Animation<double> _maskOpacityAnimation;
   late TabController tabController;
-
-  // 当前播放列表
-  late int currentRoad;
 
   // webview init events listener
   late final StreamSubscription<bool> _initSubscription;
@@ -79,9 +75,9 @@ class _VideoPageState extends ConsumerState<VideoPage>
   @override
   void initState() {
     super.initState();
-    videoPageController = ref.read(videoControllerProvider.notifier);
-    playerController = ref.read(playerControllerProvider.notifier);
-    historyController = ref.read(historyControllerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
+    playerController = ref.read(playerProvider.notifier);
+    historyController = ref.read(historyProvider.notifier);
     webviewItemController = ref.read(webviewItemControllerProvider);
     windowManager.addListener(this);
     tabController = TabController(length: 2, vsync: this);
@@ -107,7 +103,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
     playResume = setting.get(SettingBoxKey.playResume, defaultValue: true);
     disableAnimations =
         setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false);
-    currentRoad = 0;
+    // ✅ Initialize currentRoad via Riverpod provider
+    ref.read(currentRoadProvider.notifier).state = 0;
 
     // Initialize video page state after initState completes
     Future.microtask(() {
@@ -143,9 +140,9 @@ class _VideoPageState extends ConsumerState<VideoPage>
         showDebugConsole();
         return;
       }
-      setState(() {
-        webviewLogLines.add(event);
-      });
+      // ✅ Update webviewLogLines via Riverpod provider
+      final currentLogs = ref.read(webviewLogLinesProvider);
+      ref.read(webviewLogLinesProvider.notifier).state = [...currentLogs, event];
     });
   }
 
@@ -195,27 +192,24 @@ class _VideoPageState extends ConsumerState<VideoPage>
   }
 
   void showDebugConsole() {
-    setState(() {
-      showDebugLog = true;
-    });
+    // ✅ Update state via Riverpod provider
+    ref.read(showDebugLogProvider.notifier).state = true;
   }
 
   void hideDebugConsole() {
-    setState(() {
-      showDebugLog = false;
-    });
+    // ✅ Update state via Riverpod provider
+    ref.read(showDebugLogProvider.notifier).state = false;
   }
 
   void switchDebugConsole() {
-    setState(() {
-      showDebugLog = !showDebugLog;
-    });
+    // ✅ Update state via Riverpod provider
+    final current = ref.read(showDebugLogProvider);
+    ref.read(showDebugLogProvider.notifier).state = !current;
   }
 
   void clearWebviewLog() {
-    setState(() {
-      webviewLogLines.clear();
-    });
+    // ✅ Update state via Riverpod provider
+    ref.read(webviewLogLinesProvider.notifier).state = [];
   }
 
   void _initializeVideoPageState() {
@@ -246,10 +240,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
       // Ignore progress restoration errors
     }
 
-    // Update local state to match controller
-    setState(() {
-      currentRoad = videoPageController.currentRoad;
-    });
+    // ✅ Update currentRoad via Riverpod provider
+    ref.read(currentRoadProvider.notifier).state = videoPageController.currentRoad;
   }
 
   Future<void> changeEpisode(int episode,
@@ -323,7 +315,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
   void sendDanmaku(String msg) async {
     keyboardFocus.requestFocus();
     final t = context.t;
-    final playerState = ref.read(playerControllerProvider);
+    final playerState = ref.read(playerProvider);
     if (playerState.danDanmakus.isEmpty) {
       KazumiDialog.showToast(
         message: t.playback.toast.danmakuUnsupported,
@@ -410,8 +402,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
   Widget build(BuildContext context) {
     final bool isWideScreen =
         MediaQuery.sizeOf(context).width > MediaQuery.sizeOf(context).height;
-    final videoState = ref.watch(videoControllerProvider);
-    final playerState = ref.watch(playerControllerProvider);
+    final videoState = ref.watch(videoProvider);
+    final playerState = ref.watch(playerProvider);
     final debugModeFromProvider =
         ref.watch(playerSettingsProvider.select((s) => s.playerDebugMode));
     final storedDebugMode = setting.get(
@@ -421,7 +413,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     final debugModeEnabled = debugModeFromProvider || storedDebugMode;
 
     // Trigger animation when showTabBody becomes true
-    ref.listen(videoControllerProvider.select((s) => s.showTabBody), (prev, next) {
+    ref.listen(videoProvider.select((s) => s.showTabBody), (prev, next) {
       if (next && (prev == null || !prev)) {
         // Use microtask for lighter weight than PostFrameCallback
         Future.microtask(() {
@@ -454,6 +446,12 @@ class _VideoPageState extends ConsumerState<VideoPage>
         }
         final plugin = videoState.currentPlugin;
         final isFullscreen = videoState.isFullscreen;
+
+        // ✅ Watch UI state from Riverpod providers in builder scope
+        final showDebugLog = ref.watch(showDebugLogProvider);
+        final webviewLogLines = ref.watch(webviewLogLinesProvider);
+        final currentRoad = ref.watch(currentRoadProvider);
+
         return Scaffold(
           appBar: ((plugin?.useNativePlayer ?? false) || isFullscreen)
               ? null
@@ -482,6 +480,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                             videoState,
                             playerState,
                             debugModeEnabled,
+                            showDebugLog, // ✅ Pass showDebugLog
                           ),
                         ),
                       ),
@@ -495,7 +494,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                   if (isWideScreen && videoState.showTabBody) ...[
                     if (disableAnimations) ...[
                       sideTabMask(videoState),
-                      sideTabBody(videoState, playerState),
+                      sideTabBody(videoState, playerState, currentRoad), // ✅ Pass currentRoad
                     ] else ...[
                       FadeTransition(
                         opacity: _maskOpacityAnimation,
@@ -503,7 +502,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                       ),
                       SlideTransition(
                         position: _rightOffsetAnimation,
-                        child: sideTabBody(videoState, playerState),
+                        child: sideTabBody(videoState, playerState, currentRoad), // ✅ Pass currentRoad
                       ),
                     ],
                   ],
@@ -515,6 +514,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
                         isLoading: videoState.loading,
                         isPlayerLoading: playerState.loading,
                         useNativePlayer: plugin?.useNativePlayer ?? false,
+                        webviewLogLines: webviewLogLines, // ✅ Pass webviewLogLines
                       ),
                     ),
                 ],
@@ -524,7 +524,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     );
   }
 
-  Widget sideTabBody(VideoPageState videoState, PlayerState playerState) {
+  Widget sideTabBody(VideoPageState videoState, PlayerState playerState, int currentRoad) { // ✅ Added currentRoad parameter
     return SizedBox(
       height: MediaQuery.sizeOf(context).height,
       width: (!Utils.isDesktop() && !Utils.isTablet())
@@ -540,8 +540,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
               ? tabBody(videoState, playerState)
               : Column(
                   children: [
-                    menuBar(videoState),
-                    menuBody(videoState),
+                    menuBar(videoState, currentRoad), // ✅ Pass currentRoad
+                    menuBody(videoState, currentRoad), // ✅ Pass currentRoad
                   ],
                 ),
         ),
@@ -573,6 +573,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     VideoPageState videoState,
     PlayerState playerState,
     bool debugModeEnabled,
+    bool showDebugLog, // ✅ Added showDebugLog parameter
   ) {
     final t = context.t;
     final plugin = videoState.currentPlugin;
@@ -724,6 +725,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     required bool isLoading,
     required bool isPlayerLoading,
     required bool useNativePlayer,
+    required List<String> webviewLogLines, // ✅ Added parameter
   }) {
     final theme = Theme.of(context);
     final titleStyle = theme.textTheme.titleLarge?.copyWith(
@@ -1102,7 +1104,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     return '$mm:$ss';
   }
 
-  Widget menuBar(VideoPageState videoState) {
+  Widget menuBar(VideoPageState videoState, int currentRoad) { // ✅ Added currentRoad parameter
     final t = context.t;
     String playlistLabel(int index) =>
         t.playback.playlist.list.replaceFirst('{index}', '$index');
@@ -1150,9 +1152,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
               videoState.roadList.length,
               (int i) => MenuItemButton(
                 onPressed: () {
-                  setState(() {
-                    currentRoad = i;
-                  });
+                  // ✅ Update currentRoad via Riverpod provider
+                  ref.read(currentRoadProvider.notifier).state = i;
                 },
                 child: Container(
                   height: 48,
@@ -1177,7 +1178,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
     );
   }
 
-  Widget menuBody(VideoPageState videoState) {
+  Widget menuBody(VideoPageState videoState, int currentRoad) { // ✅ Added currentRoad parameter
     final cardList = <Widget>[];
     for (var roadIndex = 0;
         roadIndex < videoState.roadList.length;
@@ -1275,20 +1276,6 @@ class _VideoPageState extends ConsumerState<VideoPage>
 
   Widget tabBody(VideoPageState videoState, PlayerState playerState) {
     final t = context.t;
-    final roads = videoState.roadList;
-    final currentRoadIndex = videoState.currentRoad;
-    final currentEpisodeIndex = videoState.currentEpisode;
-    var episodeNum = currentEpisodeIndex;
-    if (roads.length > currentRoadIndex &&
-        roads[currentRoadIndex].identifier.length >= currentEpisodeIndex) {
-      final identifier =
-          roads[currentRoadIndex].identifier[currentEpisodeIndex - 1];
-      final parsedEpisode = Utils.extractEpisodeNumber(identifier);
-      if (parsedEpisode > 0 &&
-          parsedEpisode <= roads[currentRoadIndex].identifier.length) {
-        episodeNum = parsedEpisode;
-      }
-    }
 
     return Container(
       color: Theme.of(context).canvasColor,
@@ -1383,15 +1370,13 @@ class _VideoPageState extends ConsumerState<VideoPage>
                     controller: observerController,
                     child: Column(
                       children: [
-                        menuBar(videoState),
-                        menuBody(videoState),
+                        menuBar(videoState, videoState.currentRoad), // ✅ Pass videoState.currentRoad
+                        menuBody(videoState, videoState.currentRoad), // ✅ Pass videoState.currentRoad
                       ],
                     ),
                   ),
-                  EpisodeInfo(
-                    episode: episodeNum,
-                    child: EpisodeCommentsSheet(),
-                  ),
+                  // ✅ No need for EpisodeInfo InheritedWidget - use Riverpod provider instead
+                  const EpisodeCommentsSheet(),
                 ],
               ),
             ),

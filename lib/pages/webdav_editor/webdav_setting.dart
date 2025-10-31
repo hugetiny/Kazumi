@@ -18,8 +18,8 @@ class WebDavSettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(webDavSettingsControllerProvider);
-    final controller = ref.read(webDavSettingsControllerProvider.notifier);
+    final state = ref.watch(webDavSettingsProvider);
+    final controller = ref.read(webDavSettingsProvider.notifier);
     final t = ref.watch(translationsProvider);
 
     return PopScope(

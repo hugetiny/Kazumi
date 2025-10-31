@@ -45,7 +45,7 @@
       "appearanceDesc": "设置应用主题和刷新率",
       "language": "应用语言",
       "languageDesc": "选择应用界面显示语言",
-      "followSystem": "跟随系统",
+      "followSystem": "系统",
       "exitBehavior": "关闭时",
       "exitApp": "退出 Kazumi",
       "minimizeToTray": "最小化至托盘",
@@ -55,7 +55,7 @@
       "title": "外观设置",
       "mode": {
         "title": "主题模式",
-        "system": "跟随系统",
+        "system": "系统",
         "light": "浅色",
         "dark": "深色"
       },
@@ -237,8 +237,8 @@
       "superResolution": "超分辨率",
       "autoJump": "自动跳转",
       "autoJumpDesc": "跳转到上次播放位置",
-      "disableAnimations": "禁用动画",
-      "disableAnimationsDesc": "禁用播放器内的过渡动画",
+  "disableAnimations": "禁用视频",
+  "disableAnimationsDesc": "禁用播放器内的过渡视频",
       "errorPrompt": "错误提示",
       "errorPromptDesc": "显示播放器内部错误提示",
       "debugMode": "调试模式",

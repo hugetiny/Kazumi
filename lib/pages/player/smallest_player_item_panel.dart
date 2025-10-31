@@ -1,4 +1,4 @@
-﻿import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,8 +74,8 @@ class _SmallestPlayerItemPanelState
   @override
   void initState() {
     super.initState();
-    playerController = ref.read(playerControllerProvider.notifier);
-    videoPageController = ref.read(videoControllerProvider.notifier);
+    playerController = ref.read(playerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
     topOffsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.0),
       end: const Offset(0.0, 0.0),
@@ -102,20 +102,16 @@ class _SmallestPlayerItemPanelState
       String input = '';
       return AlertDialog(
         title: Text(t.playback.controls.skip.title),
-        content: StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return TextField(
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: InputDecoration(
-                floatingLabelBehavior: FloatingLabelBehavior.never,
-                labelText: playerController.forwardTime.toString(),
-              ),
-              onChanged: (value) {
-                input = value;
-              },
-            );
+        content: TextField(
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
+          decoration: InputDecoration(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            labelText: playerController.forwardTime.toString(),
+          ),
+          onChanged: (value) {
+            input = value;
           },
         ),
         actions: <Widget>[
@@ -165,8 +161,8 @@ class _SmallestPlayerItemPanelState
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(playerControllerProvider);
-    final videoState = ref.watch(videoControllerProvider);
+    final playerState = ref.watch(playerProvider);
+    final videoState = ref.watch(videoProvider);
     final shouldShowOverlay = widget.disableAnimations
         ? playerState.showVideoController
         : true;

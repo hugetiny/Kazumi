@@ -1,31 +1,24 @@
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
-class ExitBehaviorSettings extends StatefulWidget {
+/// Provider for exit behavior setting
+final exitBehaviorProvider = StateProvider.autoDispose<int>((ref) {
+  final setting = GStorage.setting;
+  return setting.get(SettingBoxKey.exitBehavior, defaultValue: 2) as int;
+});
+
+class ExitBehaviorSettings extends ConsumerWidget {
   const ExitBehaviorSettings({super.key});
 
   @override
-  State<ExitBehaviorSettings> createState() => _ExitBehaviorSettingsState();
-}
-
-class _ExitBehaviorSettingsState extends State<ExitBehaviorSettings> {
-  late final Box setting = GStorage.setting;
-  late int exitBehavior;
-
-  @override
-  void initState() {
-    super.initState();
-    exitBehavior =
-        setting.get(SettingBoxKey.exitBehavior, defaultValue: 2) as int;
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.t;
+    final setting = GStorage.setting;
+    final exitBehavior = ref.watch(exitBehaviorProvider);
 
     final List<String> exitBehaviorTitles = [
       t.settings.general.exitApp,
@@ -52,9 +45,7 @@ class _ExitBehaviorSettingsState extends State<ExitBehaviorSettings> {
                     return;
                   }
                   await setting.put(SettingBoxKey.exitBehavior, value);
-                  setState(() {
-                    exitBehavior = value;
-                  });
+                  ref.read(exitBehaviorProvider.notifier).state = value;
                 },
               ),
             ),

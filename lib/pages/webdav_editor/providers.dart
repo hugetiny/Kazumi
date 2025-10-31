@@ -220,7 +220,17 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
   }
 }
 
-final webDavSettingsControllerProvider =
+/// WebDAV 设置 Provider
+///
+/// 管理 WebDAV 服务器配置和数据同步。
+/// 支持收藏、历史记录的云端备份和恢复。
+///
+/// 示例:
+/// ```dart
+/// final controller = ref.read(webDavSettingsProvider.notifier);
+/// await controller.testConnection();
+/// ```
+final webDavSettingsProvider =
     NotifierProvider<WebDavSettingsController, WebDavSettingsState>(
   WebDavSettingsController.new,
 );

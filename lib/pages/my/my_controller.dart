@@ -8,24 +8,17 @@ import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:kazumi/providers/translations_provider.dart';
 
-class CollectState {
-  final List<CollectedBangumi> collectibles;
-  final bool syncing;
+part 'my_controller.freezed.dart';
 
-  const CollectState({
-    this.collectibles = const [],
-    this.syncing = false,
-  });
-
-  CollectState copyWith({
-    List<CollectedBangumi>? collectibles,
-    bool? syncing,
-  }) => CollectState(
-        collectibles: collectibles ?? this.collectibles,
-        syncing: syncing ?? this.syncing,
-      );
+@freezed
+class CollectState with _$CollectState {
+  const factory CollectState({
+    @Default([]) List<CollectedBangumi> collectibles,
+    @Default(false) bool syncing,
+  }) = _CollectState;
 }
 
 class CollectController extends Notifier<CollectState> {

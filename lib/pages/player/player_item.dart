@@ -35,6 +35,13 @@ import 'package:kazumi/pages/player/player_item_surface.dart';
 import 'package:kazumi/pages/setting/setting_controller.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
+/// Provider for super resolution warning dialog "don't ask again" checkbox state
+final _superResolutionDontAskAgainProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+/// Provider for syncplay server selection dialog state
+final _syncPlaySelectedServerProvider = StateProvider.autoDispose<String>((ref) => '');
+final _syncPlayCustomServerProvider = StateProvider.autoDispose<String>((ref) => '');
+
 class PlayerItem extends ConsumerStatefulWidget {
   const PlayerItem({
     super.key,
@@ -179,9 +186,8 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     playerController.danmakuController.clear();
     // if true, turn off danmaku.
     if (playerController.danmakuOn) {
-      setState(() {
-        playerController.danmakuOn = false;
-      });
+
+      playerController.danmakuOn = false;
       return;
     }
     // if false and empty, show dialog.
@@ -190,9 +196,7 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
       return;
     }
     // turn on danmaku.
-    setState(() {
-      playerController.danmakuOn = true;
-    });
+    playerController.danmakuOn = true;
   }
 
   Future<void> _uploadHistoryToWebDav() async {
@@ -238,9 +242,9 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
       bool confirmed = false;
 
       await KazumiDialog.show(builder: (context) {
-        bool dontAskAgain = false;
+        return Consumer(builder: (context, ref, child) {
+          final dontAskAgain = ref.watch(_superResolutionDontAskAgainProvider);
 
-        return StatefulBuilder(builder: (context, setState) {
           return AlertDialog(
             title: Text(t.playback.superResolution.warning.title),
             content: Column(
@@ -254,8 +258,9 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                   children: [
                     Checkbox(
                       value: dontAskAgain,
-                      onChanged: (value) =>
-                          setState(() => dontAskAgain = value ?? false),
+                      onChanged: (value) {
+                        ref.read(_superResolutionDontAskAgainProvider.notifier).state = value ?? false;
+                      },
                     ),
                     Text(t.playback.superResolution.warning.dontAskAgain),
                   ],
@@ -699,8 +704,8 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
             length: 2,
             child: Consumer(
               builder: (context, ref, _) {
-                final playerState = ref.watch(playerControllerProvider);
-                final controller = ref.read(playerControllerProvider.notifier);
+                final playerState = ref.watch(playerProvider);
+                final controller = ref.read(playerProvider.notifier);
                 return Scaffold(
                   body: Column(
                     children: [
@@ -750,33 +755,45 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
 
     KazumiDialog.show(
       builder: (context) {
-        return StatefulBuilder(builder: (context, setDialogState) {
+        return Consumer(builder: (context, ref, child) {
+          // Initialize providers with current values
+          ref.read(_syncPlaySelectedServerProvider.notifier).state = selectedSyncPlayEndPoint;
+          ref.read(_syncPlayCustomServerProvider.notifier).state = customSyncPlayEndPoint;
+
+          final selectedServer = ref.watch(_syncPlaySelectedServerProvider);
+          final customServer = ref.watch(_syncPlayCustomServerProvider);
+
           List<String> syncPlayEndPoints = [];
           syncPlayEndPoints.addAll(defaultSyncPlayEndPoints);
-          syncPlayEndPoints.add(customSyncPlayEndPoint);
-          if (!syncPlayEndPoints.contains(selectedSyncPlayEndPoint)) {
-            syncPlayEndPoints.add(selectedSyncPlayEndPoint);
+          syncPlayEndPoints.add(customServer);
+          if (!syncPlayEndPoints.contains(selectedServer)) {
+            syncPlayEndPoints.add(selectedServer);
           }
+
           return AlertDialog(
             title: Text(t.playback.syncplay.selectServer.title),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
-                  DropdownButtonFormField<String>(
+                  InputDecorator(
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    initialValue: selectedSyncPlayEndPoint,
-                    items: syncPlayEndPoints.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          value,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedServer,
+                        isExpanded: true,
+                        items: syncPlayEndPoints.map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(
+                              value,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
                       if (newValue != null) {
                         if (newValue == defaultCustomSyncPlayEndPoint) {
                           final serverTextController = TextEditingController();
@@ -807,12 +824,10 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                                           !syncPlayEndPoints.contains(
                                               serverTextController.text)) {
                                         KazumiDialog.dismiss();
-                                        setDialogState(() {
-                                          customSyncPlayEndPoint =
-                                              serverTextController.text;
-                                          selectedSyncPlayEndPoint =
-                                              serverTextController.text;
-                                        });
+                                        ref.read(_syncPlayCustomServerProvider.notifier).state =
+                                            serverTextController.text;
+                                        ref.read(_syncPlaySelectedServerProvider.notifier).state =
+                                            serverTextController.text;
                                       } else {
                                         KazumiDialog.showToast(
                                           message: t.playback.syncplay
@@ -826,12 +841,12 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                             },
                           );
                         } else {
-                          setDialogState(() {
-                            selectedSyncPlayEndPoint = newValue;
-                          });
+                          ref.read(_syncPlaySelectedServerProvider.notifier).state = newValue;
                         }
                       }
                     },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -848,7 +863,7 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                 onPressed: () {
                   setting.put(
                     SettingBoxKey.syncPlayEndPoint,
-                    selectedSyncPlayEndPoint,
+                    selectedServer,
                   );
                   KazumiDialog.dismiss();
                 },
@@ -961,13 +976,13 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
   @override
   void initState() {
     super.initState();
-    playerController = ref.read(playerControllerProvider.notifier);
-    videoPageController = ref.read(videoControllerProvider.notifier);
-    historyController = ref.read(historyControllerProvider.notifier);
-    collectController = ref.read(collectControllerProvider.notifier);
+    playerController = ref.read(playerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
+    historyController = ref.read(historyProvider.notifier);
+    collectController = ref.read(collectionsProvider.notifier);
     myController = ref.read(myControllerProvider.notifier);
     _fullscreenSubscription = ref.listenManual<bool>(
-      videoControllerProvider.select((state) => state.isFullscreen),
+      videoProvider.select((state) => state.isFullscreen),
       (previous, next) {
         if (!mounted) return;
         _handleFullscreenChange(context);
@@ -1045,9 +1060,9 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
 
   @override
   Widget build(BuildContext context) {
-    final playerState = ref.watch(playerControllerProvider);
-    final videoState = ref.watch(videoControllerProvider);
-    ref.watch(collectControllerProvider);
+    final playerState = ref.watch(playerProvider);
+    final videoState = ref.watch(videoProvider);
+    ref.watch(collectionsProvider);
     collectType =
         collectController.getCollectType(videoPageController.bangumiItem);
     return ClipRect(
@@ -1221,9 +1236,8 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                     if (playerController.lockPanel) {
                       return;
                     }
-                    setState(() {
-                      playerController.showPlaySpeed = true;
-                    });
+
+                    playerController.showPlaySpeed = true;
                     lastPlayerSpeed = playerController.playerSpeed;
                     setPlaybackSpeed(2.0);
                   },
@@ -1231,9 +1245,8 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                     if (playerController.lockPanel) {
                       return;
                     }
-                    setState(() {
-                      playerController.showPlaySpeed = false;
-                    });
+
+                    playerController.showPlaySpeed = false;
                     setPlaybackSpeed(lastPlayerSpeed);
                   },
                   child: Container(

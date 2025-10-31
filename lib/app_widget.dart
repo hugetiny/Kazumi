@@ -18,6 +18,9 @@ import 'package:kazumi/router.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/tray_localization.dart';
 
+/// Provider for exit dialog "don't ask again" checkbox state
+final _exitDialogSavePreferenceProvider = StateProvider.autoDispose<bool>((ref) => false);
+
 class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
 
@@ -71,7 +74,6 @@ class _AppWidgetState extends ConsumerState<AppWidget>
   void setPreventClose() async {
     if (Utils.isDesktop()) {
       await windowManager.setPreventClose(true);
-      setState(() {});
     }
   }
 
@@ -126,56 +128,57 @@ class _AppWidgetState extends ConsumerState<AppWidget>
           showingExitDialog = false;
         }, builder: (context) {
           final t = context.t;
-          bool saveExitBehavior = false; // 下次不再询问？
 
-          return AlertDialog(
-            title: Text(t.exitDialog.title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(t.exitDialog.message),
-                const SizedBox(height: 24),
-                StatefulBuilder(builder: (context, setState) {
-                  onChanged(value) {
-                    saveExitBehavior = value ?? false;
-                    setState(() {});
-                  }
+          return Consumer(builder: (context, ref, child) {
+            final saveExitBehavior = ref.watch(_exitDialogSavePreferenceProvider);
 
-                  return Wrap(
+            return AlertDialog(
+              title: Text(t.exitDialog.title),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(t.exitDialog.message),
+                  const SizedBox(height: 24),
+                  Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 8,
                     children: [
-                      Checkbox(value: saveExitBehavior, onChanged: onChanged),
+                      Checkbox(
+                        value: saveExitBehavior,
+                        onChanged: (value) {
+                          ref.read(_exitDialogSavePreferenceProvider.notifier).state = value ?? false;
+                        },
+                      ),
                       Text(t.exitDialog.dontAskAgain),
                     ],
-                  );
-                }),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () async {
+                      if (saveExitBehavior) {
+                        await setting.put(SettingBoxKey.exitBehavior, 0);
+                      }
+                      exit(0);
+                    },
+                    child: Text(t.exitDialog.exit)),
+                TextButton(
+                    onPressed: () async {
+                      if (saveExitBehavior) {
+                        await setting.put(SettingBoxKey.exitBehavior, 1);
+                      }
+                      KazumiDialog.dismiss();
+                      windowManager.hide();
+                    },
+                    child: Text(t.exitDialog.minimize)),
+                TextButton(
+                    onPressed: KazumiDialog.dismiss,
+                    child: Text(t.exitDialog.cancel)),
               ],
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () async {
-                    if (saveExitBehavior) {
-                      await setting.put(SettingBoxKey.exitBehavior, 0);
-                    }
-                    exit(0);
-                  },
-                  child: Text(t.exitDialog.exit)),
-              TextButton(
-                  onPressed: () async {
-                    if (saveExitBehavior) {
-                      await setting.put(SettingBoxKey.exitBehavior, 1);
-                    }
-                    KazumiDialog.dismiss();
-                    windowManager.hide();
-                  },
-                  child: Text(t.exitDialog.minimize)),
-              TextButton(
-                  onPressed: KazumiDialog.dismiss,
-                  child: Text(t.exitDialog.cancel)),
-            ],
-          );
+            );
+          });
         });
     }
   }
@@ -299,7 +302,7 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   @override
   Widget build(BuildContext context) {
-    final themeState = ref.watch(themeNotifierProvider);
+    final themeState = ref.watch(themeProvider);
     final Color seedColor = themeState.seedColor;
     final bool useDynamicColor = themeState.useDynamicColor;
     final bool oledEnhance = themeState.oledEnhance;

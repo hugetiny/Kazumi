@@ -83,7 +83,7 @@ class PlayerController extends Notifier<PlayerState> {
   StreamSubscription<double?>? playerAudioBitrateSubscription;
 
   void _initializeDependencies() {
-    videoPageController = ref.read(videoControllerProvider.notifier);
+    videoPageController = ref.read(videoProvider.notifier);
     shadersController = ref.read(shadersControllerProvider);
   }
 
