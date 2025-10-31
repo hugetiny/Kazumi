@@ -1,7 +1,8 @@
 # Implementation Plan: Full UI Internationalization
 
-**Branch**: `[002-full-ui-i18n]` | **Date**: 2025-02-14 | **Spec**: [`specs/002-implement-multilingual-architecture/spec.md`](specs/002-implement-multilingual-architecture/spec.md)
-**Input**: Feature specification from `/specs/002-implement-multilingual-architecture/spec.md`
+**Branch**: `002-full-ui-i18n` | **Date**: 2025-02-14 | **Spec**: [specs/002-implement-multilingual-architecture/spec.md](specs/002-implement-multilingual-architecture/spec.md)
+
+**Input**: Feature specification from `specs/002-implement-multilingual-architecture/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
@@ -59,7 +60,6 @@ specs/[###-feature]/
   not include Option labels.
 -->
 
-src/
 ```text
 lib/
 ├── app_widget.dart
@@ -102,4 +102,4 @@ docs/
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| _None_ | _N/A_ | _N/A_ |
+| *None* | *N/A* | *N/A* |

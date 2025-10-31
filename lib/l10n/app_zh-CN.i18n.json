@@ -209,10 +209,10 @@
       }
     },
     "metadata": {
-      "title": "元数据",
-      "enableBangumi": "启用 Bangumi 元数据",
+      "title": "信息源",
+      "enableBangumi": "启用 Bangumi 信息源",
       "enableBangumiDesc": "从 Bangumi 拉取番剧信息",
-      "enableTmdb": "启用 TMDb 元数据",
+      "enableTmdb": "启用 TMDb 信息源",
       "enableTmdbDesc": "从 TMDb 补充多语言资料",
       "preferredLanguage": "优先语言",
       "preferredLanguageDesc": "设置元数据同步时使用的语言",

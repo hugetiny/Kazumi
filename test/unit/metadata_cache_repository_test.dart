@@ -52,7 +52,7 @@ void main() {
     await Hive.deleteBoxFromDisk('settingsRepoTest');
   });
 
-  MetadataCacheRepository _buildRepository() {
+  MetadataCacheRepository buildRepository() {
     return MetadataCacheRepository(
       metadataBox: metadataBox,
       settingBox: settingsBox,
@@ -63,7 +63,7 @@ void main() {
   group('MetadataCacheRepository', () {
     test('purges expired entries when accessing records', () async {
       await settingsBox.put(SettingBoxKey.metadataRetentionHours, 1);
-      final MetadataCacheRepository repository = _buildRepository();
+      final MetadataCacheRepository repository = buildRepository();
 
       final MetadataRecord staleRecord = MetadataRecord(
         slug: 'stale',
@@ -79,7 +79,7 @@ void main() {
 
     test('upsert merges identifiers, titles, episodes and snapshots', () async {
       await settingsBox.put(SettingBoxKey.metadataRetentionHours, 24);
-      final MetadataCacheRepository repository = _buildRepository();
+      final MetadataCacheRepository repository = buildRepository();
 
       final MetadataFetchResult tmdbResult = MetadataFetchResult(
         source: MetadataSourceKind.tmdb,
@@ -165,7 +165,7 @@ void main() {
 
     test('purgeExpired removes entries older than retention window', () async {
       await settingsBox.put(SettingBoxKey.metadataRetentionHours, 2);
-      final MetadataCacheRepository repository = _buildRepository();
+      final MetadataCacheRepository repository = buildRepository();
 
       final MetadataRecord fresh = MetadataRecord(
         slug: 'fresh',

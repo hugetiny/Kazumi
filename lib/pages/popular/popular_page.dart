@@ -42,14 +42,16 @@ class _PopularPageState extends ConsumerState<PopularPage>
   void initState() {
     super.initState();
     scrollController.addListener(scrollListener);
-    final state = ref.read(popularControllerProvider);
     popularController = ref.read(popularControllerProvider.notifier);
+
+    // Use ref.listenManual to load data after widget is built
+    final state = ref.read(popularControllerProvider);
     if (state.trendList.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
+      // Schedule loading after initState completes
+      Future.microtask(() {
+        if (mounted) {
+          popularController.queryBangumiByTrend();
         }
-        popularController.queryBangumiByTrend();
       });
     }
   }

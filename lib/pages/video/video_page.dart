@@ -108,36 +108,12 @@ class _VideoPageState extends ConsumerState<VideoPage>
     disableAnimations =
         setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false);
     currentRoad = 0;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
+
+    // Initialize video page state after initState completes
+    Future.microtask(() {
+      if (mounted) {
+        _initializeVideoPageState();
       }
-      videoPageController.isDesktopFullscreen();
-      videoPageController.currentEpisode = 1;
-      videoPageController.currentRoad = 0;
-      videoPageController.historyOffset = 0;
-      videoPageController.showTabBody = true;
-      try {
-        final progress = historyController.lastWatching(
-          videoPageController.bangumiItem,
-          videoPageController.currentPlugin.name,
-        );
-        if (progress != null &&
-            videoPageController.roadList.length > progress.road &&
-            videoPageController.roadList[progress.road].data.length >=
-                progress.episode) {
-          videoPageController.currentEpisode = progress.episode;
-          videoPageController.currentRoad = progress.road;
-          if (playResume) {
-            videoPageController.historyOffset = progress.progress.inSeconds;
-          }
-        }
-      } catch (_) {
-        // Ignore progress restoration when controller state is not ready yet.
-      }
-      setState(() {
-        currentRoad = videoPageController.currentRoad;
-      });
     });
 
     // webview events listener
@@ -239,6 +215,40 @@ class _VideoPageState extends ConsumerState<VideoPage>
   void clearWebviewLog() {
     setState(() {
       webviewLogLines.clear();
+    });
+  }
+
+  void _initializeVideoPageState() {
+    // Initialize video page state immediately instead of waiting for next frame
+    videoPageController.isDesktopFullscreen();
+    videoPageController.currentEpisode = 1;
+    videoPageController.currentRoad = 0;
+    videoPageController.historyOffset = 0;
+    videoPageController.showTabBody = true;
+
+    // Try to restore playback progress from history
+    try {
+      final progress = historyController.lastWatching(
+        videoPageController.bangumiItem,
+        videoPageController.currentPlugin.name,
+      );
+      if (progress != null &&
+          videoPageController.roadList.length > progress.road &&
+          videoPageController.roadList[progress.road].data.length >=
+              progress.episode) {
+        videoPageController.currentEpisode = progress.episode;
+        videoPageController.currentRoad = progress.road;
+        if (playResume) {
+          videoPageController.historyOffset = progress.progress.inSeconds;
+        }
+      }
+    } catch (_) {
+      // Ignore progress restoration errors
+    }
+
+    // Update local state to match controller
+    setState(() {
+      currentRoad = videoPageController.currentRoad;
     });
   }
 
@@ -409,9 +419,19 @@ class _VideoPageState extends ConsumerState<VideoPage>
       defaultValue: kDebugMode,
     ) as bool;
     final debugModeEnabled = debugModeFromProvider || storedDebugMode;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      openTabBodyAnimated();
+
+    // Trigger animation when showTabBody becomes true
+    ref.listen(videoControllerProvider.select((s) => s.showTabBody), (prev, next) {
+      if (next && (prev == null || !prev)) {
+        // Use microtask for lighter weight than PostFrameCallback
+        Future.microtask(() {
+          if (mounted) {
+            openTabBodyAnimated();
+          }
+        });
+      }
     });
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {

@@ -15,6 +15,8 @@ import 'package:kazumi/pages/settings/displaymode_settings.dart';
 import 'package:kazumi/pages/settings/player_settings.dart';
 import 'package:kazumi/pages/settings/super_resolution_settings.dart';
 import 'package:kazumi/pages/settings/theme_settings_page.dart';
+import 'package:kazumi/pages/setting/appearance/language_settings.dart';
+import 'package:kazumi/pages/setting/appearance/exit_behavior_settings.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_settings.dart';
 import 'package:kazumi/pages/settings/danmaku/danmaku_shield_settings.dart';
 import 'package:kazumi/pages/timeline/timeline_page.dart';
@@ -86,6 +88,14 @@ final GoRouter router = GoRouter(
         return null;
       },
       routes: [
+        GoRoute(
+          path: 'language',
+          builder: (context, state) => const LanguageSettings(),
+        ),
+        GoRoute(
+          path: 'exit-behavior',
+          builder: (context, state) => const ExitBehaviorSettings(),
+        ),
         GoRoute(
           path: 'theme',
           builder: (context, state) => const ThemeSettingsPage(),

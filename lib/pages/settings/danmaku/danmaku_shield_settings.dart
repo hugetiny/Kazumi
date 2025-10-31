@@ -15,13 +15,6 @@ class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
   final TextEditingController textEditingController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    // Ensure shield list is loaded when entering the screen.
-    ref.read(myControllerProvider.notifier).loadShieldList();
-  }
-
-  @override
   void dispose() {
     textEditingController.dispose();
     super.dispose();

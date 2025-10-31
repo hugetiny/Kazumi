@@ -15,41 +15,41 @@
       "bangumi": "Bangumi",
       "tmdb": "TMDb"
     },
-    "lastSynced": "Last synced: {timestamp}"
+    "lastSynced": "最後同步：{timestamp}"
   },
   "downloads": {
-    "sectionTitle": "Download Queue",
-    "aria2Offline": "aria2 not connected",
-    "queued": "Queued",
-    "running": "Downloading",
-    "completed": "Completed"
+    "sectionTitle": "下載佇列",
+    "aria2Offline": "aria2 未連線",
+    "queued": "排隊中",
+    "running": "下載中",
+    "completed": "已完成"
   },
   "torrent": {
     "consent": {
-      "title": "BitTorrent Usage Notice",
-      "description": "Before enabling BT downloads, please confirm compliance with local laws and understand the risks involved.",
-      "agree": "I understand, continue",
-      "decline": "Not now"
+      "title": "BitTorrent 使用提示",
+      "description": "啟用 BT 下載前，請確認遵守所在地法律並了解使用風險。",
+      "agree": "我已知悉，繼續",
+      "decline": "暫不開啟"
     },
     "error": {
-      "submit": "Unable to submit magnet link, please try again later"
+      "submit": "無法提交磁力連結，稍後重試"
     }
   },
   "settings": {
-    "title": "Settings",
-    "downloads": "Download Settings",
-    "playback": "Playback Preferences",
+    "title": "設定",
+    "downloads": "下載設定",
+    "playback": "播放偏好",
     "general": {
-      "title": "General",
-      "appearance": "Appearance",
-      "appearanceDesc": "Configure app theme and refresh rate",
-      "language": "App Language",
-      "languageDesc": "Choose the display language for the app interface",
-      "followSystem": "Follow System",
-      "exitBehavior": "On Close",
-      "exitApp": "Exit Kazumi",
-      "minimizeToTray": "Minimize to Tray",
-      "askEveryTime": "Ask Every Time"
+      "title": "通用",
+      "appearance": "外觀",
+      "appearanceDesc": "設定應用程式主題和更新率",
+      "language": "應用程式語言",
+      "languageDesc": "選擇應用程式介面顯示語言",
+      "followSystem": "依系統",
+      "exitBehavior": "關閉時",
+      "exitApp": "結束 Kazumi",
+      "minimizeToTray": "最小化至系統匣",
+      "askEveryTime": "每次都詢問"
     },
     "appearancePage": {
       "title": "外觀設定",
@@ -209,11 +209,11 @@
       }
     },
     "metadata": {
-      "title": "Metadata",
-      "enableBangumi": "Enable Bangumi Metadata",
-      "enableBangumiDesc": "Fetch anime information from Bangumi",
-      "enableTmdb": "Enable TMDb Metadata",
-      "enableTmdbDesc": "Supplement multilingual data from TMDb",
+      "title": "資訊來源",
+      "enableBangumi": "啟用 Bangumi 資訊來源",
+      "enableBangumiDesc": "從 Bangumi 拉取番劇資訊",
+      "enableTmdb": "啟用 TMDb 資訊來源",
+      "enableTmdbDesc": "從 TMDb 補充多語言資料",
       "preferredLanguage": "Preferred Language",
       "preferredLanguageDesc": "Set the language for metadata synchronization",
       "followSystemLanguage": "Follow System Language",
@@ -488,44 +488,44 @@
   },
   "navigation": {
     "tabs": {
-      "popular": "Popular",
-      "timeline": "Timeline",
-      "my": "My",
-      "settings": "Settings"
+      "popular": "熱門番組",
+      "timeline": "時間表",
+      "my": "我的",
+      "settings": "設定"
     },
     "actions": {
-      "search": "Search",
-      "history": "History",
-      "close": "Quit"
+      "search": "搜尋",
+      "history": "歷史記錄",
+      "close": "結束"
     }
   },
   "dialogs": {
     "disclaimer": {
-      "title": "Disclaimer",
-      "agree": "I have read and agree",
-      "exit": "Exit"
+      "title": "免責聲明",
+      "agree": "已閱讀並同意",
+      "exit": "結束"
     },
     "updateMirror": {
-      "title": "Update Mirror",
-      "question": "Where would you like to fetch app updates?",
-      "description": "GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.",
+      "title": "更新鏡像",
+      "question": "您希望從哪裡取得應用程式更新？",
+      "description": "GitHub 鏡像適用於大多數情況。如果您使用 F-Droid 應用程式商店，請選擇 F-Droid 鏡像。",
       "options": {
         "github": "GitHub",
         "fdroid": "F-Droid"
       }
     },
     "pluginUpdates": {
-      "toast": "Detected {count} rule updates"
+      "toast": "偵測到 {count} 條規則可以更新"
     },
     "webdav": {
-      "syncFailed": "Failed to sync watch history: {error}"
+      "syncFailed": "同步觀看記錄失敗 {error}"
     },
     "about": {
-      "licenseLegalese": "Open Source Licenses"
+      "licenseLegalese": "開放原始碼授權"
     },
     "cache": {
-      "title": "Cache Management",
-      "message": "Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?"
+      "title": "快取管理",
+      "message": "快取包含番劇封面，清除後載入時需要重新下載，確認要清除快取嗎？"
     }
   },
   "library": {

@@ -147,7 +147,6 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {});
     final pluginsState = ref.watch(pluginsControllerProvider);
     final pluginList = pluginsState.pluginList;
     final pluginTexts = context.t.settings.plugins;

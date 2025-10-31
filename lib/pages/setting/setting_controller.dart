@@ -21,7 +21,11 @@ class MyState {
 
 class MyController extends Notifier<MyState> {
   @override
-  MyState build() => const MyState();
+  MyState build() {
+    // Auto-load shield list when provider is initialized
+    final values = GStorage.shieldList.values.cast<String>().toList();
+    return MyState(shieldList: List.unmodifiable(values));
+  }
 
   final Box setting = GStorage.setting;
 

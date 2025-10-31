@@ -214,7 +214,6 @@ class _DanmakuSettingsPageState extends State<DanmakuSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {});
     final translations = context.t;
     final playerTexts = translations.settings.player;
     final sourcesTexts = playerTexts.danmakuSources;

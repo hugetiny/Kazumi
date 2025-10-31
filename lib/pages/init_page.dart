@@ -9,7 +9,6 @@ import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
 import 'package:kazumi/pages/my/providers.dart';
 import 'package:kazumi/pages/setting/setting_controller.dart';
-import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:kazumi/plugins/plugins_controller.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
@@ -48,19 +47,7 @@ class _InitPageState extends ConsumerState<InitPage> {
     _webDavInit();
     _migrateStorage();
     _loadShaders();
-    _loadDanmakuShield();
     _update();
-  }
-
-  void _syncThemeFromSettings() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final useDynamicColor =
-          setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
-      ref
-          .read(themeNotifierProvider.notifier)
-          .setUseDynamicColor(useDynamicColor);
-    });
   }
 
   Future<void> _migrateStorage() async {
@@ -69,13 +56,6 @@ class _InitPageState extends ConsumerState<InitPage> {
 
   Future<void> _loadShaders() async {
     await shadersController.copyShadersToExternalDirectory();
-  }
-
-  void _loadDanmakuShield() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      myController.loadShieldList();
-    });
   }
 
   Future<void> _webDavInit() async {
@@ -153,7 +133,6 @@ class _InitPageState extends ConsumerState<InitPage> {
         },
       );
     } else {
-      _syncThemeFromSettings();
       _goHome();
     }
   }
@@ -207,7 +186,6 @@ class _InitPageState extends ConsumerState<InitPage> {
 
   Future<void> _update() async {
     if (pluginsController.pluginList.isEmpty) {
-      _syncThemeFromSettings();
       return;
     }
 

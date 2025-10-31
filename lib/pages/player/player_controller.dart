@@ -565,7 +565,7 @@ class PlayerController extends Notifier<PlayerState> {
             exitSyncPlayRoom();
             KazumiDialog.showToast(
               message: t.playback.syncplay.disconnected
-                  .replaceFirst('{reason}', '${error.message}'),
+                  .replaceFirst('{reason}', error.message),
               duration: const Duration(seconds: 5),
               showActionButton: true,
               actionLabel: t.playback.syncplay.actionReconnect,

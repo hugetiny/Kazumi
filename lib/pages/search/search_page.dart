@@ -25,10 +25,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     super.initState();
     scrollController.addListener(scrollListener);
     searchController.addListener(_handleSearchTextChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref.read(searchControllerProvider.notifier).loadSearchHistories();
-    });
   }
 
   @override
@@ -117,15 +113,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final t = context.t;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.inputTag.isNotEmpty) {
-        final String tagString = 'tag:${Uri.decodeComponent(widget.inputTag)}';
-        searchController.text = tagString;
-        ref
-            .read(searchControllerProvider.notifier)
-            .searchBangumi(tagString, type: 'init');
-      }
-    });
+    // Handle inputTag parameter once on first build
+    if (widget.inputTag.isNotEmpty && searchController.text.isEmpty) {
+      final String tagString = 'tag:${Uri.decodeComponent(widget.inputTag)}';
+      searchController.text = tagString;
+      // Use microtask to trigger search after build
+      Future.microtask(() {
+        if (mounted) {
+          ref
+              .read(searchControllerProvider.notifier)
+              .searchBangumi(tagString, type: 'init');
+        }
+      });
+    }
     return Scaffold(
       appBar: SysAppBar(
         backgroundColor: Colors.transparent,

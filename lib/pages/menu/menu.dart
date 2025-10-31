@@ -25,11 +25,11 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
     return OrientationBuilder(builder: (context, orientation) {
       final bool isPortrait = orientation == Orientation.portrait;
       if (navigationState.isBottom != isPortrait) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) {
-            return;
+        // Use microtask to update state after build completes
+        Future.microtask(() {
+          if (mounted) {
+            navigationController.setIsBottom(isPortrait);
           }
-          navigationController.setIsBottom(isPortrait);
         });
       }
       return isPortrait

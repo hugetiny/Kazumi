@@ -33,7 +33,47 @@ class ThemeState {
 
 class ThemeNotifier extends Notifier<ThemeState> {
   @override
-  ThemeState build() => const ThemeState();
+  ThemeState build() {
+    final setting = GStorage.setting;
+
+    // Load useDynamicColor
+    final useDynamicColor =
+        setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
+
+    // Load themeMode
+    final String savedThemeMode =
+        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
+    final ThemeMode themeMode;
+    switch (savedThemeMode) {
+      case 'dark':
+        themeMode = ThemeMode.dark;
+        break;
+      case 'light':
+        themeMode = ThemeMode.light;
+        break;
+      default:
+        themeMode = ThemeMode.system;
+        break;
+    }
+
+    // Load seedColor
+    final String colorValue =
+        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
+    final Color seedColor = colorValue == 'default'
+        ? Colors.green
+        : Color(int.parse(colorValue, radix: 16));
+
+    // Load oledEnhance
+    final bool oledEnhance =
+        setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
+
+    return ThemeState(
+      useDynamicColor: useDynamicColor,
+      themeMode: themeMode,
+      seedColor: seedColor,
+      oledEnhance: oledEnhance,
+    );
+  }
 
   void setThemeMode(ThemeMode mode) {
     state = state.copyWith(themeMode: mode);

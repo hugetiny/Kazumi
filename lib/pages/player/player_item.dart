@@ -1014,14 +1014,15 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     haEnable = setting.get(SettingBoxKey.hAenable, defaultValue: true);
     playerTimer = getPlayerTimer();
     windowManager.addListener(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
+
+    // Initialize player UI after widget is mounted
+    Future.microtask(() {
+      if (mounted) {
+        playerController.resetUiState(
+          danmakuEnabled: defaultDanmakuEnabled,
+        );
+        displayVideoController();
       }
-      playerController.resetUiState(
-        danmakuEnabled: defaultDanmakuEnabled,
-      );
-      displayVideoController();
     });
   }
 

@@ -31,7 +31,6 @@ class _AppWidgetState extends ConsumerState<AppWidget>
 
   final TrayManager trayManager = TrayManager.instance;
   bool showingExitDialog = false;
-  bool _themeInitialized = false;
   ProviderSubscription<LocaleSettingsState>? _localeSubscription;
 
   @override
@@ -43,66 +42,30 @@ class _AppWidgetState extends ConsumerState<AppWidget>
     WidgetsBinding.instance.addObserver(this);
     _localeSubscription = ref.listenManual<LocaleSettingsState>(
       localeSettingsProvider,
-      (_, __) {
+      (_, localeState) {
+        // Sync global slang locale when provider changes
+        if (localeState.followSystem) {
+          LocaleSettings.useDeviceLocale();
+        } else {
+          LocaleSettings.setLocale(localeState.appLocale);
+        }
         if (Utils.isDesktop()) {
           _handleTray();
         }
       },
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeThemeFromStorage();
-      _initializeLocaleFromStorage();
-      if (Utils.isDesktop()) {
-        _handleTray();
-      }
-    });
-  }
 
-  void _initializeLocaleFromStorage() {
-    final LocaleSettingsState localeState = ref.read(localeSettingsProvider);
-    // Ensure the global slang locale is aligned before the next frame so
-    // TranslationProvider reads the correct language during startup.
-    if (localeState.followSystem) {
+    // Initialize locale from provider on startup
+    final initialLocaleState = ref.read(localeSettingsProvider);
+    if (initialLocaleState.followSystem) {
       LocaleSettings.useDeviceLocale();
     } else {
-      LocaleSettings.setLocale(localeState.appLocale);
-    }
-  }
-
-  void _initializeThemeFromStorage() {
-    if (_themeInitialized) return;
-    final themeNotifier = ref.read(themeNotifierProvider.notifier);
-
-    final String savedThemeMode =
-        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
-    switch (savedThemeMode) {
-      case 'dark':
-        themeNotifier.setThemeMode(ThemeMode.dark);
-        break;
-      case 'light':
-        themeNotifier.setThemeMode(ThemeMode.light);
-        break;
-      default:
-        themeNotifier.setThemeMode(ThemeMode.system);
-        break;
+      LocaleSettings.setLocale(initialLocaleState.appLocale);
     }
 
-    final String colorValue =
-        setting.get(SettingBoxKey.themeColor, defaultValue: 'default');
-    final Color seedColor = colorValue == 'default'
-        ? Colors.green
-        : Color(int.parse(colorValue, radix: 16));
-    themeNotifier.setSeedColor(seedColor);
-
-    final bool useDynamicColor =
-        setting.get(SettingBoxKey.useDynamicColor, defaultValue: false);
-    themeNotifier.setUseDynamicColor(useDynamicColor);
-
-    final bool oledEnhance =
-        setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
-    themeNotifier.setOledEnhance(oledEnhance);
-
-    _themeInitialized = true;
+    if (Utils.isDesktop()) {
+      _handleTray();
+    }
   }
 
   void setPreventClose() async {

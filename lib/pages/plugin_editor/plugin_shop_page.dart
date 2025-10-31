@@ -40,14 +40,15 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     pluginsController = ref.read(pluginsControllerProvider.notifier);
     enableGitProxy =
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      if (pluginsController.pluginHTTPList.isEmpty) {
-        _handleRefresh();
-      }
-    });
+
+    // Load plugin list on first visit
+    if (pluginsController.pluginHTTPList.isEmpty) {
+      Future.microtask(() {
+        if (mounted) {
+          _handleRefresh();
+        }
+      });
+    }
   }
 
   Future<void> _handleRefresh() async {

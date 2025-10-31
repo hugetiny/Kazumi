@@ -209,10 +209,10 @@
       }
     },
     "metadata": {
-      "title": "Metadata",
-      "enableBangumi": "Enable Bangumi Metadata",
+      "title": "Information Sources",
+      "enableBangumi": "Enable Bangumi Information Source",
       "enableBangumiDesc": "Fetch anime information from Bangumi",
-      "enableTmdb": "Enable TMDb Metadata",
+      "enableTmdb": "Enable TMDb Information Source",
       "enableTmdbDesc": "Supplement multilingual data from TMDb",
       "preferredLanguage": "Preferred Language",
       "preferredLanguageDesc": "Set the language for metadata synchronization",

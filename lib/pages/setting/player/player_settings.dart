@@ -26,6 +26,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
   @override
   void initState() {
     super.initState();
+    // Initialize provider immediately instead of deferring to next frame
     final notifier = ref.read(playerSettingsProvider.notifier);
     final initialState = PlayerSettingsState(
       defaultPlaySpeed:
@@ -49,12 +50,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
         defaultValue: false,
       ) as bool,
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      notifier.initialize(initialState);
-    });
+    notifier.initialize(initialState);
   }
 
   void onBackPressed(BuildContext context) {

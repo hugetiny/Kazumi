@@ -298,9 +298,7 @@ class InfoController extends Notifier<InfoState> {
     for (final String segment in segments.skip(1)) {
       if (segment.length == 4 && scriptCode == null) {
         scriptCode = segment;
-      } else if (countryCode == null) {
-        countryCode = segment;
-      }
+      } else countryCode ??= segment;
     }
     return ui.Locale.fromSubtags(
       languageCode: segments[0],

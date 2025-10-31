@@ -119,23 +119,24 @@ class _InfoPageState extends ConsumerState<InfoPage>
     infoController = ref.read(infoControllerProvider.notifier);
     videoPageController = ref.read(videoControllerProvider.notifier);
     final BangumiItem? initialBangumi = widget.bangumi;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
+
+    // Delay provider state modifications until after initState completes
+    Future.microtask(() {
+      if (!mounted) return;
+
       if (initialBangumi != null) {
         infoController.bangumiItem = initialBangumi;
       }
       infoController.resetListsForNewBangumi();
       videoPageController.currentEpisode = 1;
-      // Because the gap between different bangumi API response is too large, sometimes we need to query the bangumi info again
-      // We need the type parameter to determine whether to attach the new data to the old data
-      // We can't generally replace the old data with the new data, because the old data contains images url, update them will cause the image to reload and flicker
+
+      // Query bangumi info asynchronously if needed
       if (infoController.bangumiItem.summary == '' ||
           infoController.bangumiItem.votesCount.isEmpty) {
         queryBangumiInfoByID(infoController.bangumiItem.id, type: 'attach');
       }
     });
+
     infoTabController = TabController(length: 5, vsync: this);
     infoTabController.addListener(() {
       int index = infoTabController.index;

@@ -209,10 +209,10 @@
       }
     },
     "metadata": {
-      "title": "メタデータ",
-      "enableBangumi": "Bangumiメタデータを有効化",
+      "title": "情報ソース",
+      "enableBangumi": "Bangumi情報ソースを有効化",
       "enableBangumiDesc": "Bangumiからアニメ情報を取得",
-      "enableTmdb": "TMDbメタデータを有効化",
+      "enableTmdb": "TMDb情報ソースを有効化",
       "enableTmdbDesc": "TMDbから多言語データを補完",
       "preferredLanguage": "優先言語",
       "preferredLanguageDesc": "メタデータ同期に使用する言語を設定",
@@ -488,44 +488,44 @@
   },
   "navigation": {
     "tabs": {
-      "popular": "Popular",
-      "timeline": "Timeline",
-      "my": "My",
-      "settings": "Settings"
+      "popular": "人気作品",
+      "timeline": "タイムライン",
+      "my": "マイページ",
+      "settings": "設定"
     },
     "actions": {
-      "search": "Search",
-      "history": "History",
-      "close": "Quit"
+      "search": "検索",
+      "history": "履歴",
+      "close": "終了"
     }
   },
   "dialogs": {
     "disclaimer": {
-      "title": "Disclaimer",
-      "agree": "I have read and agree",
-      "exit": "Exit"
+      "title": "免責事項",
+      "agree": "読んで同意しました",
+      "exit": "終了"
     },
     "updateMirror": {
-      "title": "Update Mirror",
-      "question": "Where would you like to fetch app updates?",
-      "description": "GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.",
+      "title": "更新ミラー",
+      "question": "アプリの更新をどこから取得しますか？",
+      "description": "GitHub ミラーはほとんどの場合に適しています。F-Droid ストアを使用している場合は F-Droid を選択してください。",
       "options": {
         "github": "GitHub",
         "fdroid": "F-Droid"
       }
     },
     "pluginUpdates": {
-      "toast": "Detected {count} rule updates"
+      "toast": "{count} 件のルール更新を検出しました"
     },
     "webdav": {
-      "syncFailed": "Failed to sync watch history: {error}"
+      "syncFailed": "視聴履歴の同期に失敗しました: {error}"
     },
     "about": {
-      "licenseLegalese": "Open Source Licenses"
+      "licenseLegalese": "オープンソースライセンス"
     },
     "cache": {
-      "title": "Cache Management",
-      "message": "Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?"
+      "title": "キャッシュ管理",
+      "message": "キャッシュにはアニメのカバー画像が含まれます。クリアすると再ダウンロードが必要になります。続行しますか？"
     }
   },
   "library": {

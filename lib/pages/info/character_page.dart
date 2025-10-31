@@ -55,10 +55,9 @@ class _CharacterPageState extends State<CharacterPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      loadCharacter();
-      loadComments();
-    });
+    // Load data immediately without waiting for next frame
+    loadCharacter();
+    loadComments();
   }
 
   @override

@@ -4,9 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/card/episode_comments_card.dart';
-import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/video/providers.dart';
-import 'package:kazumi/pages/video/video_state.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class EpisodeInfo extends InheritedWidget {
@@ -33,56 +31,29 @@ class EpisodeCommentsSheet extends ConsumerStatefulWidget {
 }
 
 class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
-  late final VideoPageController videoPageController;
-  bool commentsQueryTimeout = false;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
   /// episode input by [showEpisodeSelection]
-  int ep = 0;
+  int? ep;
 
-  @override
-  void initState() {
-    videoPageController = ref.read(videoControllerProvider.notifier);
-    super.initState();
-  }
+  /// Current episode from context
+  int get currentEpisode => EpisodeInfo.of(context)!.episode;
 
-  Future<void> loadComments(int episode) async {
-    commentsQueryTimeout = false;
-    await videoPageController
-        .queryBangumiEpisodeCommentsByID(
-            videoPageController.bangumiItem.id, episode)
-        .then((_) {
-      if (videoPageController.episodeCommentsList.isEmpty && mounted) {
-        setState(() {
-          commentsQueryTimeout = true;
-        });
-      }
-    });
-    if (mounted) {
-      setState(() {});
-    }
-  }
+  /// Episode to query (manual selection or current)
+  int get targetEpisode => ep ?? currentEpisode;
 
   @override
   void didChangeDependencies() {
-    ep = 0;
+    super.didChangeDependencies();
+    ep = null;
     // wait until currentState is not null
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (videoPageController.episodeCommentsList.isEmpty) {
-        // trigger RefreshIndicator onRefresh and show animation
-        _refreshIndicatorKey.currentState?.show();
-      }
+      _refreshIndicatorKey.currentState?.show();
     });
-    super.didChangeDependencies();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  Widget _buildEpisodeCommentsBody(VideoPageState videoState) {
+  Widget _buildEpisodeCommentsBody(List<dynamic> comments) {
     return CustomScrollView(
       scrollBehavior: const ScrollBehavior().copyWith(
         // Scrollbars' movement is not linear so hide it.
@@ -97,7 +68,7 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
       slivers: [
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
-          sliver: commentsQueryTimeout
+          sliver: comments.isEmpty
               ? SliverFillRemaining(
                   child: Center(
                     child: Text(context.t.library.common.emptyState),
@@ -114,13 +85,13 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
                           index: index,
                           child: SelectionArea(
                             child: EpisodeCommentsCard(
-                              commentItem: videoState.episodeComments[index],
+                              commentItem: comments[index],
                             ),
                           ),
                         ),
                       );
                     },
-                    childCount: videoState.episodeComments.length,
+                    childCount: comments.length,
                     addAutomaticKeepAlives: false,
                     addRepaintBoundaries: false,
                     addSemanticIndexes: false,
@@ -131,9 +102,8 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
     );
   }
 
-  Widget _buildCommentsInfo(VideoPageState videoState) {
+  Widget _buildCommentsInfo(dynamic episodeInfo) {
     final t = context.t;
-    final currentEpisodeInfo = videoState.episodeInfo;
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Row(
@@ -145,15 +115,15 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                    '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
+                    '${episodeInfo.readType()}.${episodeInfo.episode} ${episodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline)),
                 Text(
-                    (currentEpisodeInfo.nameCn != '')
-                        ? '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.nameCn}'
-                        : '${currentEpisodeInfo.readType()}.${currentEpisodeInfo.episode} ${currentEpisodeInfo.name}',
+                    (episodeInfo.nameCn != '')
+                        ? '${episodeInfo.readType()}.${episodeInfo.episode} ${episodeInfo.nameCn}'
+                        : '${episodeInfo.readType()}.${episodeInfo.episode} ${episodeInfo.name}',
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         fontSize: 12,
@@ -216,10 +186,13 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
                   );
                   return;
                 }
-                ep = int.tryParse(textController.text) ?? 0;
-                if (ep == 0) {
+                final newEp = int.tryParse(textController.text);
+                if (newEp == null || newEp <= 0) {
                   return;
                 }
+                setState(() {
+                  ep = newEp;
+                });
                 _refreshIndicatorKey.currentState?.show();
                 KazumiDialog.dismiss();
               },
@@ -234,20 +207,77 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
   @override
   Widget build(BuildContext context) {
     final videoState = ref.watch(videoControllerProvider);
-    final int episode = EpisodeInfo.of(context)!.episode;
-    return Scaffold(
-      body: RefreshIndicator(
-        key: _refreshIndicatorKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCommentsInfo(videoState),
-            Expanded(child: _buildEpisodeCommentsBody(videoState)),
-          ],
+    final bangumiId = videoState.bangumiItem?.id;
+
+    if (bangumiId == null) {
+      return Scaffold(
+        body: Center(
+          child: Text(context.t.library.common.emptyState),
         ),
-        onRefresh: () async {
-          await loadComments(ep == 0 ? episode : ep);
+      );
+    }
+
+    // Watch async comments provider
+    final commentsAsync = ref.watch(
+      episodeCommentsProvider((bangumiId, targetEpisode))
+    );
+
+    return Scaffold(
+      body: commentsAsync.when(
+        data: (comments) {
+          return RefreshIndicator(
+            key: _refreshIndicatorKey,
+            onRefresh: () async {
+              ref.invalidate(episodeCommentsProvider((bangumiId, targetEpisode)));
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // We need episode info, get it from video controller for now
+                _buildCommentsInfo(videoState.episodeInfo),
+                Expanded(child: _buildEpisodeCommentsBody(comments)),
+              ],
+            ),
+          );
         },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: () async {
+            ref.invalidate(episodeCommentsProvider((bangumiId, targetEpisode)));
+          },
+          child: ListView(
+            children: [
+              SizedBox(
+                height: 400,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 16),
+                      Text(
+                        context.t.library.common.emptyState,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        error.toString(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

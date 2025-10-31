@@ -46,15 +46,16 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       initialIndex: initialIndex,
     );
     timelineController = ref.read(timelineControllerProvider.notifier);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      final state = ref.read(timelineControllerProvider);
-      if (state.bangumiCalendar.isEmpty) {
-        timelineController.init();
-      }
-    });
+
+    // Use Future.microtask instead of PostFrameCallback for initial load
+    final state = ref.read(timelineControllerProvider);
+    if (state.bangumiCalendar.isEmpty) {
+      Future.microtask(() {
+        if (mounted) {
+          timelineController.init();
+        }
+      });
+    }
   }
 
   @override

@@ -22,9 +22,6 @@ class SettingPage extends ConsumerStatefulWidget {
 class _SettingPageState extends ConsumerState<SettingPage> {
   late final Box setting;
   late int exitBehavior;
-  final MenuController _exitMenuController = MenuController();
-  final MenuController _metadataLocaleMenuController = MenuController();
-  final MenuController _appLocaleMenuController = MenuController();
 
   @override
   void initState() {
@@ -43,16 +40,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     context.go('/tab/popular');
   }
 
-  Future<void> _updateExitBehavior(int value) async {
-    setState(() {
-      exitBehavior = value;
-    });
-    await setting.put(SettingBoxKey.exitBehavior, value);
-    if (_exitMenuController.isOpen) {
-      _exitMenuController.close();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = context.t; // Get translations
@@ -62,7 +49,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final metadataState = ref.watch(metadataSettingsProvider);
     final metadataController = ref.read(metadataSettingsProvider.notifier);
     final localeState = ref.watch(localeSettingsProvider);
-    final localeController = ref.read(localeSettingsProvider.notifier);
 
     // Exit behavior options
     final List<String> exitBehaviorTitles = [
@@ -94,42 +80,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         locale: AppLocale.zhTw,
       ),
     ];
-
-    // Metadata locale options
-    final List<_MetadataLocaleOption> metadataLocaleOptions =
-        <_MetadataLocaleOption>[
-      _MetadataLocaleOption(
-        label: t.settings.metadata.followSystemLanguage,
-        tag: null,
-      ),
-      _MetadataLocaleOption(
-        label: t.settings.metadata.simplifiedChinese,
-        tag: 'zh-CN',
-      ),
-      _MetadataLocaleOption(
-        label: t.settings.metadata.traditionalChinese,
-        tag: 'zh-TW',
-      ),
-      _MetadataLocaleOption(
-        label: t.settings.metadata.japanese,
-        tag: 'ja-JP',
-      ),
-      _MetadataLocaleOption(
-        label: t.settings.metadata.english,
-        tag: 'en-US',
-      ),
-    ];
-
-    final _MetadataLocaleOption matchedMetadataLocale =
-        metadataLocaleOptions.firstWhere(
-      (option) => option.tag == metadataState.manualLocaleTag,
-      orElse: () => _MetadataLocaleOption(label: '', tag: null),
-    );
-    final String metadataLocaleLabel = metadataState.manualLocaleTag == null
-        ? metadataLocaleOptions.first.label
-        : (matchedMetadataLocale.label.isNotEmpty
-            ? matchedMetadataLocale.label
-            : '${t.settings.metadata.custom} (${metadataState.manualLocaleTag})');
 
     final String appLocaleLabel;
     if (localeState.followSystem) {
@@ -170,106 +120,24 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/theme');
                   },
-                  leading: const Icon(Icons.palette_rounded),
                   title: Text(t.settings.general.appearance),
                   description: Text(t.settings.general.appearanceDesc),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    if (_appLocaleMenuController.isOpen) {
-                      _appLocaleMenuController.close();
-                    } else {
-                      _appLocaleMenuController.open();
-                    }
+                    context.push('/settings/language');
                   },
-                  leading: const Icon(Icons.language_rounded),
                   title: Text(t.settings.general.language),
                   description: Text(t.settings.general.languageDesc),
-                  value: MenuAnchor(
-                    consumeOutsideTap: true,
-                    controller: _appLocaleMenuController,
-                    builder: (_, __, ___) {
-                      return Text(appLocaleLabel);
-                    },
-                    menuChildren: [
-                      for (final _AppLocaleOption option in appLocaleOptions)
-                        MenuItemButton(
-                          requestFocusOnHover: false,
-                          onPressed: () async {
-                            if (option.locale == null) {
-                              await localeController.useSystemLocale();
-                            } else {
-                              await localeController.setLocale(option.locale!);
-                            }
-                            _appLocaleMenuController.close();
-                          },
-                          child: SizedBox(
-                            height: 48,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                option.label,
-                                style: TextStyle(
-                                  color: option.locale == null
-                                      ? (localeState.followSystem
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null)
-                                      : (!localeState.followSystem &&
-                                              option.locale ==
-                                                  localeState.appLocale
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                  value: Text(appLocaleLabel),
                 ),
                 if (isDesktop)
                   SettingsTile.navigation(
                     onPressed: (_) {
-                      if (_exitMenuController.isOpen) {
-                        _exitMenuController.close();
-                      } else {
-                        _exitMenuController.open();
-                      }
+                      context.push('/settings/exit-behavior');
                     },
-                    leading: const Icon(Icons.logout_rounded),
                     title: Text(t.settings.general.exitBehavior),
-                    value: MenuAnchor(
-                      consumeOutsideTap: true,
-                      controller: _exitMenuController,
-                      builder: (_, __, ___) {
-                        return Text(exitBehaviorTitles[exitBehavior]);
-                      },
-                      menuChildren: [
-                        for (int i = 0; i < exitBehaviorTitles.length; i++)
-                          MenuItemButton(
-                            requestFocusOnHover: false,
-                            onPressed: () => _updateExitBehavior(i),
-                            child: SizedBox(
-                              height: 48,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  exitBehaviorTitles[i],
-                                  style: TextStyle(
-                                    color: i == exitBehavior
-                                        ? Theme.of(context).colorScheme.primary
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    value: Text(exitBehaviorTitles[exitBehavior]),
                   ),
               ],
             ),
@@ -280,7 +148,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/plugin');
                   },
-                  leading: const Icon(Icons.extension),
                   title: Text(t.settings.source.ruleManagement),
                   description: Text(t.settings.source.ruleManagementDesc),
                 ),
@@ -323,51 +190,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   description: Text(t.settings.metadata.enableTmdbDesc),
                   initialValue: metadataState.tmdbEnabled,
                 ),
-                SettingsTile.navigation(
-                  onPressed: (_) {
-                    if (_metadataLocaleMenuController.isOpen) {
-                      _metadataLocaleMenuController.close();
-                    } else {
-                      _metadataLocaleMenuController.open();
-                    }
-                  },
-                  leading: const Icon(Icons.translate_rounded),
-                  title: Text(t.settings.metadata.preferredLanguage),
-                  description: Text(t.settings.metadata.preferredLanguageDesc),
-                  value: MenuAnchor(
-                    consumeOutsideTap: true,
-                    controller: _metadataLocaleMenuController,
-                    builder: (_, __, ___) {
-                      return Text(metadataLocaleLabel);
-                    },
-                    menuChildren: [
-                      for (final _MetadataLocaleOption option
-                          in metadataLocaleOptions)
-                        MenuItemButton(
-                          requestFocusOnHover: false,
-                          onPressed: () async {
-                            await metadataController.setManualLocale(option.tag);
-                            _metadataLocaleMenuController.close();
-                          },
-                          child: SizedBox(
-                            height: 48,
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                option.label,
-                                style: TextStyle(
-                                  color: option.tag ==
-                                          metadataState.manualLocaleTag
-                                      ? Theme.of(context).colorScheme.primary
-                                      : null,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
               ],
             ),
             SettingsSection(
@@ -377,7 +199,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/player');
                   },
-                  leading: const Icon(Icons.display_settings_rounded),
                   title: Text(t.settings.player.playerSettings),
                   description: Text(t.settings.player.playerSettingsDesc),
                 ),
@@ -385,7 +206,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/danmaku');
                   },
-                  leading: const Icon(Icons.subtitles_rounded),
                   title: Text(t.settings.player.danmakuSettings),
                   description: Text(t.settings.player.danmakuSettingsDesc),
                 ),
@@ -398,7 +218,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/webdav');
                   },
-                  leading: const Icon(Icons.cloud),
                   title: Text(t.settings.webdav.title),
                   description: Text(t.settings.webdav.desc),
                 ),
@@ -411,7 +230,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                   onPressed: (_) {
                     context.push('/settings/about');
                   },
-                  leading: const Icon(Icons.info_outline_rounded),
                   title: Text(t.settings.other.about),
                 ),
               ],
@@ -428,11 +246,4 @@ class _AppLocaleOption {
 
   final String label;
   final AppLocale? locale;
-}
-
-class _MetadataLocaleOption {
-  const _MetadataLocaleOption({required this.label, required this.tag});
-
-  final String label;
-  final String? tag;
 }

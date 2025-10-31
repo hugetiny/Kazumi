@@ -6,7 +6,7 @@
 /// Locales: 4
 /// Strings: 2520 (630 per locale)
 ///
-/// Built on 2025-10-31 at 06:25 UTC
+/// Built on 2025-10-31 at 09:06 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -459,10 +459,10 @@ class _TranslationsSettingsMetadataEnUs {
 	final AppTranslations _root; // ignore: unused_field
 
 	// Translations
-	String get title => 'Metadata';
-	String get enableBangumi => 'Enable Bangumi Metadata';
+	String get title => 'Information Sources';
+	String get enableBangumi => 'Enable Bangumi Information Source';
 	String get enableBangumiDesc => 'Fetch anime information from Bangumi';
-	String get enableTmdb => 'Enable TMDb Metadata';
+	String get enableTmdb => 'Enable TMDb Information Source';
 	String get enableTmdbDesc => 'Supplement multilingual data from TMDb';
 	String get preferredLanguage => 'Preferred Language';
 	String get preferredLanguageDesc => 'Set the language for metadata synchronization';
@@ -2777,10 +2777,10 @@ class _TranslationsSettingsMetadataJaJp extends _TranslationsSettingsMetadataEnU
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'メタデータ';
-	@override String get enableBangumi => 'Bangumiメタデータを有効化';
+	@override String get title => '情報ソース';
+	@override String get enableBangumi => 'Bangumi情報ソースを有効化';
 	@override String get enableBangumiDesc => 'Bangumiからアニメ情報を取得';
-	@override String get enableTmdb => 'TMDbメタデータを有効化';
+	@override String get enableTmdb => 'TMDb情報ソースを有効化';
 	@override String get enableTmdbDesc => 'TMDbから多言語データを補完';
 	@override String get preferredLanguage => '優先言語';
 	@override String get preferredLanguageDesc => 'メタデータ同期に使用する言語を設定';
@@ -2931,10 +2931,10 @@ class _TranslationsNavigationTabsJaJp extends _TranslationsNavigationTabsEnUs {
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get popular => 'Popular';
-	@override String get timeline => 'Timeline';
-	@override String get my => 'My';
-	@override String get settings => 'Settings';
+	@override String get popular => '人気作品';
+	@override String get timeline => 'タイムライン';
+	@override String get my => 'マイページ';
+	@override String get settings => '設定';
 }
 
 // Path: navigation.actions
@@ -2944,9 +2944,9 @@ class _TranslationsNavigationActionsJaJp extends _TranslationsNavigationActionsE
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get search => 'Search';
-	@override String get history => 'History';
-	@override String get close => 'Quit';
+	@override String get search => '検索';
+	@override String get history => '履歴';
+	@override String get close => '終了';
 }
 
 // Path: dialogs.disclaimer
@@ -2956,9 +2956,9 @@ class _TranslationsDialogsDisclaimerJaJp extends _TranslationsDialogsDisclaimerE
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Disclaimer';
-	@override String get agree => 'I have read and agree';
-	@override String get exit => 'Exit';
+	@override String get title => '免責事項';
+	@override String get agree => '読んで同意しました';
+	@override String get exit => '終了';
 }
 
 // Path: dialogs.updateMirror
@@ -2968,9 +2968,9 @@ class _TranslationsDialogsUpdateMirrorJaJp extends _TranslationsDialogsUpdateMir
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Update Mirror';
-	@override String get question => 'Where would you like to fetch app updates?';
-	@override String get description => 'GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.';
+	@override String get title => '更新ミラー';
+	@override String get question => 'アプリの更新をどこから取得しますか？';
+	@override String get description => 'GitHub ミラーはほとんどの場合に適しています。F-Droid ストアを使用している場合は F-Droid を選択してください。';
 	@override late final _TranslationsDialogsUpdateMirrorOptionsJaJp options = _TranslationsDialogsUpdateMirrorOptionsJaJp._(_root);
 }
 
@@ -2981,7 +2981,7 @@ class _TranslationsDialogsPluginUpdatesJaJp extends _TranslationsDialogsPluginUp
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get toast => 'Detected {count} rule updates';
+	@override String get toast => '{count} 件のルール更新を検出しました';
 }
 
 // Path: dialogs.webdav
@@ -2991,7 +2991,7 @@ class _TranslationsDialogsWebdavJaJp extends _TranslationsDialogsWebdavEnUs {
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get syncFailed => 'Failed to sync watch history: {error}';
+	@override String get syncFailed => '視聴履歴の同期に失敗しました: {error}';
 }
 
 // Path: dialogs.about
@@ -3001,7 +3001,7 @@ class _TranslationsDialogsAboutJaJp extends _TranslationsDialogsAboutEnUs {
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get licenseLegalese => 'Open Source Licenses';
+	@override String get licenseLegalese => 'オープンソースライセンス';
 }
 
 // Path: dialogs.cache
@@ -3011,8 +3011,8 @@ class _TranslationsDialogsCacheJaJp extends _TranslationsDialogsCacheEnUs {
 	@override final _TranslationsJaJp _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Cache Management';
-	@override String get message => 'Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?';
+	@override String get title => 'キャッシュ管理';
+	@override String get message => 'キャッシュにはアニメのカバー画像が含まれます。クリアすると再ダウンロードが必要になります。続行しますか？';
 }
 
 // Path: library.common
@@ -5105,10 +5105,10 @@ class _TranslationsSettingsMetadataZhCn extends _TranslationsSettingsMetadataEnU
 	@override final _TranslationsZhCn _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => '元数据';
-	@override String get enableBangumi => '启用 Bangumi 元数据';
+	@override String get title => '信息源';
+	@override String get enableBangumi => '启用 Bangumi 信息源';
 	@override String get enableBangumiDesc => '从 Bangumi 拉取番剧信息';
-	@override String get enableTmdb => '启用 TMDb 元数据';
+	@override String get enableTmdb => '启用 TMDb 信息源';
 	@override String get enableTmdbDesc => '从 TMDb 补充多语言资料';
 	@override String get preferredLanguage => '优先语言';
 	@override String get preferredLanguageDesc => '设置元数据同步时使用的语言';
@@ -7163,7 +7163,7 @@ class _TranslationsMetadataZhTw extends _TranslationsMetadataEnUs {
 	@override String get sectionTitle => '作品資訊';
 	@override String get refresh => '重新整理中繼資料';
 	@override late final _TranslationsMetadataSourceZhTw source = _TranslationsMetadataSourceZhTw._(_root);
-	@override String get lastSynced => 'Last synced: {timestamp}';
+	@override String get lastSynced => '最後同步：{timestamp}';
 }
 
 // Path: downloads
@@ -7173,11 +7173,11 @@ class _TranslationsDownloadsZhTw extends _TranslationsDownloadsEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get sectionTitle => 'Download Queue';
-	@override String get aria2Offline => 'aria2 not connected';
-	@override String get queued => 'Queued';
-	@override String get running => 'Downloading';
-	@override String get completed => 'Completed';
+	@override String get sectionTitle => '下載佇列';
+	@override String get aria2Offline => 'aria2 未連線';
+	@override String get queued => '排隊中';
+	@override String get running => '下載中';
+	@override String get completed => '已完成';
 }
 
 // Path: torrent
@@ -7198,9 +7198,9 @@ class _TranslationsSettingsZhTw extends _TranslationsSettingsEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Settings';
-	@override String get downloads => 'Download Settings';
-	@override String get playback => 'Playback Preferences';
+	@override String get title => '設定';
+	@override String get downloads => '下載設定';
+	@override String get playback => '播放偏好';
 	@override late final _TranslationsSettingsGeneralZhTw general = _TranslationsSettingsGeneralZhTw._(_root);
 	@override late final _TranslationsSettingsAppearancePageZhTw appearancePage = _TranslationsSettingsAppearancePageZhTw._(_root);
 	@override late final _TranslationsSettingsSourceZhTw source = _TranslationsSettingsSourceZhTw._(_root);
@@ -7332,10 +7332,10 @@ class _TranslationsTorrentConsentZhTw extends _TranslationsTorrentConsentEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'BitTorrent Usage Notice';
-	@override String get description => 'Before enabling BT downloads, please confirm compliance with local laws and understand the risks involved.';
-	@override String get agree => 'I understand, continue';
-	@override String get decline => 'Not now';
+	@override String get title => 'BitTorrent 使用提示';
+	@override String get description => '啟用 BT 下載前，請確認遵守所在地法律並了解使用風險。';
+	@override String get agree => '我已知悉，繼續';
+	@override String get decline => '暫不開啟';
 }
 
 // Path: torrent.error
@@ -7345,7 +7345,7 @@ class _TranslationsTorrentErrorZhTw extends _TranslationsTorrentErrorEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get submit => 'Unable to submit magnet link, please try again later';
+	@override String get submit => '無法提交磁力連結，稍後重試';
 }
 
 // Path: settings.general
@@ -7355,16 +7355,16 @@ class _TranslationsSettingsGeneralZhTw extends _TranslationsSettingsGeneralEnUs 
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'General';
-	@override String get appearance => 'Appearance';
-	@override String get appearanceDesc => 'Configure app theme and refresh rate';
-	@override String get language => 'App Language';
-	@override String get languageDesc => 'Choose the display language for the app interface';
-	@override String get followSystem => 'Follow System';
-	@override String get exitBehavior => 'On Close';
-	@override String get exitApp => 'Exit Kazumi';
-	@override String get minimizeToTray => 'Minimize to Tray';
-	@override String get askEveryTime => 'Ask Every Time';
+	@override String get title => '通用';
+	@override String get appearance => '外觀';
+	@override String get appearanceDesc => '設定應用程式主題和更新率';
+	@override String get language => '應用程式語言';
+	@override String get languageDesc => '選擇應用程式介面顯示語言';
+	@override String get followSystem => '依系統';
+	@override String get exitBehavior => '關閉時';
+	@override String get exitApp => '結束 Kazumi';
+	@override String get minimizeToTray => '最小化至系統匣';
+	@override String get askEveryTime => '每次都詢問';
 }
 
 // Path: settings.appearancePage
@@ -7423,11 +7423,11 @@ class _TranslationsSettingsMetadataZhTw extends _TranslationsSettingsMetadataEnU
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Metadata';
-	@override String get enableBangumi => 'Enable Bangumi Metadata';
-	@override String get enableBangumiDesc => 'Fetch anime information from Bangumi';
-	@override String get enableTmdb => 'Enable TMDb Metadata';
-	@override String get enableTmdbDesc => 'Supplement multilingual data from TMDb';
+	@override String get title => '資訊來源';
+	@override String get enableBangumi => '啟用 Bangumi 資訊來源';
+	@override String get enableBangumiDesc => '從 Bangumi 拉取番劇資訊';
+	@override String get enableTmdb => '啟用 TMDb 資訊來源';
+	@override String get enableTmdbDesc => '從 TMDb 補充多語言資料';
 	@override String get preferredLanguage => 'Preferred Language';
 	@override String get preferredLanguageDesc => 'Set the language for metadata synchronization';
 	@override String get followSystemLanguage => 'Follow System Language';
@@ -7577,10 +7577,10 @@ class _TranslationsNavigationTabsZhTw extends _TranslationsNavigationTabsEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get popular => 'Popular';
-	@override String get timeline => 'Timeline';
-	@override String get my => 'My';
-	@override String get settings => 'Settings';
+	@override String get popular => '熱門番組';
+	@override String get timeline => '時間表';
+	@override String get my => '我的';
+	@override String get settings => '設定';
 }
 
 // Path: navigation.actions
@@ -7590,9 +7590,9 @@ class _TranslationsNavigationActionsZhTw extends _TranslationsNavigationActionsE
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get search => 'Search';
-	@override String get history => 'History';
-	@override String get close => 'Quit';
+	@override String get search => '搜尋';
+	@override String get history => '歷史記錄';
+	@override String get close => '結束';
 }
 
 // Path: dialogs.disclaimer
@@ -7602,9 +7602,9 @@ class _TranslationsDialogsDisclaimerZhTw extends _TranslationsDialogsDisclaimerE
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Disclaimer';
-	@override String get agree => 'I have read and agree';
-	@override String get exit => 'Exit';
+	@override String get title => '免責聲明';
+	@override String get agree => '已閱讀並同意';
+	@override String get exit => '結束';
 }
 
 // Path: dialogs.updateMirror
@@ -7614,9 +7614,9 @@ class _TranslationsDialogsUpdateMirrorZhTw extends _TranslationsDialogsUpdateMir
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Update Mirror';
-	@override String get question => 'Where would you like to fetch app updates?';
-	@override String get description => 'GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.';
+	@override String get title => '更新鏡像';
+	@override String get question => '您希望從哪裡取得應用程式更新？';
+	@override String get description => 'GitHub 鏡像適用於大多數情況。如果您使用 F-Droid 應用程式商店，請選擇 F-Droid 鏡像。';
 	@override late final _TranslationsDialogsUpdateMirrorOptionsZhTw options = _TranslationsDialogsUpdateMirrorOptionsZhTw._(_root);
 }
 
@@ -7627,7 +7627,7 @@ class _TranslationsDialogsPluginUpdatesZhTw extends _TranslationsDialogsPluginUp
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get toast => 'Detected {count} rule updates';
+	@override String get toast => '偵測到 {count} 條規則可以更新';
 }
 
 // Path: dialogs.webdav
@@ -7637,7 +7637,7 @@ class _TranslationsDialogsWebdavZhTw extends _TranslationsDialogsWebdavEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get syncFailed => 'Failed to sync watch history: {error}';
+	@override String get syncFailed => '同步觀看記錄失敗 {error}';
 }
 
 // Path: dialogs.about
@@ -7647,7 +7647,7 @@ class _TranslationsDialogsAboutZhTw extends _TranslationsDialogsAboutEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get licenseLegalese => 'Open Source Licenses';
+	@override String get licenseLegalese => '開放原始碼授權';
 }
 
 // Path: dialogs.cache
@@ -7657,8 +7657,8 @@ class _TranslationsDialogsCacheZhTw extends _TranslationsDialogsCacheEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Cache Management';
-	@override String get message => 'Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?';
+	@override String get title => '快取管理';
+	@override String get message => '快取包含番劇封面，清除後載入時需要重新下載，確認要清除快取嗎？';
 }
 
 // Path: library.common
@@ -9555,10 +9555,10 @@ extension on AppTranslations {
 			case 'settings.plugins.shop.error.unreachable': return 'Unable to reach the repository\n{status}';
 			case 'settings.plugins.shop.error.mirrorEnabled': return 'Mirror enabled';
 			case 'settings.plugins.shop.error.mirrorDisabled': return 'Mirror disabled';
-			case 'settings.metadata.title': return 'Metadata';
-			case 'settings.metadata.enableBangumi': return 'Enable Bangumi Metadata';
+			case 'settings.metadata.title': return 'Information Sources';
+			case 'settings.metadata.enableBangumi': return 'Enable Bangumi Information Source';
 			case 'settings.metadata.enableBangumiDesc': return 'Fetch anime information from Bangumi';
-			case 'settings.metadata.enableTmdb': return 'Enable TMDb Metadata';
+			case 'settings.metadata.enableTmdb': return 'Enable TMDb Information Source';
 			case 'settings.metadata.enableTmdbDesc': return 'Supplement multilingual data from TMDb';
 			case 'settings.metadata.preferredLanguage': return 'Preferred Language';
 			case 'settings.metadata.preferredLanguageDesc': return 'Set the language for metadata synchronization';
@@ -10193,10 +10193,10 @@ extension on _TranslationsJaJp {
 			case 'settings.plugins.shop.error.unreachable': return 'Unable to reach the repository\n{status}';
 			case 'settings.plugins.shop.error.mirrorEnabled': return 'Mirror enabled';
 			case 'settings.plugins.shop.error.mirrorDisabled': return 'Mirror disabled';
-			case 'settings.metadata.title': return 'メタデータ';
-			case 'settings.metadata.enableBangumi': return 'Bangumiメタデータを有効化';
+			case 'settings.metadata.title': return '情報ソース';
+			case 'settings.metadata.enableBangumi': return 'Bangumi情報ソースを有効化';
 			case 'settings.metadata.enableBangumiDesc': return 'Bangumiからアニメ情報を取得';
-			case 'settings.metadata.enableTmdb': return 'TMDbメタデータを有効化';
+			case 'settings.metadata.enableTmdb': return 'TMDb情報ソースを有効化';
 			case 'settings.metadata.enableTmdbDesc': return 'TMDbから多言語データを補完';
 			case 'settings.metadata.preferredLanguage': return '優先言語';
 			case 'settings.metadata.preferredLanguageDesc': return 'メタデータ同期に使用する言語を設定';
@@ -10394,26 +10394,26 @@ extension on _TranslationsJaJp {
 			case 'exitDialog.cancel': return 'キャンセル';
 			case 'tray.showWindow': return 'ウィンドウを表示';
 			case 'tray.exit': return 'Kazumiを終了';
-			case 'navigation.tabs.popular': return 'Popular';
-			case 'navigation.tabs.timeline': return 'Timeline';
-			case 'navigation.tabs.my': return 'My';
-			case 'navigation.tabs.settings': return 'Settings';
-			case 'navigation.actions.search': return 'Search';
-			case 'navigation.actions.history': return 'History';
-			case 'navigation.actions.close': return 'Quit';
-			case 'dialogs.disclaimer.title': return 'Disclaimer';
-			case 'dialogs.disclaimer.agree': return 'I have read and agree';
-			case 'dialogs.disclaimer.exit': return 'Exit';
-			case 'dialogs.updateMirror.title': return 'Update Mirror';
-			case 'dialogs.updateMirror.question': return 'Where would you like to fetch app updates?';
-			case 'dialogs.updateMirror.description': return 'GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.';
+			case 'navigation.tabs.popular': return '人気作品';
+			case 'navigation.tabs.timeline': return 'タイムライン';
+			case 'navigation.tabs.my': return 'マイページ';
+			case 'navigation.tabs.settings': return '設定';
+			case 'navigation.actions.search': return '検索';
+			case 'navigation.actions.history': return '履歴';
+			case 'navigation.actions.close': return '終了';
+			case 'dialogs.disclaimer.title': return '免責事項';
+			case 'dialogs.disclaimer.agree': return '読んで同意しました';
+			case 'dialogs.disclaimer.exit': return '終了';
+			case 'dialogs.updateMirror.title': return '更新ミラー';
+			case 'dialogs.updateMirror.question': return 'アプリの更新をどこから取得しますか？';
+			case 'dialogs.updateMirror.description': return 'GitHub ミラーはほとんどの場合に適しています。F-Droid ストアを使用している場合は F-Droid を選択してください。';
 			case 'dialogs.updateMirror.options.github': return 'GitHub';
 			case 'dialogs.updateMirror.options.fdroid': return 'F-Droid';
-			case 'dialogs.pluginUpdates.toast': return 'Detected {count} rule updates';
-			case 'dialogs.webdav.syncFailed': return 'Failed to sync watch history: {error}';
-			case 'dialogs.about.licenseLegalese': return 'Open Source Licenses';
-			case 'dialogs.cache.title': return 'Cache Management';
-			case 'dialogs.cache.message': return 'Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?';
+			case 'dialogs.pluginUpdates.toast': return '{count} 件のルール更新を検出しました';
+			case 'dialogs.webdav.syncFailed': return '視聴履歴の同期に失敗しました: {error}';
+			case 'dialogs.about.licenseLegalese': return 'オープンソースライセンス';
+			case 'dialogs.cache.title': return 'キャッシュ管理';
+			case 'dialogs.cache.message': return 'キャッシュにはアニメのカバー画像が含まれます。クリアすると再ダウンロードが必要になります。続行しますか？';
 			case 'library.common.emptyState': return 'No content found';
 			case 'library.common.retry': return 'Tap to retry';
 			case 'library.common.backHint': return 'Press again to exit Kazumi';
@@ -10831,10 +10831,10 @@ extension on _TranslationsZhCn {
 			case 'settings.plugins.shop.error.unreachable': return '无法访问远程仓库\n{status}';
 			case 'settings.plugins.shop.error.mirrorEnabled': return '镜像已启用';
 			case 'settings.plugins.shop.error.mirrorDisabled': return '镜像已禁用';
-			case 'settings.metadata.title': return '元数据';
-			case 'settings.metadata.enableBangumi': return '启用 Bangumi 元数据';
+			case 'settings.metadata.title': return '信息源';
+			case 'settings.metadata.enableBangumi': return '启用 Bangumi 信息源';
 			case 'settings.metadata.enableBangumiDesc': return '从 Bangumi 拉取番剧信息';
-			case 'settings.metadata.enableTmdb': return '启用 TMDb 元数据';
+			case 'settings.metadata.enableTmdb': return '启用 TMDb 信息源';
 			case 'settings.metadata.enableTmdbDesc': return '从 TMDb 补充多语言资料';
 			case 'settings.metadata.preferredLanguage': return '优先语言';
 			case 'settings.metadata.preferredLanguageDesc': return '设置元数据同步时使用的语言';
@@ -11346,30 +11346,30 @@ extension on _TranslationsZhTw {
 			case 'metadata.refresh': return '重新整理中繼資料';
 			case 'metadata.source.bangumi': return 'Bangumi';
 			case 'metadata.source.tmdb': return 'TMDb';
-			case 'metadata.lastSynced': return 'Last synced: {timestamp}';
-			case 'downloads.sectionTitle': return 'Download Queue';
-			case 'downloads.aria2Offline': return 'aria2 not connected';
-			case 'downloads.queued': return 'Queued';
-			case 'downloads.running': return 'Downloading';
-			case 'downloads.completed': return 'Completed';
-			case 'torrent.consent.title': return 'BitTorrent Usage Notice';
-			case 'torrent.consent.description': return 'Before enabling BT downloads, please confirm compliance with local laws and understand the risks involved.';
-			case 'torrent.consent.agree': return 'I understand, continue';
-			case 'torrent.consent.decline': return 'Not now';
-			case 'torrent.error.submit': return 'Unable to submit magnet link, please try again later';
-			case 'settings.title': return 'Settings';
-			case 'settings.downloads': return 'Download Settings';
-			case 'settings.playback': return 'Playback Preferences';
-			case 'settings.general.title': return 'General';
-			case 'settings.general.appearance': return 'Appearance';
-			case 'settings.general.appearanceDesc': return 'Configure app theme and refresh rate';
-			case 'settings.general.language': return 'App Language';
-			case 'settings.general.languageDesc': return 'Choose the display language for the app interface';
-			case 'settings.general.followSystem': return 'Follow System';
-			case 'settings.general.exitBehavior': return 'On Close';
-			case 'settings.general.exitApp': return 'Exit Kazumi';
-			case 'settings.general.minimizeToTray': return 'Minimize to Tray';
-			case 'settings.general.askEveryTime': return 'Ask Every Time';
+			case 'metadata.lastSynced': return '最後同步：{timestamp}';
+			case 'downloads.sectionTitle': return '下載佇列';
+			case 'downloads.aria2Offline': return 'aria2 未連線';
+			case 'downloads.queued': return '排隊中';
+			case 'downloads.running': return '下載中';
+			case 'downloads.completed': return '已完成';
+			case 'torrent.consent.title': return 'BitTorrent 使用提示';
+			case 'torrent.consent.description': return '啟用 BT 下載前，請確認遵守所在地法律並了解使用風險。';
+			case 'torrent.consent.agree': return '我已知悉，繼續';
+			case 'torrent.consent.decline': return '暫不開啟';
+			case 'torrent.error.submit': return '無法提交磁力連結，稍後重試';
+			case 'settings.title': return '設定';
+			case 'settings.downloads': return '下載設定';
+			case 'settings.playback': return '播放偏好';
+			case 'settings.general.title': return '通用';
+			case 'settings.general.appearance': return '外觀';
+			case 'settings.general.appearanceDesc': return '設定應用程式主題和更新率';
+			case 'settings.general.language': return '應用程式語言';
+			case 'settings.general.languageDesc': return '選擇應用程式介面顯示語言';
+			case 'settings.general.followSystem': return '依系統';
+			case 'settings.general.exitBehavior': return '關閉時';
+			case 'settings.general.exitApp': return '結束 Kazumi';
+			case 'settings.general.minimizeToTray': return '最小化至系統匣';
+			case 'settings.general.askEveryTime': return '每次都詢問';
 			case 'settings.appearancePage.title': return '外觀設定';
 			case 'settings.appearancePage.mode.title': return '主題模式';
 			case 'settings.appearancePage.mode.system': return '依系統';
@@ -11469,11 +11469,11 @@ extension on _TranslationsZhTw {
 			case 'settings.plugins.shop.error.unreachable': return 'Unable to reach the repository\n{status}';
 			case 'settings.plugins.shop.error.mirrorEnabled': return 'Mirror enabled';
 			case 'settings.plugins.shop.error.mirrorDisabled': return 'Mirror disabled';
-			case 'settings.metadata.title': return 'Metadata';
-			case 'settings.metadata.enableBangumi': return 'Enable Bangumi Metadata';
-			case 'settings.metadata.enableBangumiDesc': return 'Fetch anime information from Bangumi';
-			case 'settings.metadata.enableTmdb': return 'Enable TMDb Metadata';
-			case 'settings.metadata.enableTmdbDesc': return 'Supplement multilingual data from TMDb';
+			case 'settings.metadata.title': return '資訊來源';
+			case 'settings.metadata.enableBangumi': return '啟用 Bangumi 資訊來源';
+			case 'settings.metadata.enableBangumiDesc': return '從 Bangumi 拉取番劇資訊';
+			case 'settings.metadata.enableTmdb': return '啟用 TMDb 資訊來源';
+			case 'settings.metadata.enableTmdbDesc': return '從 TMDb 補充多語言資料';
 			case 'settings.metadata.preferredLanguage': return 'Preferred Language';
 			case 'settings.metadata.preferredLanguageDesc': return 'Set the language for metadata synchronization';
 			case 'settings.metadata.followSystemLanguage': return 'Follow System Language';
@@ -11670,26 +11670,26 @@ extension on _TranslationsZhTw {
 			case 'exitDialog.cancel': return '取消';
 			case 'tray.showWindow': return '顯示視窗';
 			case 'tray.exit': return '結束 Kazumi';
-			case 'navigation.tabs.popular': return 'Popular';
-			case 'navigation.tabs.timeline': return 'Timeline';
-			case 'navigation.tabs.my': return 'My';
-			case 'navigation.tabs.settings': return 'Settings';
-			case 'navigation.actions.search': return 'Search';
-			case 'navigation.actions.history': return 'History';
-			case 'navigation.actions.close': return 'Quit';
-			case 'dialogs.disclaimer.title': return 'Disclaimer';
-			case 'dialogs.disclaimer.agree': return 'I have read and agree';
-			case 'dialogs.disclaimer.exit': return 'Exit';
-			case 'dialogs.updateMirror.title': return 'Update Mirror';
-			case 'dialogs.updateMirror.question': return 'Where would you like to fetch app updates?';
-			case 'dialogs.updateMirror.description': return 'GitHub mirror works best for most users. Choose F-Droid if you use the F-Droid store.';
+			case 'navigation.tabs.popular': return '熱門番組';
+			case 'navigation.tabs.timeline': return '時間表';
+			case 'navigation.tabs.my': return '我的';
+			case 'navigation.tabs.settings': return '設定';
+			case 'navigation.actions.search': return '搜尋';
+			case 'navigation.actions.history': return '歷史記錄';
+			case 'navigation.actions.close': return '結束';
+			case 'dialogs.disclaimer.title': return '免責聲明';
+			case 'dialogs.disclaimer.agree': return '已閱讀並同意';
+			case 'dialogs.disclaimer.exit': return '結束';
+			case 'dialogs.updateMirror.title': return '更新鏡像';
+			case 'dialogs.updateMirror.question': return '您希望從哪裡取得應用程式更新？';
+			case 'dialogs.updateMirror.description': return 'GitHub 鏡像適用於大多數情況。如果您使用 F-Droid 應用程式商店，請選擇 F-Droid 鏡像。';
 			case 'dialogs.updateMirror.options.github': return 'GitHub';
 			case 'dialogs.updateMirror.options.fdroid': return 'F-Droid';
-			case 'dialogs.pluginUpdates.toast': return 'Detected {count} rule updates';
-			case 'dialogs.webdav.syncFailed': return 'Failed to sync watch history: {error}';
-			case 'dialogs.about.licenseLegalese': return 'Open Source Licenses';
-			case 'dialogs.cache.title': return 'Cache Management';
-			case 'dialogs.cache.message': return 'Cached data includes poster art. Clearing it will require re-downloading assets. Do you want to continue?';
+			case 'dialogs.pluginUpdates.toast': return '偵測到 {count} 條規則可以更新';
+			case 'dialogs.webdav.syncFailed': return '同步觀看記錄失敗 {error}';
+			case 'dialogs.about.licenseLegalese': return '開放原始碼授權';
+			case 'dialogs.cache.title': return '快取管理';
+			case 'dialogs.cache.message': return '快取包含番劇封面，清除後載入時需要重新下載，確認要清除快取嗎？';
 			case 'library.common.emptyState': return 'No content found';
 			case 'library.common.retry': return 'Tap to retry';
 			case 'library.common.backHint': return 'Press again to exit Kazumi';

@@ -69,7 +69,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {});
     final state = ref.watch(historyControllerProvider);
     return Builder(builder: (context) {
       return PopScope(
