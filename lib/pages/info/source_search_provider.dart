@@ -114,12 +114,10 @@ class SourceSearchController
           return;
         }
 
-        final prevNames = previous?.pluginList
-                .map((plugin) => plugin.name)
-                .toList() ??
-            const [];
-        final nextNames =
-            next.pluginList.map((plugin) => plugin.name).toList();
+        final prevNames =
+            previous?.pluginList.map((plugin) => plugin.name).toList() ??
+                const [];
+        final nextNames = next.pluginList.map((plugin) => plugin.name).toList();
 
         if (listEquals(prevNames, nextNames)) {
           return;
@@ -219,8 +217,7 @@ class SourceSearchController
     _markPending(plugin.name, clearExisting: clearExisting);
 
     try {
-      final response =
-          await plugin.queryBangumi(keyword, shouldRethrow: true);
+      final response = await plugin.queryBangumi(keyword, shouldRethrow: true);
       if (_isDisposed) {
         return;
       }

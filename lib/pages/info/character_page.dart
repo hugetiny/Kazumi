@@ -63,7 +63,8 @@ class CharacterPage extends ConsumerWidget {
                       actions: [
                         GeneralErrorButton(
                           onPressed: () {
-                            ref.invalidate(characterDetailProvider(characterID));
+                            ref.invalidate(
+                                characterDetailProvider(characterID));
                           },
                           text: '点击重试',
                         ),
@@ -120,8 +121,8 @@ class CharacterPage extends ConsumerWidget {
                                   ),
                                   const Divider(),
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 8.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
                                     child: Text(
                                       '基本信息',
                                       style: Theme.of(context)
@@ -140,8 +141,8 @@ class CharacterPage extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 16.0),
                                   Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 8.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
                                     child: Text(
                                       '角色简介',
                                       style: Theme.of(context)
@@ -213,7 +214,8 @@ class CharacterPage extends ConsumerWidget {
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
-                          ref.invalidate(characterCommentsProvider(characterID));
+                          ref.invalidate(
+                              characterCommentsProvider(characterID));
                         },
                         text: '点击重试',
                       ),

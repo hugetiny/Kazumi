@@ -81,8 +81,8 @@ class ApiInterceptor extends Interceptor {
       case DioExceptionType.sendTimeout:
         return errorTexts.sendTimeout;
       case DioExceptionType.unknown:
-  final String res = await checkConnect();
-  return errorTexts.unknown.replaceFirst('{status}', res);
+        final String res = await checkConnect();
+        return errorTexts.unknown.replaceFirst('{status}', res);
     }
   }
 

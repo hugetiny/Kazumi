@@ -13,7 +13,12 @@ class Danmaku {
   // 弹幕源 ([BiliBili], [Gamer])
   String source;
 
-  Danmaku({required this.message, required this.time, required this.type, required this.color, required this.source});
+  Danmaku(
+      {required this.message,
+      required this.time,
+      required this.type,
+      required this.color,
+      required this.source});
 
   factory Danmaku.fromJson(Map<String, dynamic> json) {
     String messageValue = json['m'];
@@ -22,6 +27,11 @@ class Danmaku {
     int typeValue = int.parse(parts[1]);
     Color color = Utils.generateDanmakuColor(int.parse(parts[2]));
     String sourceValue = parts[3];
-    return Danmaku(time: timeValue, message: messageValue, type: typeValue, color: color, source: sourceValue);
+    return Danmaku(
+        time: timeValue,
+        message: messageValue,
+        type: typeValue,
+        color: color,
+        source: sourceValue);
   }
 }

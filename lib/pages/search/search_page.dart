@@ -183,9 +183,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                               title: Text(history.keyword),
                               onTap: () {
                                 controller.text = history.keyword;
-                                ref
-                                    .read(searchProvider.notifier)
-                                    .searchBangumi(controller.text.trim(), type: 'init');
+                                ref.read(searchProvider.notifier).searchBangumi(
+                                    controller.text.trim(),
+                                    type: 'init');
                                 if (searchController.isOpen) {
                                   searchController.closeView(history.keyword);
                                 }
@@ -227,9 +227,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                       actions: [
                         GeneralErrorButton(
                           onPressed: () {
-                            ref
-                                .read(searchProvider.notifier)
-                                .searchBangumi(searchController.text, type: 'init');
+                            ref.read(searchProvider.notifier).searchBangumi(
+                                searchController.text,
+                                type: 'init');
                           },
                           text: t.library.common.retry,
                         ),
@@ -258,10 +258,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   mainAxisSpacing: StyleString.cardSpace - 2,
                   crossAxisSpacing: StyleString.cardSpace,
                   crossAxisCount: crossCount,
-                  mainAxisExtent: MediaQuery.of(context).size.width /
-                          crossCount /
-                          0.65 +
-                      MediaQuery.textScalerOf(context).scale(32.0),
+                  mainAxisExtent:
+                      MediaQuery.of(context).size.width / crossCount / 0.65 +
+                          MediaQuery.textScalerOf(context).scale(32.0),
                 ),
                 itemCount: bangumiList.isNotEmpty ? bangumiList.length : 10,
                 itemBuilder: (context, index) {

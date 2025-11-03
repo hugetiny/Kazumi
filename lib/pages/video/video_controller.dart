@@ -16,10 +16,11 @@ import 'package:kazumi/pages/webview/webview_controller.dart';
 import 'package:kazumi/pages/webview/providers.dart';
 import 'package:logger/logger.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:kazumi/utils/parse_failure_helper.dart';
 
 import 'video_state.dart';
 
-class VideoPageController extends Notifier<VideoPageState> {
+class VideoPageController extends AutoDisposeNotifier<VideoPageState> {
   late final PluginsController pluginsController;
   late final WebviewItemController<dynamic> webviewController;
 
@@ -28,6 +29,11 @@ class VideoPageController extends Notifier<VideoPageState> {
     pluginsController = ref.read(pluginsProvider.notifier);
     webviewController = ref.read(webviewItemControllerProvider);
     ref.onDispose(cancelQueryRoads);
+    // Keep the VideoPageController alive across route transitions to avoid
+    // losing state (roadList/currentPlugin) between SourceSheet -> VideoPage.
+    // This prevents AutoDispose from disposing the provider when temporarily
+    // unlistened during navigation, which caused `Plugin is null!` and empty road lists.
+    ref.keepAlive();
     return VideoPageState.initial();
   }
 
@@ -57,7 +63,7 @@ class VideoPageController extends Notifier<VideoPageState> {
   }
 
   void clearEpisodeComments() {
-     state = state.copyWith(episodeComments: []);
+    state = state.copyWith(episodeComments: []);
   }
 
   void addEpisodeComments(Iterable<EpisodeCommentItem> comments) {
@@ -192,18 +198,56 @@ class VideoPageController extends Notifier<VideoPageState> {
     }
 
     if (matched == null) {
-  KazumiLogger().log(Level.warning, '未找到源 $pluginName');
-      state = state.copyWith(roadList: const []);
+      KazumiLogger().log(Level.warning, '未找到源 $pluginName');
+      state = state.copyWith(
+        roadList: const [],
+        currentPlugin: null,
+      );
       return;
     }
 
-    final roads =
-        await matched.querychapterRoads(url, cancelToken: cancelToken);
-    state = state.copyWith(roadList: List<Road>.from(roads));
-    KazumiLogger().log(Level.info, '播放列表长度 ${state.roadList.length}');
-    if (state.roadList.isNotEmpty) {
-      KazumiLogger()
-          .log(Level.info, '第一播放列表选集数 ${state.roadList.first.data.length}');
+    try {
+      final roads =
+          await matched.querychapterRoads(url, cancelToken: cancelToken);
+      state = state.copyWith(
+        roadList: List<Road>.from(roads),
+        currentPlugin: matched,
+      );
+      KazumiLogger().log(Level.info, '播放列表长度 ${state.roadList.length}');
+      if (state.roadList.isNotEmpty) {
+        KazumiLogger()
+            .log(Level.info, '第一播放列表选集数 ${state.roadList.first.data.length}');
+      }
+    } catch (e) {
+      KazumiLogger().log(Level.error, '查询播放列表失败: $e');
+      
+      // 记录查询失败(非解析失败,是获取播放列表失败)
+      String reason = 'network_error';
+      if (e is DioException) {
+        if (e.type == DioExceptionType.connectionTimeout) {
+          reason = 'connection_timeout';
+        } else if (e.type == DioExceptionType.receiveTimeout) {
+          reason = 'receive_timeout';
+        } else if (e.type == DioExceptionType.badResponse) {
+          reason = 'bad_response_${e.response?.statusCode ?? 0}';
+        } else if (e.type == DioExceptionType.cancel) {
+          reason = 'cancelled';
+        }
+      }
+      
+      // 记录失败
+      ParseFailureHelper.recordFailure(
+        bangumiId: bangumiItem.id,
+        pluginName: pluginName,
+        src: url,
+        reason: reason,
+      );
+      
+      state = state.copyWith(
+        roadList: const [],
+        currentPlugin: matched,
+      );
+      rethrow;
     }
   }
 

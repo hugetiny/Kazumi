@@ -36,11 +36,14 @@ import 'package:kazumi/pages/setting/setting_controller.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
 /// Provider for super resolution warning dialog "don't ask again" checkbox state
-final _superResolutionDontAskAgainProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _superResolutionDontAskAgainProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 
 /// Provider for syncplay server selection dialog state
-final _syncPlaySelectedServerProvider = StateProvider.autoDispose<String>((ref) => '');
-final _syncPlayCustomServerProvider = StateProvider.autoDispose<String>((ref) => '');
+final _syncPlaySelectedServerProvider =
+    StateProvider.autoDispose<String>((ref) => '');
+final _syncPlayCustomServerProvider =
+    StateProvider.autoDispose<String>((ref) => '');
 
 class PlayerItem extends ConsumerStatefulWidget {
   const PlayerItem({
@@ -186,7 +189,6 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
     playerController.danmakuController.clear();
     // if true, turn off danmaku.
     if (playerController.danmakuOn) {
-
       playerController.danmakuOn = false;
       return;
     }
@@ -259,7 +261,9 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                     Checkbox(
                       value: dontAskAgain,
                       onChanged: (value) {
-                        ref.read(_superResolutionDontAskAgainProvider.notifier).state = value ?? false;
+                        ref
+                            .read(_superResolutionDontAskAgainProvider.notifier)
+                            .state = value ?? false;
                       },
                     ),
                     Text(t.playback.superResolution.warning.dontAskAgain),
@@ -462,8 +466,7 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
         KazumiDialog.showToast(
           message: context.t.playback.toast.loadingEpisode.replaceFirst(
             '{identifier}',
-            videoPageController
-                .roadList[videoPageController.currentRoad]
+            videoPageController.roadList[videoPageController.currentRoad]
                 .identifier[videoPageController.currentEpisode],
           ),
         );
@@ -757,8 +760,10 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
       builder: (context) {
         return Consumer(builder: (context, ref, child) {
           // Initialize providers with current values
-          ref.read(_syncPlaySelectedServerProvider.notifier).state = selectedSyncPlayEndPoint;
-          ref.read(_syncPlayCustomServerProvider.notifier).state = customSyncPlayEndPoint;
+          ref.read(_syncPlaySelectedServerProvider.notifier).state =
+              selectedSyncPlayEndPoint;
+          ref.read(_syncPlayCustomServerProvider.notifier).state =
+              customSyncPlayEndPoint;
 
           final selectedServer = ref.watch(_syncPlaySelectedServerProvider);
           final customServer = ref.watch(_syncPlayCustomServerProvider);
@@ -778,7 +783,8 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                   InputDecorator(
                     decoration: InputDecoration(
                       border: const OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -794,57 +800,70 @@ class _PlayerItemState extends ConsumerState<PlayerItem>
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        if (newValue == defaultCustomSyncPlayEndPoint) {
-                          final serverTextController = TextEditingController();
-                          KazumiDialog.show(
-                            builder: (context) {
-                              return AlertDialog(
-                                title:
-                                    Text(t.playback.syncplay.selectServer.customTitle),
-                                content: TextField(
-                                  controller: serverTextController,
-                                  decoration: InputDecoration(
-                                    hintText: t
-                                        .playback.syncplay.selectServer.customHint,
-                                  ),
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: Text(t.app.cancel),
-                                    onPressed: () {
-                                      KazumiDialog.dismiss();
-                                    },
-                                  ),
-                                  TextButton(
-                                    child: Text(t.app.confirm),
-                                    onPressed: () {
-                                      if (serverTextController
-                                              .text.isNotEmpty &&
-                                          !syncPlayEndPoints.contains(
-                                              serverTextController.text)) {
-                                        KazumiDialog.dismiss();
-                                        ref.read(_syncPlayCustomServerProvider.notifier).state =
-                                            serverTextController.text;
-                                        ref.read(_syncPlaySelectedServerProvider.notifier).state =
-                                            serverTextController.text;
-                                      } else {
-                                        KazumiDialog.showToast(
-                                          message: t.playback.syncplay
-                                              .selectServer.duplicateOrEmpty,
-                                        );
-                                      }
-                                    },
-                                  ),
-                                ],
+                          if (newValue != null) {
+                            if (newValue == defaultCustomSyncPlayEndPoint) {
+                              final serverTextController =
+                                  TextEditingController();
+                              KazumiDialog.show(
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Text(t.playback.syncplay.selectServer
+                                        .customTitle),
+                                    content: TextField(
+                                      controller: serverTextController,
+                                      decoration: InputDecoration(
+                                        hintText: t.playback.syncplay
+                                            .selectServer.customHint,
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: Text(t.app.cancel),
+                                        onPressed: () {
+                                          KazumiDialog.dismiss();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: Text(t.app.confirm),
+                                        onPressed: () {
+                                          if (serverTextController
+                                                  .text.isNotEmpty &&
+                                              !syncPlayEndPoints.contains(
+                                                  serverTextController.text)) {
+                                            KazumiDialog.dismiss();
+                                            ref
+                                                .read(
+                                                    _syncPlayCustomServerProvider
+                                                        .notifier)
+                                                .state = serverTextController.text;
+                                            ref
+                                                .read(
+                                                    _syncPlaySelectedServerProvider
+                                                        .notifier)
+                                                .state = serverTextController.text;
+                                          } else {
+                                            KazumiDialog.showToast(
+                                              message: t
+                                                  .playback
+                                                  .syncplay
+                                                  .selectServer
+                                                  .duplicateOrEmpty,
+                                            );
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
-                            },
-                          );
-                        } else {
-                          ref.read(_syncPlaySelectedServerProvider.notifier).state = newValue;
-                        }
-                      }
-                    },
+                            } else {
+                              ref
+                                  .read(
+                                      _syncPlaySelectedServerProvider.notifier)
+                                  .state = newValue;
+                            }
+                          }
+                        },
                       ),
                     ),
                   ),

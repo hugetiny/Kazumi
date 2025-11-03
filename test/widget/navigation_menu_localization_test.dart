@@ -15,8 +15,8 @@ void main() {
 
   testWidgets('navigation labels respond to locale changes', (tester) async {
     const size = Size(400, 800);
-    tester.binding.window.physicalSizeTestValue = size;
-    tester.binding.window.devicePixelRatioTestValue = 1.0;
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
       ProviderScope(
@@ -41,7 +41,7 @@ void main() {
     expect(find.text('我的'), findsOneWidget);
     expect(find.text('设置'), findsOneWidget);
 
-    tester.binding.window.clearPhysicalSizeTestValue();
-    tester.binding.window.clearDevicePixelRatioTestValue();
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
   });
 }

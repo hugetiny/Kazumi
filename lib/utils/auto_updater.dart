@@ -178,8 +178,8 @@ class AutoUpdater {
   void _showUpdateDialog(UpdateInfo updateInfo, {bool isAutoCheck = false}) {
     KazumiDialog.show(
       builder: (context) {
-  final translations = context.t;
-  final updateTexts = translations.settings.update;
+        final translations = context.t;
+        final updateTexts = translations.settings.update;
         return AlertDialog(
           title: Text(updateTexts.dialog.title
               .replaceFirst('{version}', updateInfo.version)),
@@ -249,8 +249,8 @@ class AutoUpdater {
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
-                      _getInstallationTypeDescription(
-                        translations, type),
+                                          _getInstallationTypeDescription(
+                                              translations, type),
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodySmall,
@@ -700,9 +700,9 @@ class AutoUpdater {
       } else if (Platform.isAndroid) {
         final result = await OpenFilex.open(filePath);
         if (result.type != ResultType.done) {
-      final errorDetail = result.message.isNotEmpty
-        ? result.message
-        : updateTexts.toast.unknownReason;
+          final errorDetail = result.message.isNotEmpty
+              ? result.message
+              : updateTexts.toast.unknownReason;
           KazumiDialog.showToast(
             message: updateTexts.toast.openInstallerFailed
                 .replaceFirst('{error}', errorDetail),
@@ -745,14 +745,15 @@ class AutoUpdater {
   /// 根据安装类型获取下载链接
   Future<String> _getDownloadUrlForType(
       List<dynamic> assets, InstallationType type) async {
-    final patterns = _getFilePatterns(type).map((p) => p.toLowerCase()).toList();
+    final patterns =
+        _getFilePatterns(type).map((p) => p.toLowerCase()).toList();
 
     try {
       final asset = assets.cast<Map<String, dynamic>>().firstWhere((asset) {
         final name = (asset['name'] as String?)?.toLowerCase() ?? '';
         final downloadUrl = (asset['browser_download_url'] as String?) ?? '';
         return downloadUrl.isNotEmpty &&
-              patterns.every((pattern) => name.contains(pattern));
+            patterns.every((pattern) => name.contains(pattern));
       });
       return (asset['browser_download_url'] as String?) ?? '';
     } catch (e) {

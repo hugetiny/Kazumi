@@ -15,5 +15,7 @@ final collectionsProvider =
     NotifierProvider<CollectController, CollectState>(CollectController.new);
 
 // ✅ Favorites page UI state providers
-final favoritesShowDeleteProvider = StateProvider.autoDispose<bool>((ref) => false);
-final favoritesSyncingProvider = StateProvider.autoDispose<bool>((ref) => false);
+final favoritesShowDeleteProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
+final favoritesSyncingProvider =
+    StateProvider.autoDispose<bool>((ref) => false);

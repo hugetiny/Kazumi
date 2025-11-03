@@ -195,7 +195,7 @@ class PluginsController extends Notifier<PluginsState> {
     final jsonData = jsonEncode(pluginListToJson());
     final pluginsFile = File('${newPluginDirectory!.path}/$pluginsFileName');
     await pluginsFile.writeAsString(jsonData);
-  KazumiLogger().log(Level.info, '已更新源文件 $pluginsFileName');
+    KazumiLogger().log(Level.info, '已更新源文件 $pluginsFileName');
   }
 
   Future<void> queryPluginHTTPList() async {

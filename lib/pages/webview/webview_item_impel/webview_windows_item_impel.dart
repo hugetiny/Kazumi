@@ -7,7 +7,8 @@ import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 
 /// Provider for webview windows initialization state
-final webviewWindowsInitializedProvider = StateProvider.autoDispose<int>((ref) => 0);
+final webviewWindowsInitializedProvider =
+    StateProvider.autoDispose<int>((ref) => 0);
 
 class WebviewWindowsItemImpel extends ConsumerStatefulWidget {
   const WebviewWindowsItemImpel({
@@ -24,7 +25,8 @@ class WebviewWindowsItemImpel extends ConsumerStatefulWidget {
       _WebviewWindowsItemImpelState();
 }
 
-class _WebviewWindowsItemImpelState extends ConsumerState<WebviewWindowsItemImpel> {
+class _WebviewWindowsItemImpelState
+    extends ConsumerState<WebviewWindowsItemImpel> {
   final List<StreamSubscription> _subscriptions = [];
 
   @override
@@ -40,27 +42,27 @@ class _WebviewWindowsItemImpelState extends ConsumerState<WebviewWindowsItemImpe
         s.cancel();
       } catch (_) {}
     }
-    widget.webviewController.dispose();
     super.dispose();
   }
 
   Future<void> initPlatformState() async {
-    // 初始化Webview
-    if (widget.webviewController.webviewController == null) {
-      await widget.webviewController.init();
-    }
+    // 初始化Webview（幂等，内部自带并发保护）
+    await widget.webviewController.init();
     // 接受全屏事件
     final controller = widget.webviewController.webviewController;
     if (controller != null) {
-      _subscriptions.add(controller.containsFullScreenElementChanged
-          .listen((flag) {
+      _subscriptions
+          .add(controller.containsFullScreenElementChanged.listen((flag) {
         widget.videoPageController.isFullscreen = flag;
         windowManager.setFullScreen(flag);
       }));
     }
     if (!mounted) return;
-
-    ref.read(webviewWindowsInitializedProvider.notifier).state++;
+    // Defer provider update to next frame to avoid potential writes during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(webviewWindowsInitializedProvider.notifier).state++;
+    });
   }
 
   Widget get compositeView {

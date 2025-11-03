@@ -48,7 +48,8 @@ class PopularController extends Notifier<PopularState> {
     }
     state = state.copyWith(isLoadingMore: true);
     try {
-      final result = await BangumiHTTP.getBangumiTrendsList(offset: trendList.length);
+      final result =
+          await BangumiHTTP.getBangumiTrendsList(offset: trendList.length);
       trendList = [...trendList, ...result];
       state = state.copyWith(
         trendList: trendList,
@@ -56,7 +57,8 @@ class PopularController extends Notifier<PopularState> {
         isTimeOut: trendList.isEmpty,
       );
     } catch (_) {
-      state = state.copyWith(isLoadingMore: false, isTimeOut: trendList.isEmpty);
+      state =
+          state.copyWith(isLoadingMore: false, isTimeOut: trendList.isEmpty);
     }
   }
 
@@ -80,8 +82,8 @@ class PopularController extends Notifier<PopularState> {
         isTimeOut: bangumiList.isEmpty,
       );
     } catch (_) {
-      state = state.copyWith(isLoadingMore: false, isTimeOut: bangumiList.isEmpty);
+      state =
+          state.copyWith(isLoadingMore: false, isTimeOut: bangumiList.isEmpty);
     }
   }
 }
-

@@ -27,7 +27,6 @@ class BangumiInfoCardV extends ConsumerStatefulWidget {
 }
 
 class _BangumiInfoCardVState extends ConsumerState<BangumiInfoCardV> {
-
   Widget get voteBarChart {
     final List<int> voteCounts = _normalizedVoteCounts();
     final int totalVotes = _resolveTotalVotes(voteCounts);
@@ -67,7 +66,8 @@ class _BangumiInfoCardVState extends ConsumerState<BangumiInfoCardV> {
                     getTooltipColor: (_) =>
                         Theme.of(context).colorScheme.inverseSurface,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final int safeIndex = groupIndex.clamp(0, voteCounts.length - 1);
+                      final int safeIndex =
+                          groupIndex.clamp(0, voteCounts.length - 1);
                       final double percentage =
                           (voteCounts[safeIndex] / totalVotes) * 100;
                       return BarTooltipItem(

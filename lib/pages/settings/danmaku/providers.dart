@@ -63,14 +63,16 @@ class DanmakuSettingsState {
       danmakuOpacity: danmakuOpacity ?? this.danmakuOpacity,
       danmakuFontSize: danmakuFontSize ?? this.danmakuFontSize,
       danmakuFontWeight: danmakuFontWeight ?? this.danmakuFontWeight,
-      danmakuEnabledByDefault: danmakuEnabledByDefault ?? this.danmakuEnabledByDefault,
+      danmakuEnabledByDefault:
+          danmakuEnabledByDefault ?? this.danmakuEnabledByDefault,
       danmakuBorder: danmakuBorder ?? this.danmakuBorder,
       danmakuTop: danmakuTop ?? this.danmakuTop,
       danmakuBottom: danmakuBottom ?? this.danmakuBottom,
       danmakuScroll: danmakuScroll ?? this.danmakuScroll,
       danmakuColor: danmakuColor ?? this.danmakuColor,
       danmakuMassive: danmakuMassive ?? this.danmakuMassive,
-      danmakuBiliBiliSource: danmakuBiliBiliSource ?? this.danmakuBiliBiliSource,
+      danmakuBiliBiliSource:
+          danmakuBiliBiliSource ?? this.danmakuBiliBiliSource,
       danmakuGamerSource: danmakuGamerSource ?? this.danmakuGamerSource,
       danmakuDanDanSource: danmakuDanDanSource ?? this.danmakuDanDanSource,
       danDanAppIdOverride: danDanAppIdOverride ?? this.danDanAppIdOverride,
@@ -86,23 +88,43 @@ class DanmakuSettingsNotifier extends Notifier<DanmakuSettingsState> {
     final setting = GStorage.setting;
 
     return DanmakuSettingsState(
-      danmakuArea: setting.get(SettingBoxKey.danmakuArea, defaultValue: 1.0) as double,
-      danmakuOpacity: setting.get(SettingBoxKey.danmakuOpacity, defaultValue: 1.0) as double,
+      danmakuArea:
+          setting.get(SettingBoxKey.danmakuArea, defaultValue: 1.0) as double,
+      danmakuOpacity: setting.get(SettingBoxKey.danmakuOpacity,
+          defaultValue: 1.0) as double,
       danmakuFontSize: setting.get(SettingBoxKey.danmakuFontSize,
           defaultValue: (Utils.isCompact()) ? 16.0 : 25.0) as double,
-      danmakuFontWeight: setting.get(SettingBoxKey.danmakuFontWeight, defaultValue: 4) as int,
-      danmakuEnabledByDefault: setting.get(SettingBoxKey.danmakuEnabledByDefault, defaultValue: false) as bool,
-      danmakuBorder: setting.get(SettingBoxKey.danmakuBorder, defaultValue: true) as bool,
-      danmakuTop: setting.get(SettingBoxKey.danmakuTop, defaultValue: true) as bool,
-      danmakuBottom: setting.get(SettingBoxKey.danmakuBottom, defaultValue: false) as bool,
-      danmakuScroll: setting.get(SettingBoxKey.danmakuScroll, defaultValue: true) as bool,
-      danmakuColor: setting.get(SettingBoxKey.danmakuColor, defaultValue: true) as bool,
-      danmakuMassive: setting.get(SettingBoxKey.danmakuMassive, defaultValue: false) as bool,
-      danmakuBiliBiliSource: setting.get(SettingBoxKey.danmakuBiliBiliSource, defaultValue: true) as bool,
-      danmakuGamerSource: setting.get(SettingBoxKey.danmakuGamerSource, defaultValue: true) as bool,
-      danmakuDanDanSource: setting.get(SettingBoxKey.danmakuDanDanSource, defaultValue: true) as bool,
-      danDanAppIdOverride: ((setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)?.trim() ?? ''),
-      danDanApiKeyOverride: ((setting.get(SettingBoxKey.danDanApiKey, defaultValue: '') as String?)?.trim() ?? ''),
+      danmakuFontWeight:
+          setting.get(SettingBoxKey.danmakuFontWeight, defaultValue: 4) as int,
+      danmakuEnabledByDefault: setting.get(
+          SettingBoxKey.danmakuEnabledByDefault,
+          defaultValue: false) as bool,
+      danmakuBorder:
+          setting.get(SettingBoxKey.danmakuBorder, defaultValue: true) as bool,
+      danmakuTop:
+          setting.get(SettingBoxKey.danmakuTop, defaultValue: true) as bool,
+      danmakuBottom:
+          setting.get(SettingBoxKey.danmakuBottom, defaultValue: false) as bool,
+      danmakuScroll:
+          setting.get(SettingBoxKey.danmakuScroll, defaultValue: true) as bool,
+      danmakuColor:
+          setting.get(SettingBoxKey.danmakuColor, defaultValue: true) as bool,
+      danmakuMassive: setting.get(SettingBoxKey.danmakuMassive,
+          defaultValue: false) as bool,
+      danmakuBiliBiliSource: setting.get(SettingBoxKey.danmakuBiliBiliSource,
+          defaultValue: true) as bool,
+      danmakuGamerSource: setting.get(SettingBoxKey.danmakuGamerSource,
+          defaultValue: true) as bool,
+      danmakuDanDanSource: setting.get(SettingBoxKey.danmakuDanDanSource,
+          defaultValue: true) as bool,
+      danDanAppIdOverride:
+          ((setting.get(SettingBoxKey.danDanAppId, defaultValue: '') as String?)
+                  ?.trim() ??
+              ''),
+      danDanApiKeyOverride: ((setting.get(SettingBoxKey.danDanApiKey,
+                  defaultValue: '') as String?)
+              ?.trim() ??
+          ''),
     );
   }
 
@@ -196,6 +218,7 @@ class DanmakuSettingsNotifier extends Notifier<DanmakuSettingsState> {
 /// final controller = ref.read(danmakuSettingsProvider.notifier);
 /// await controller.setDanmakuArea(0.5);
 /// ```
-final danmakuSettingsProvider = NotifierProvider<DanmakuSettingsNotifier, DanmakuSettingsState>(
+final danmakuSettingsProvider =
+    NotifierProvider<DanmakuSettingsNotifier, DanmakuSettingsState>(
   DanmakuSettingsNotifier.new,
 );

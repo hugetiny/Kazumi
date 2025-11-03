@@ -75,10 +75,10 @@ void main() {
         container.read(metadataSettingsProvider.notifier);
 
     await notifier.setManualLocale('ja-JP');
-    expect(GStorage.setting.get(SettingBoxKey.metadataPreferredLocale), 'ja-JP');
+    expect(
+        GStorage.setting.get(SettingBoxKey.metadataPreferredLocale), 'ja-JP');
 
-    MetadataSettingsState state =
-        container.read(metadataSettingsProvider);
+    MetadataSettingsState state = container.read(metadataSettingsProvider);
     expect(state.manualLocaleTag, 'ja-JP');
 
     await notifier.setManualLocale(null);

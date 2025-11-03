@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
@@ -34,7 +35,7 @@ class BangumiCardV extends StatelessWidget {
               );
               return;
             }
-            context.push('/info', extra: bangumiItem);
+            context.push(Routes.info, extra: bangumiItem);
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

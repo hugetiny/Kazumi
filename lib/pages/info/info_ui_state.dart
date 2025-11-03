@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///
 /// 管理详情页面各种展开/折叠等 UI 状态
 class InfoUIState {
-  final bool fullIntro;       // 是否展开完整简介
-  final bool fullTag;          // 是否展开完整标签列表
-  final bool showAllEpisodes;  // 是否显示所有剧集
+  final bool fullIntro; // 是否展开完整简介
+  final bool fullTag; // 是否展开完整标签列表
+  final bool showAllEpisodes; // 是否显示所有剧集
 
   const InfoUIState({
     this.fullIntro = false,

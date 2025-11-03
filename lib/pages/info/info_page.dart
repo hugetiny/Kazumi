@@ -220,8 +220,8 @@ class _InfoPageState extends ConsumerState<InfoPage>
                                             ).createShader(bounds);
                                           },
                                           child: NetworkImgLayer(
-                                            src: infoController
-                                                    .bangumiItem.images['large'] ??
+                                            src: infoController.bangumiItem
+                                                    .images['large'] ??
                                                 '',
                                             width: boxConstraints.maxWidth,
                                             height: boxConstraints.maxHeight,

@@ -64,12 +64,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
       double totalSizeMB = (totalSizeBytes / (1024 * 1024));
 
       if (mounted) {
-
         ref.read(cacheSizeMBProvider.notifier).state = totalSizeMB;
       }
     } else {
       if (mounted) {
-
         ref.read(cacheSizeMBProvider.notifier).state = 0.0;
       }
     }
@@ -235,7 +233,6 @@ class _AboutPageState extends ConsumerState<AboutPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-
                     final newValue = value ?? !autoUpdate;
                     await setting.put(SettingBoxKey.autoUpdate, newValue);
                     ref.read(autoUpdateProvider.notifier).state = newValue;

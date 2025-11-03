@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
@@ -42,7 +43,7 @@ class BangumiTimelineCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         onTap: onTap ??
             () {
-              context.push('/info', extra: bangumiItem);
+              context.push(Routes.info, extra: bangumiItem);
             },
         child: SizedBox(
           height: cardHeight,
@@ -50,7 +51,8 @@ class BangumiTimelineCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              buildImage(context, bangumiItem.images['large'] ?? '', imageWidth, cardHeight),
+              buildImage(context, bangumiItem.images['large'] ?? '', imageWidth,
+                  cardHeight),
               Expanded(
                 child: Padding(
                   padding:
@@ -65,7 +67,8 @@ class BangumiTimelineCard extends StatelessWidget {
     );
   }
 
-  Widget buildImage(BuildContext context, String imageUrl, double width, double height) {
+  Widget buildImage(
+      BuildContext context, String imageUrl, double width, double height) {
     final borderRadius = BorderRadius.circular(16);
     Widget img = NetworkImgLayer(
       src: imageUrl,
@@ -120,7 +123,8 @@ class BangumiTimelineCard extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 2),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withAlpha((255 * 0.10).round()),
+                color: colorScheme.primaryContainer
+                    .withAlpha((255 * 0.10).round()),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Padding(

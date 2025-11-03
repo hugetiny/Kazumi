@@ -52,9 +52,8 @@ class WebDavSettingsController extends Notifier<WebDavSettingsState> {
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false) as bool;
     final webDavEnable =
         setting.get(SettingBoxKey.webDavEnable, defaultValue: false) as bool;
-    final webDavEnableHistory =
-        setting.get(SettingBoxKey.webDavEnableHistory, defaultValue: false)
-            as bool;
+    final webDavEnableHistory = setting.get(SettingBoxKey.webDavEnableHistory,
+        defaultValue: false) as bool;
 
     return WebDavSettingsState(
       enableGitProxy: enableGitProxy,

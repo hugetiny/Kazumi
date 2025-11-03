@@ -13,11 +13,11 @@ class DanmakuSettingsSheet extends ConsumerStatefulWidget {
   const DanmakuSettingsSheet({super.key, required this.danmakuController});
 
   @override
-  ConsumerState<DanmakuSettingsSheet> createState() => _DanmakuSettingsSheetState();
+  ConsumerState<DanmakuSettingsSheet> createState() =>
+      _DanmakuSettingsSheetState();
 }
 
 class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
-
   void showDanmakuShieldSheet() {
     showModalBottomSheet(
         isScrollControlled: true,
@@ -68,7 +68,8 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                     ),
                   );
                   // ✅ Save to Riverpod provider (which persists to storage)
-                  ref.read(danmakuSettingsProvider.notifier)
+                  ref
+                      .read(danmakuSettingsProvider.notifier)
                       .setDanmakuFontSize(value.floorToDouble());
                 },
               ),
@@ -89,8 +90,8 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                     ),
                   );
                   // ✅ Save to Riverpod provider (which persists to storage)
-                  ref.read(danmakuSettingsProvider.notifier)
-                      .setDanmakuOpacity(double.parse(value.toStringAsFixed(2)));
+                  ref.read(danmakuSettingsProvider.notifier).setDanmakuOpacity(
+                      double.parse(value.toStringAsFixed(2)));
                 },
               ),
             ),
@@ -116,7 +117,9 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                     ),
                   );
                   // ✅ Save to Riverpod provider (which persists to storage)
-                  ref.read(danmakuSettingsProvider.notifier).setDanmakuArea(value);
+                  ref
+                      .read(danmakuSettingsProvider.notifier)
+                      .setDanmakuArea(value);
                 },
               ),
             ),
@@ -130,7 +133,9 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                   ),
                 );
                 // ✅ Save to Riverpod provider (which persists to storage)
-                await ref.read(danmakuSettingsProvider.notifier).setDanmakuTop(show);
+                await ref
+                    .read(danmakuSettingsProvider.notifier)
+                    .setDanmakuTop(show);
               },
               title: Text(playerTexts.danmakuTopDisplay),
               initialValue: !widget.danmakuController.option.hideTop,
@@ -145,7 +150,9 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                   ),
                 );
                 // ✅ Save to Riverpod provider (which persists to storage)
-                await ref.read(danmakuSettingsProvider.notifier).setDanmakuBottom(show);
+                await ref
+                    .read(danmakuSettingsProvider.notifier)
+                    .setDanmakuBottom(show);
               },
               title: Text(playerTexts.danmakuBottomDisplay),
               initialValue: !widget.danmakuController.option.hideBottom,
@@ -160,7 +167,9 @@ class _DanmakuSettingsSheetState extends ConsumerState<DanmakuSettingsSheet> {
                   ),
                 );
                 // ✅ Save to Riverpod provider (which persists to storage)
-                await ref.read(danmakuSettingsProvider.notifier).setDanmakuScroll(show);
+                await ref
+                    .read(danmakuSettingsProvider.notifier)
+                    .setDanmakuScroll(show);
               },
               title: Text(playerTexts.danmakuScrollDisplay),
               initialValue: !widget.danmakuController.option.hideScroll,

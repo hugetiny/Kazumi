@@ -91,7 +91,7 @@
     "source": {
       "title": "源",
       "ruleManagement": "规则管理",
-      "ruleManagementDesc": "管理番剧资源规则",
+      "ruleManagementDesc": "管理视频资源规则",
       "githubProxy": "Github 镜像",
       "githubProxyDesc": "使用镜像访问规则托管仓库"
     },
@@ -101,6 +101,17 @@
       "tooltip": {
         "updateAll": "更新全部",
         "addRule": "添加规则"
+      },
+      "sort": {
+        "title": "排序方式",
+        "tooltip": "排序",
+        "options": {
+          "original": "默认顺序",
+          "nameAsc": "名称升序",
+          "nameDesc": "名称降序",
+          "failureAsc": "失败次数升序",
+          "failureDesc": "失败次数降序"
+        }
       },
       "multiSelect": {
         "selectedCount": "已选择 {count} 项"
@@ -211,7 +222,7 @@
     "metadata": {
       "title": "信息源",
       "enableBangumi": "启用 Bangumi 信息源",
-      "enableBangumiDesc": "从 Bangumi 拉取番剧信息",
+      "enableBangumiDesc": "从 Bangumi 拉取视频信息",
       "enableTmdb": "启用 TMDb 信息源",
       "enableTmdbDesc": "从 TMDb 补充多语言资料",
       "preferredLanguage": "优先语言",
@@ -448,7 +459,7 @@
           "project": "项目主页",
           "repository": "代码仓库",
           "icon": "图标创作",
-          "index": "番剧索引",
+          "index": "视频索引",
           "danmaku": "弹幕源",
           "danmakuId": "ID：{id}"
         },
@@ -525,7 +536,7 @@
     },
     "cache": {
       "title": "缓存管理",
-      "message": "缓存包含番剧封面，清除后加载时需要重新下载，确认要清除缓存吗？"
+      "message": "缓存包含视频封面，清除后加载时需要重新下载，确认要清除缓存吗？"
     }
   },
   "library": {
@@ -599,7 +610,7 @@
         "episodeNumber": "第{number}话"
       },
       "toast": {
-        "sourceMissing": "未找到关联番剧源"
+        "sourceMissing": "未找到关联视频源"
       },
       "manage": {
         "title": "记录管理",
@@ -643,7 +654,7 @@
       },
       "tabs": {
         "overview": "概览",
-        "comments": "吐槽",
+        "comments": "短评",
         "characters": "角色",
         "reviews": "评论",
         "staff": "制作人员",
@@ -668,11 +679,14 @@
           "removed": "已删除源 {plugin}。"
         },
         "sort": {
+          "title": "排序方式",
           "tooltip": "排序：{label}",
           "options": {
             "original": "默认顺序",
             "nameAsc": "名称升序",
-            "nameDesc": "名称降序"
+            "nameDesc": "名称降序",
+            "failureAsc": "失败次数升序",
+            "failureDesc": "失败次数降序"
           }
         },
         "card": {
@@ -721,7 +735,7 @@
       },
       "history": {
         "title": "播放历史记录",
-        "description": "查看播放过的番剧"
+        "description": "查看播放过的视频"
       }
     }
   },
@@ -812,12 +826,13 @@
     },
     "loading": {
       "parsing": "视频资源解析中",
+      "parseFailed": "视频资源解析失败",
       "player": "视频资源解析成功，播放器加载中",
       "danmakuSearch": "弹幕检索中..."
     },
     "danmakuSearch": {
       "title": "弹幕检索",
-      "hint": "番剧名",
+      "hint": "视频名",
       "submit": "提交"
     },
     "remote": {
@@ -842,7 +857,7 @@
         "media": "媒体轨道"
       },
       "labels": {
-        "series": "番剧",
+        "series": "视频",
         "plugin": "插件",
         "route": "线路",
         "episode": "集数",

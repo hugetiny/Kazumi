@@ -23,7 +23,7 @@ export 'package:kazumi/pages/info/info_ui_state.dart';
 /// await controller.queryBangumiInfoByID(12345);
 /// ```
 final bangumiInfoProvider =
-    NotifierProvider<InfoController, InfoState>(InfoController.new);
+    NotifierProvider.autoDispose<InfoController, InfoState>(InfoController.new);
 
 // ✅ Bangumi Comments Provider (支持分页)
 class BangumiCommentsNotifier

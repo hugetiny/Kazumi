@@ -14,7 +14,8 @@ class PluginHTTP {
       // debugPrint('${jsonData.toString()}');
       for (dynamic pluginJsonItem in jsonData) {
         try {
-          PluginHTTPItem pluginHTTPItem = PluginHTTPItem.fromJson(pluginJsonItem);
+          PluginHTTPItem pluginHTTPItem =
+              PluginHTTPItem.fromJson(pluginJsonItem);
           pluginHTTPItemList.add(pluginHTTPItem);
         } catch (_) {}
       }

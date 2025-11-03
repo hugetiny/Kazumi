@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/card/network_img_layer.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/collect_button.dart';
@@ -33,7 +34,8 @@ class BangumiHistoryCardV extends ConsumerStatefulWidget {
   final double? cardWidth;
 
   @override
-  ConsumerState<BangumiHistoryCardV> createState() => _BangumiHistoryCardVState();
+  ConsumerState<BangumiHistoryCardV> createState() =>
+      _BangumiHistoryCardVState();
 }
 
 class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
@@ -160,8 +162,7 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
             const SizedBox(width: 12),
             Expanded(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+                padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -223,7 +224,8 @@ class _BangumiHistoryCardVState extends ConsumerState<BangumiHistoryCardV> {
                     ),
                     tooltip: '番剧详情',
                     onPressed: () {
-                      context.push('/info', extra: widget.historyItem.bangumiItem);
+                      context.push(Routes.info,
+                          extra: widget.historyItem.bangumiItem);
                     },
                   ),
                 ],

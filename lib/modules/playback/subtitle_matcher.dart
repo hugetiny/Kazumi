@@ -163,7 +163,8 @@ class SubtitleMatcher {
 
     for (final Map<String, dynamic> entry in apiData) {
       try {
-        final String? url = urlExtractor?.call(entry) ?? entry['url'] as String?;
+        final String? url =
+            urlExtractor?.call(entry) ?? entry['url'] as String?;
         final String? language =
             languageExtractor?.call(entry) ?? entry['language'] as String?;
         final double confidence = confidenceExtractor?.call(entry) ??

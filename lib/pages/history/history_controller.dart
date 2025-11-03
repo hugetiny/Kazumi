@@ -23,7 +23,8 @@ class HistoryController extends Notifier<HistoryState> {
 
   List<History> _sortedHistories() {
     return List<History>.from(storedHistories.values)
-      ..sort((a, b) => b.lastWatchTime.millisecondsSinceEpoch -
+      ..sort((a, b) =>
+          b.lastWatchTime.millisecondsSinceEpoch -
           a.lastWatchTime.millisecondsSinceEpoch);
   }
 
@@ -40,48 +41,61 @@ class HistoryController extends Notifier<HistoryState> {
     String lastSrc,
     String lastWatchEpisodeName,
   ) {
-    final privateMode = setting.get(SettingBoxKey.privateMode, defaultValue: false);
-    if (privateMode) return;
+  final privateMode =
+    setting.get(SettingBoxKey.privateMode, defaultValue: false);
+  if (privateMode) {
+    return;
+  }
 
     final key = History.getKey(adapterName, bangumiItem);
     final history = storedHistories.get(key) ??
-        History(bangumiItem, episode, adapterName, DateTime.now(), lastSrc, lastWatchEpisodeName);
+        History(bangumiItem, episode, adapterName, DateTime.now(), lastSrc,
+            lastWatchEpisodeName);
 
     history.lastWatchEpisode = episode;
     history.lastWatchTime = DateTime.now();
-    if (lastSrc.isNotEmpty) history.lastSrc = lastSrc;
-    if (lastWatchEpisodeName.isNotEmpty) history.lastWatchEpisodeName = lastWatchEpisodeName;
+    if (lastSrc.isNotEmpty) {
+      history.lastSrc = lastSrc;
+    }
+    if (lastWatchEpisodeName.isNotEmpty) {
+      history.lastWatchEpisodeName = lastWatchEpisodeName;
+    }
 
     final prog = history.progresses[episode];
     if (prog == null) {
-      history.progresses[episode] = Progress(episode, road, progress.inMilliseconds);
+      history.progresses[episode] =
+          Progress(episode, road, progress.inMilliseconds);
     } else {
       prog.progress = progress;
     }
 
-  storedHistories.put(history.key, history);
-  refreshHistories();
+    storedHistories.put(history.key, history);
+    refreshHistories();
   }
 
   Progress? lastWatching(BangumiItem bangumiItem, String adapterName) {
-    final history = storedHistories.get(History.getKey(adapterName, bangumiItem));
+    final history =
+        storedHistories.get(History.getKey(adapterName, bangumiItem));
     return history?.progresses[history.lastWatchEpisode];
   }
 
-  Progress? findProgress(BangumiItem bangumiItem, String adapterName, int episode) {
-    final history = storedHistories.get(History.getKey(adapterName, bangumiItem));
+  Progress? findProgress(
+      BangumiItem bangumiItem, String adapterName, int episode) {
+    final history =
+        storedHistories.get(History.getKey(adapterName, bangumiItem));
     return history?.progresses[episode];
   }
 
   void deleteHistory(History history) {
-  storedHistories.delete(history.key);
-  refreshHistories();
+    storedHistories.delete(history.key);
+    refreshHistories();
   }
 
   void clearProgress(BangumiItem bangumiItem, String adapterName, int episode) {
-  final history = storedHistories.get(History.getKey(adapterName, bangumiItem));
-  history?.progresses[episode]?.progress = Duration.zero;
-  refreshHistories();
+    final history =
+        storedHistories.get(History.getKey(adapterName, bangumiItem));
+    history?.progresses[episode]?.progress = Duration.zero;
+    refreshHistories();
   }
 
   void clearAll() {

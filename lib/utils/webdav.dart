@@ -47,14 +47,16 @@ class WebDav {
       await client.ping();
       try {
         // KazumiLogger().log(Level.warning, 'webDav backup directory not exists, creating');
-        await client.mkdir('/kazumiSync');    
+        await client.mkdir('/kazumiSync');
         if (!await webDavLocalTempDirectory.exists()) {
           await webDavLocalTempDirectory.create(recursive: true);
         }
         initialized = true;
-        KazumiLogger().log(Level.info, 'webDav backup directory create success');
+        KazumiLogger()
+            .log(Level.info, 'webDav backup directory create success');
       } catch (_) {
-        KazumiLogger().log(Level.error, 'webDav backup directory create failed');
+        KazumiLogger()
+            .log(Level.error, 'webDav backup directory create failed');
         rethrow;
       }
     } catch (e) {
@@ -65,16 +67,15 @@ class WebDav {
 
   Future<void> update(String boxName) async {
     var directory = await getApplicationSupportDirectory();
-    final localFilePath = '${directory.path}/hive/$boxName.hive'; 
+    final localFilePath = '${directory.path}/hive/$boxName.hive';
     final tempFilePath = '${webDavLocalTempDirectory.path}/$boxName.tmp';
     final webDavPath = '/kazumiSync/$boxName.tmp';
-    await File(localFilePath)
-          .copy(tempFilePath);
+    await File(localFilePath).copy(tempFilePath);
     try {
       await client.remove('$webDavPath.cache');
     } catch (_) {}
-    await client.writeFromFile(tempFilePath,
-        '$webDavPath.cache', onProgress: (c, t) {
+    await client.writeFromFile(tempFilePath, '$webDavPath.cache',
+        onProgress: (c, t) {
       // print(c / t);
     });
     try {
@@ -82,8 +83,7 @@ class WebDav {
     } catch (_) {
       KazumiLogger().log(Level.warning, 'webDav former backup file not exist');
     }
-    await client.rename(
-        '$webDavPath.cache', webDavPath, true);
+    await client.rename('$webDavPath.cache', webDavPath, true);
     try {
       await File(tempFilePath).delete();
     } catch (_) {}
@@ -157,41 +157,45 @@ class WebDav {
     List<CollectedBangumiChange> remoteChanges = [];
 
     final files = await client.readDir('/kazumiSync');
-    final collectiblesExists = files.any((file) => file.name == 'collectibles.tmp');
-    final changesExists = files.any((file) => file.name == 'collectchanges.tmp');
+    final collectiblesExists =
+        files.any((file) => file.name == 'collectibles.tmp');
+    final changesExists =
+        files.any((file) => file.name == 'collectchanges.tmp');
     if (!collectiblesExists && !changesExists) {
       await updateCollectibles();
       return;
     }
-    
+
     List<Future<void>> downloadFutures = [];
     if (collectiblesExists) {
       downloadFutures.add(download('collectibles').catchError((e) {
-        KazumiLogger().log(Level.error, 'webDav download collectibles failed $e');
+        KazumiLogger()
+            .log(Level.error, 'webDav download collectibles failed $e');
         throw Exception('webDav download collectibles failed');
       }));
     }
     if (changesExists) {
       downloadFutures.add(download('collectchanges').catchError((e) {
-        KazumiLogger().log(Level.error, 'webDav download collectchanges failed $e');
+        KazumiLogger()
+            .log(Level.error, 'webDav download collectchanges failed $e');
         throw Exception('webDav download collectchanges failed');
       }));
     }
     if (downloadFutures.isNotEmpty) {
       await Future.wait(downloadFutures);
-    } 
+    }
     try {
       if (collectiblesExists) {
         remoteCollectibles = await GStorage.getCollectiblesFromFile(
-          '${webDavLocalTempDirectory.path}/collectibles.tmp');
+            '${webDavLocalTempDirectory.path}/collectibles.tmp');
       }
       if (changesExists) {
         remoteChanges = await GStorage.getCollectChangesFromFile(
-          '${webDavLocalTempDirectory.path}/collectchanges.tmp');
-      }  
+            '${webDavLocalTempDirectory.path}/collectchanges.tmp');
+      }
     } catch (e) {
       KazumiLogger().log(Level.error, 'webDav get collectibles failed: $e');
-      throw Exception('webDav get collectibles from file failed'); 
+      throw Exception('webDav get collectibles from file failed');
     }
     if (remoteChanges.isNotEmpty || remoteCollectibles.isNotEmpty) {
       await GStorage.patchCollectibles(remoteCollectibles, remoteChanges);

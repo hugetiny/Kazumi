@@ -8,7 +8,8 @@ class DanmakuShieldSettings extends ConsumerStatefulWidget {
   const DanmakuShieldSettings({super.key});
 
   @override
-  ConsumerState<DanmakuShieldSettings> createState() => _DanmakuShieldSettingsState();
+  ConsumerState<DanmakuShieldSettings> createState() =>
+      _DanmakuShieldSettingsState();
 }
 
 class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
@@ -24,7 +25,7 @@ class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
   Widget build(BuildContext context) {
     final shieldState = ref.watch(myControllerProvider);
     final controller = ref.read(myControllerProvider.notifier);
-  final playerTexts = context.t.settings.player;
+    final playerTexts = context.t.settings.player;
     final shieldDescription = playerTexts.danmakuShieldDescription;
     final shieldCount = playerTexts.danmakuShieldCount
         .replaceFirst('{count}', '${shieldState.shieldList.length}');
@@ -79,7 +80,8 @@ class _DanmakuShieldSettingsState extends ConsumerState<DanmakuShieldSettings> {
                       item,
                       style: const TextStyle(fontSize: 14),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     deleteIcon: const Icon(Icons.close, size: 18),
                     deleteButtonTooltipMessage: '',
                     onDeleted: () {

@@ -12,6 +12,6 @@ import 'package:kazumi/pages/search/search_controller.dart';
 /// await controller.search(keyword);
 /// ```
 final searchProvider =
-    NotifierProvider<SearchPageController, SearchPageState>(
+    NotifierProvider.autoDispose<SearchPageController, SearchPageState>(
   SearchPageController.new,
 );

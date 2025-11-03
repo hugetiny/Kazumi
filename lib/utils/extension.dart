@@ -5,4 +5,3 @@ extension ImageExtension on num {
     return (this * MediaQuery.of(context).devicePixelRatio).round();
   }
 }
-

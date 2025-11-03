@@ -151,7 +151,8 @@ class MetadataClient {
       }
     }
 
-    final ui.Locale fallback = WidgetsBinding.instance.platformDispatcher.locale;
+    final ui.Locale fallback =
+        WidgetsBinding.instance.platformDispatcher.locale;
     if (!_setting.containsKey(SettingBoxKey.metadataPreferredLocale)) {
       unawaited(_setting.put(
         SettingBoxKey.metadataPreferredLocale,
@@ -166,7 +167,8 @@ class MetadataClient {
     required bool bangumiEnabled,
     required bool tmdbEnabled,
   }) {
-    final bool bangumiPreferred = bangumiEnabled && _defaultBangumiEnabled(locale);
+    final bool bangumiPreferred =
+        bangumiEnabled && _defaultBangumiEnabled(locale);
     final List<MetadataSourceKind> order = <MetadataSourceKind>[];
 
     if (bangumiPreferred) {
@@ -221,8 +223,8 @@ class MetadataClient {
       return null;
     }
 
-    final String url =
-        Api.formatUrl(Api.bangumiAPIDomain + Api.bangumiInfoByID, <dynamic>[id]);
+    final String url = Api.formatUrl(
+        Api.bangumiAPIDomain + Api.bangumiInfoByID, <dynamic>[id]);
     final Response<dynamic> response = await _request.get(
       url,
       options: Options(
@@ -249,7 +251,8 @@ class MetadataClient {
     ui.Locale locale,
   ) async {
     final String storedKey =
-        (_setting.get(SettingBoxKey.tmdbApiKey, defaultValue: '') as String).trim();
+        (_setting.get(SettingBoxKey.tmdbApiKey, defaultValue: '') as String)
+            .trim();
     final String apiKey =
         storedKey.isNotEmpty ? storedKey : ApiCredentials.tmdbApiKey;
     if (apiKey.isEmpty) {
@@ -339,9 +342,8 @@ class MetadataClient {
     final String? countryCode = locale.countryCode;
     final String? scriptCode = locale.scriptCode;
     if (scriptCode != null && scriptCode.isNotEmpty) {
-      final String extra = countryCode != null && countryCode.isNotEmpty
-          ? '-$countryCode'
-          : '';
+      final String extra =
+          countryCode != null && countryCode.isNotEmpty ? '-$countryCode' : '';
       return '$languageCode-$scriptCode$extra';
     }
     if (countryCode != null && countryCode.isNotEmpty) {
@@ -357,14 +359,14 @@ class MetadataClient {
     switch (source) {
       case MetadataSourceKind.bangumi:
         return _setting.get(
-              SettingBoxKey.metadataBangumiEnabled,
-              defaultValue: _defaultBangumiEnabled(locale),
-            ) as bool;
+          SettingBoxKey.metadataBangumiEnabled,
+          defaultValue: _defaultBangumiEnabled(locale),
+        ) as bool;
       case MetadataSourceKind.tmdb:
         return _setting.get(
-              SettingBoxKey.metadataTmdbEnabled,
-              defaultValue: true,
-            ) as bool;
+          SettingBoxKey.metadataTmdbEnabled,
+          defaultValue: true,
+        ) as bool;
     }
   }
 }

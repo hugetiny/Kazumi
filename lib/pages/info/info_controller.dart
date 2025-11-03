@@ -33,7 +33,7 @@ class InfoState with _$InfoState {
   }) = _InfoState;
 }
 
-class InfoController extends Notifier<InfoState> {
+class InfoController extends AutoDisposeNotifier<InfoState> {
   late final CollectController collectController;
   late final MetadataSyncController _metadataSyncController;
 
@@ -155,8 +155,9 @@ class InfoController extends Notifier<InfoState> {
   }
 
   Future<void> queryBangumiCommentsByID(int id, {int offset = 0}) async {
-    final existing =
-        offset == 0 ? <CommentItem>[] : List<CommentItem>.from(state.commentsList);
+    final existing = offset == 0
+        ? <CommentItem>[]
+        : List<CommentItem>.from(state.commentsList);
     final result = await BangumiHTTP.getBangumiCommentsByID(id, offset: offset);
     final updated = [...existing, ...result.commentList];
     state = state.copyWith(commentsList: updated);
@@ -215,8 +216,8 @@ class InfoController extends Notifier<InfoState> {
     final String displayLocale = _resolveDisplayLocaleTag(record);
     final String preferredTitle =
         record.displayTitleForLocale(displayLocale).trim();
-    final String? synopsis =
-        record.synopsisForLocale(displayLocale) ?? record.synopsis[record.localeTag];
+    final String? synopsis = record.synopsisForLocale(displayLocale) ??
+        record.synopsis[record.localeTag];
     final Map<String, String> images = Map<String, String>.from(base.images);
     if (record.posterUrl != null && record.posterUrl!.isNotEmpty) {
       images['large'] = record.posterUrl!;
@@ -230,7 +231,8 @@ class InfoController extends Notifier<InfoState> {
       type: base.type,
       name: preferredTitle.isNotEmpty ? preferredTitle : base.name,
       nameCn: preferredTitle.isNotEmpty ? preferredTitle : base.nameCn,
-      summary: synopsis?.trim().isNotEmpty == true ? synopsis!.trim() : base.summary,
+      summary:
+          synopsis?.trim().isNotEmpty == true ? synopsis!.trim() : base.summary,
       airDate: base.airDate,
       airWeekday: base.airWeekday,
       rank: base.rank,
@@ -263,7 +265,9 @@ class InfoController extends Notifier<InfoState> {
     for (final String segment in segments.skip(1)) {
       if (segment.length == 4 && scriptCode == null) {
         scriptCode = segment;
-      } else countryCode ??= segment;
+      } else {
+        countryCode ??= segment;
+      }
     }
     return ui.Locale.fromSubtags(
       languageCode: segments[0],

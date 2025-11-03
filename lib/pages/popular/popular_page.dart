@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/bean/widget/custom_dropdown_menu.dart';
@@ -71,7 +72,8 @@ class _PopularPageState extends ConsumerState<PopularPage>
   void scrollListener() {
     final state = ref.read(popularProvider);
     popularController.updateScrollOffset(scrollController.offset);
-    if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200 &&
+    if (scrollController.position.pixels >=
+            scrollController.position.maxScrollExtent - 200 &&
         !state.isLoadingMore) {
       KazumiLogger().log(Level.info, 'Popular is loading more');
       if (state.currentTag != '') {
@@ -105,6 +107,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
     }
     SystemNavigator.pop();
   }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -214,7 +217,7 @@ class _PopularPageState extends ConsumerState<PopularPage>
 
   Widget buildSliverAppBar() {
     final theme = Theme.of(context);
-  return SliverAppBar(
+    return SliverAppBar(
       pinned: true,
       stretch: true,
       expandedHeight: 120,
@@ -286,14 +289,14 @@ class _PopularPageState extends ConsumerState<PopularPage>
       if (MediaQuery.of(context).orientation == Orientation.portrait)
         IconButton(
           tooltip: t.navigation.actions.search,
-          onPressed: () => context.push('/search'),
+          onPressed: () => context.push(Routes.search),
           icon: const Icon(Icons.search),
         ),
     ];
     actions.add(
       IconButton(
         tooltip: t.navigation.actions.history,
-  onPressed: () => context.push('/my/history'),
+        onPressed: () => context.push(Routes.history),
         icon: const Icon(Icons.history),
       ),
     );

@@ -103,7 +103,7 @@ ref.read(pluginSelectionProvider.notifier).toggleSelection(plugin.name);
    - `PluginShopUIState`: 管理插件商店的加载和排序状态
    - `PluginSelectionState`: 管理插件多选模式
 
-2. **类型安全**: 
+2. **类型安全**:
    - 之前: `StateProvider<bool>` 分散在各处，容易误用
    - 之后: 通过类属性访问，编译时检查，IDE 自动补全
 
@@ -149,7 +149,7 @@ ref.read(pluginSelectionProvider.notifier).toggleSelection(plugin.name);
 
 ---
 
-**修复完成时间**: 2025-11-01  
-**受影响文件数**: 6 个  
-**修复错误总数**: 62 个编译错误  
+**修复完成时间**: 2025-11-01
+**受影响文件数**: 6 个
+**修复错误总数**: 62 个编译错误
 **状态**: ✅ 全部修复完成

@@ -34,7 +34,7 @@ class SearchPageState {
   }
 }
 
-class SearchPageController extends Notifier<SearchPageState> {
+class SearchPageController extends AutoDisposeNotifier<SearchPageState> {
   final Box setting = GStorage.setting;
   final Box searchHistoryBox = GStorage.searchHistory;
 
@@ -83,8 +83,8 @@ class SearchPageController extends Notifier<SearchPageState> {
         if (state.searchHistories.length >= 10) {
           await searchHistoryBox.delete(state.searchHistories.last.key);
         }
-        final historiesToDelete =
-            state.searchHistories.where((element) => element.keyword == normalizedInput);
+        final historiesToDelete = state.searchHistories
+            .where((element) => element.keyword == normalizedInput);
         if (historiesToDelete.isNotEmpty) {
           for (var history in historiesToDelete) {
             await searchHistoryBox.delete(history.key);
@@ -105,7 +105,7 @@ class SearchPageController extends Notifier<SearchPageState> {
     String? sort = parser.parseSort();
     String keywords = parser.parseKeywords();
     if (idString != null) {
-  final id = int.tryParse(idString);
+      final id = int.tryParse(idString);
       if (id != null) {
         final BangumiItem? item = await BangumiHTTP.getBangumiInfoByID(id);
         if (item != null) {

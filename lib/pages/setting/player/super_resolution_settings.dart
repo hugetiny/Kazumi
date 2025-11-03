@@ -50,8 +50,7 @@ class SuperResolutionSettings extends ConsumerWidget {
             ],
           ),
           SettingsSection(
-            title:
-                Text(t.settings.player.superResolutionDefaultBehavior),
+            title: Text(t.settings.player.superResolutionDefaultBehavior),
             tiles: [
               SettingsTile.switchTile(
                 title: Text(t.settings.player.superResolutionClosePrompt),
@@ -64,7 +63,8 @@ class SuperResolutionSettings extends ConsumerWidget {
                     SettingBoxKey.superResolutionWarn,
                     newValue,
                   );
-                  ref.read(superResolutionPromptProvider.notifier).state = newValue;
+                  ref.read(superResolutionPromptProvider.notifier).state =
+                      newValue;
                 },
               ),
             ],

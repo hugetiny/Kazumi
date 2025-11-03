@@ -45,7 +45,8 @@ abstract class WebviewItemController<T> {
   final StreamController<(String, int)> videoParserEventController =
       StreamController<(String, int)>.broadcast();
 
-  Stream<(String, int)> get onVideoURLParser => videoParserEventController.stream;
+  Stream<(String, int)> get onVideoURLParser =>
+      videoParserEventController.stream;
 
   /// Webview load URL method
   Future<void> loadUrl(String url, bool useNativePlayer, bool useLegacyParser,

@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///
 /// 管理插件编辑器相关的 UI 状态
 class PluginEditorUIState {
-  final bool useLegacyParser;    // 是否使用旧版解析器
-  final bool usePost;             // 是否使用 POST 请求
-  final bool useNativePlayer;     // 是否使用原生播放器
+  final bool useLegacyParser; // 是否使用旧版解析器
+  final bool usePost; // 是否使用 POST 请求
+  final bool useNativePlayer; // 是否使用原生播放器
 
   const PluginEditorUIState({
     this.useLegacyParser = false,
@@ -126,7 +126,8 @@ class PluginSelectionState {
 }
 
 /// 插件多选状态 Notifier
-class PluginSelectionNotifier extends AutoDisposeNotifier<PluginSelectionState> {
+class PluginSelectionNotifier
+    extends AutoDisposeNotifier<PluginSelectionState> {
   @override
   PluginSelectionState build() => const PluginSelectionState();
 

@@ -56,8 +56,7 @@ class MyController extends Notifier<MyState> {
 
   void addShieldList(String item) {
     final trimmed = item.trim();
-    final toastTexts =
-        ref.read(translationsProvider).settings.player.toast;
+    final toastTexts = ref.read(translationsProvider).settings.player.toast;
     if (trimmed.isEmpty) {
       KazumiDialog.showToast(message: toastTexts.danmakuKeywordEmpty);
       return;
@@ -106,4 +105,4 @@ class MyController extends Notifier<MyState> {
 }
 
 final myControllerProvider =
-  NotifierProvider<MyController, MyState>(MyController.new);
+    NotifierProvider<MyController, MyState>(MyController.new);

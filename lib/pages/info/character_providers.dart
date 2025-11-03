@@ -11,7 +11,8 @@ class CharacterDetailNotifier
   @override
   Future<CharacterFullItem> build(int characterId) async {
     try {
-      final character = await BangumiHTTP.getCharacterByCharacterID(characterId);
+      final character =
+          await BangumiHTTP.getCharacterByCharacterID(characterId);
       KazumiLogger().log(Level.info, '已加载角色详情: ${character.name}');
       return character;
     } catch (error, stackTrace) {
@@ -43,8 +44,10 @@ class CharacterCommentsNotifier
   @override
   Future<List<CharacterCommentItem>> build(int characterId) async {
     try {
-      final result = await BangumiHTTP.getCharacterCommentsByCharacterID(characterId);
-      KazumiLogger().log(Level.info, '已加载角色评论列表长度 ${result.commentList.length}');
+      final result =
+          await BangumiHTTP.getCharacterCommentsByCharacterID(characterId);
+      KazumiLogger()
+          .log(Level.info, '已加载角色评论列表长度 ${result.commentList.length}');
       return result.commentList;
     } catch (error, stackTrace) {
       KazumiLogger().log(
@@ -68,4 +71,3 @@ final characterCommentsProvider = AsyncNotifierProvider.autoDispose
     .family<CharacterCommentsNotifier, List<CharacterCommentItem>, int>(
   CharacterCommentsNotifier.new,
 );
-

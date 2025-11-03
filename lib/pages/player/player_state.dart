@@ -6,7 +6,7 @@ part 'player_state.freezed.dart';
 @freezed
 class PlayerState with _$PlayerState {
   const factory PlayerState({
-  // 弹幕控制
+    // 弹幕控制
     // 弹幕依赖类型
     @Default({}) Map<int, List<Danmaku>> danDanmakus,
     @Default(false) bool danmakuOn,

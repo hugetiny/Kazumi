@@ -16,7 +16,7 @@ class PopularState {
   // ... 更多字段
 
   const PopularState({...});
-  
+
   PopularState copyWith({...}) {
     return PopularState(...); // 手动实现
   }
@@ -53,7 +53,7 @@ class CollectState {
   final bool syncing;
 
   const CollectState({...});
-  
+
   CollectState copyWith({...}) => CollectState(...);
 }
 ```
@@ -83,7 +83,7 @@ class VideoPageState {
   // ...
 
   const VideoPageState({...});
-  
+
   VideoPageState copyWith({
     // 特殊参数 resetEpisodeComments
     bool resetEpisodeComments = false,
@@ -170,7 +170,7 @@ class InfoState {
   final MetadataRecord? metadataRecord;
 
   const InfoState({...});
-  
+
   InfoState copyWith({...}) {
     return InfoState(...);
   }
@@ -315,9 +315,9 @@ class ApiResponse with _$ApiResponse {
     required String status,
     required List<Item> data,
   }) = _ApiResponse;
-  
+
   // 添加 JSON 序列化支持
-  factory ApiResponse.fromJson(Map<String, dynamic> json) 
+  factory ApiResponse.fromJson(Map<String, dynamic> json)
       => _$ApiResponseFromJson(json);
 }
 ```
@@ -354,7 +354,7 @@ dev_dependencies:
 
 ---
 
-**完成时间**: 2025-11-01  
-**修改文件数**: 4 个 State 类 + 4 个生成文件  
-**代码质量**: ✅ 提升  
+**完成时间**: 2025-11-01
+**修改文件数**: 4 个 State 类 + 4 个生成文件
+**代码质量**: ✅ 提升
 **维护成本**: ✅ 降低

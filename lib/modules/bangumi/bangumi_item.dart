@@ -87,7 +87,7 @@ class BangumiItem {
       final json = jsonData['rating']['count'];
       // For api.bgm.tv
       if (json is Map<String, dynamic>) {
-        return List<int>.generate(10, (i) => json['${i+1}'] as int);
+        return List<int>.generate(10, (i) => json['${i + 1}'] as int);
       }
       // For next.bgm.tv
       if (json is List<dynamic>) {

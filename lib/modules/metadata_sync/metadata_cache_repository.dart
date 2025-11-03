@@ -21,10 +21,10 @@ class MetadataCacheRepository {
 
   Duration get _retention => Duration(
         hours: (_settings.get(
-                  SettingBoxKey.metadataRetentionHours,
-                  defaultValue: 24,
-                ) as int?) ??
-                24,
+              SettingBoxKey.metadataRetentionHours,
+              defaultValue: 24,
+            ) as int?) ??
+            24,
       );
 
   MetadataRecord? getRecord(String slug) {
@@ -198,8 +198,11 @@ class MetadataCacheRepository {
       primaryTitle: primaryTitle,
       alternateTitles: titles,
       synopsis: synopsis,
-      posterUrl: posterPath != null ? _tmdbImageUrl(posterPath) : existing?.posterUrl,
-      backdropUrl: backdropPath != null ? _tmdbImageUrl(backdropPath) : existing?.backdropUrl,
+      posterUrl:
+          posterPath != null ? _tmdbImageUrl(posterPath) : existing?.posterUrl,
+      backdropUrl: backdropPath != null
+          ? _tmdbImageUrl(backdropPath)
+          : existing?.backdropUrl,
       episodes: episodes,
       activeSource: MetadataSourceKind.tmdb.name,
       localeTag: result.locale.toLanguageTag(),
@@ -235,7 +238,9 @@ class MetadataCacheRepository {
     for (final dynamic entry in raw) {
       if (entry is! Map<String, dynamic>) continue;
       final int? sort = _toInt(entry['sort']);
-      final int number = sort ?? _toInt(entry['ep']) ?? _toInt(entry['id']) ??
+      final int number = sort ??
+          _toInt(entry['ep']) ??
+          _toInt(entry['id']) ??
           episodes.length + 1;
       episodes.add(
         EpisodeMetadata(
@@ -262,8 +267,8 @@ class MetadataCacheRepository {
       if (episodesRaw is! List) continue;
       for (final dynamic episode in episodesRaw) {
         if (episode is! Map<String, dynamic>) continue;
-        final int number = _toInt(episode['episode_number']) ??
-            (episodes.length + 1);
+        final int number =
+            _toInt(episode['episode_number']) ?? (episodes.length + 1);
         episodes.add(
           EpisodeMetadata(
             number: max(number, 1),

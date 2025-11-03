@@ -551,16 +551,17 @@ class PlayerController extends Notifier<PlayerState> {
       final value = (raw is String ? raw.trim() : '');
       return value.isEmpty ? t.playback.syncplay.unknownUser : value;
     }
+
     syncplayController =
         SyncplayClient(host: syncPlayEndPointHost, port: syncPlayEndPointPort);
     try {
       await syncplayController!.connect(enableTLS: enableTLS);
       syncplayController!.onGeneralMessage.listen(
         (message) {
-          // print('SyncPlay: general message: ${message.toString()}');
+          // KazumiLogger().log(Level.debug, 'SyncPlay: general message: ${message.toString()}');
         },
         onError: (error) {
-          print('SyncPlay: error: ${error.message}');
+          KazumiLogger().log(Level.error, 'SyncPlay: error: ${error.message}');
           if (error is SyncplayConnectionException) {
             exitSyncPlayRoom();
             KazumiDialog.showToast(
@@ -606,7 +607,7 @@ class PlayerController extends Notifier<PlayerState> {
       );
       syncplayController!.onFileChangedMessage.listen(
         (message) {
-          print(
+          KazumiLogger().log(Level.info,
               'SyncPlay: file changed by ${message['setBy']}: ${message['name']}');
           RegExp regExp = RegExp(r'(\d+)\[(\d+)\]');
           Match? match = regExp.firstMatch(message['name']);
@@ -633,8 +634,8 @@ class PlayerController extends Notifier<PlayerState> {
             KazumiDialog.showToast(
                 message: t.playback.syncplay.chat
                     .replaceFirst('{username}', actorName(message['username']))
-                    .replaceFirst('{message}',
-                        (message['message'] ?? '').toString()),
+                    .replaceFirst(
+                        '{message}', (message['message'] ?? '').toString()),
                 duration: const Duration(seconds: 5));
           }
         },
@@ -644,7 +645,7 @@ class PlayerController extends Notifier<PlayerState> {
           final syncplayClientRtt =
               (message['clientRtt'].toDouble() * 1000).toInt();
           state = state.copyWith(syncplayClientRtt: syncplayClientRtt);
-          print(
+          KazumiLogger().log(Level.debug,
               'SyncPlay: position changed by ${message['setBy']}: [${DateTime.now().millisecondsSinceEpoch / 1000.0}] calculatedPosition ${message['calculatedPositon']} position: ${message['position']} doSeek: ${message['doSeek']} paused: ${message['paused']} clientRtt: ${message['clientRtt']} serverRtt: ${message['serverRtt']} fd: ${message['fd']}');
           if (message['paused'] != !state.playing) {
             if (message['paused']) {
@@ -684,7 +685,7 @@ class PlayerController extends Notifier<PlayerState> {
       await syncplayController!.joinRoom(room, username);
       state = state.copyWith(syncplayRoom: room);
     } catch (e) {
-      print('SyncPlay: error: $e');
+      KazumiLogger().log(Level.error, 'SyncPlay: error: $e');
     }
   }
 

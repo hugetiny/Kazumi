@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
@@ -54,7 +53,6 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       return;
     }
 
-
     ref.read(pluginShopUIProvider.notifier).setLoading(true);
     ref.read(pluginShopUIProvider.notifier).setTimeout(false);
 
@@ -68,8 +66,9 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       }
 
       ref.read(pluginShopUIProvider.notifier).setLoading(false);
-      ref.read(pluginShopUIProvider.notifier).setTimeout(
-          pluginsController.pluginHTTPList.isEmpty);
+      ref
+          .read(pluginShopUIProvider.notifier)
+          .setTimeout(pluginsController.pluginHTTPList.isEmpty);
     } catch (_) {
       if (!mounted) {
         return;
@@ -81,7 +80,6 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   }
 
   void _toggleSort() {
-
     final currentSort = ref.read(pluginShopUIProvider).sortByName;
     ref.read(pluginShopUIProvider.notifier).setSortByName(!currentSort);
   }
@@ -93,7 +91,8 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     final sortedList = List<PluginHTTPItem>.from(pluginHTTPList);
 
     // ✅ Read sort mode from provider
-    final sortByName = ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
+    final sortByName =
+        ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
 
     if (sortByName) {
       sortedList.sort(
@@ -107,13 +106,13 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
       itemCount: sortedList.length,
       itemBuilder: (context, index) {
         final item = sortedList[index];
-    final status = pluginsController.pluginStatus(item);
-    final bool isInstall = status == 'install';
-    final bool isInstalled = status == 'installed';
-    final formattedTimestamp =
-      DateTime.fromMillisecondsSinceEpoch(item.lastUpdate)
-        .toString()
-        .split('.')[0];
+        final status = pluginsController.pluginStatus(item);
+        final bool isInstall = status == 'install';
+        final bool isInstalled = status == 'installed';
+        final formattedTimestamp =
+            DateTime.fromMillisecondsSinceEpoch(item.lastUpdate)
+                .toString()
+                .split('.')[0];
 
         return Card(
           margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
@@ -232,7 +231,8 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     // ✅ Watch state from providers
     final loading = ref.watch(pluginShopUIProvider.select((s) => s.isLoading));
     final timeout = ref.watch(pluginShopUIProvider.select((s) => s.isTimeout));
-    final sortByName = ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
+    final sortByName =
+        ref.watch(pluginShopUIProvider.select((s) => s.sortByName));
 
     return PopScope(
       canPop: true,
@@ -276,11 +276,25 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
                           ),
                           actions: [
                             GeneralErrorButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (!mounted) {
                                   return;
                                 }
-                                context.go('/tab/my');
+                                // Toggle GitHub proxy setting
+                                final newValue = !enableGitProxy;
+                                await setting.put(
+                                    SettingBoxKey.enableGitProxy, newValue);
+                                setState(() {
+                                  enableGitProxy = newValue;
+                                });
+                                // Show toast notification
+                                KazumiDialog.showToast(
+                                  message: newValue
+                                      ? shopTexts.error.mirrorEnabled
+                                      : shopTexts.error.mirrorDisabled,
+                                );
+                                // Refresh plugin list with new proxy setting
+                                _handleRefresh();
                               },
                               text: enableGitProxy
                                   ? shopTexts.buttons.toggleMirrorDisable

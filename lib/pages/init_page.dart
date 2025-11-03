@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
 import 'package:kazumi/pages/my/providers.dart';
@@ -37,7 +38,7 @@ class _InitPageState extends ConsumerState<InitPage> {
   @override
   void initState() {
     super.initState();
-  pluginsController = ref.read(pluginsProvider.notifier);
+    pluginsController = ref.read(pluginsProvider.notifier);
     collectController = ref.read(collectionsProvider.notifier);
     shadersController = ref.read(shadersControllerProvider);
     myController = ref.read(myControllerProvider.notifier);
@@ -189,7 +190,8 @@ class _InitPageState extends ConsumerState<InitPage> {
       return;
     }
 
-    final autoUpdate = setting.get(SettingBoxKey.autoUpdate, defaultValue: true);
+    final autoUpdate =
+        setting.get(SettingBoxKey.autoUpdate, defaultValue: true);
     if (autoUpdate) {
       await myController.checkUpdate(type: 'auto');
     }
@@ -214,7 +216,7 @@ class _InitPageState extends ConsumerState<InitPage> {
 
   void _goHome() {
     if (!mounted) return;
-    context.go('/tab/popular');
+    context.go(Routes.popular);
   }
 
   @override

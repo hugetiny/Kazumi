@@ -37,8 +37,7 @@ final platformGuardProvider = Provider<PlatformGuard>((ref) {
   return PlatformGuard();
 });
 
-final metadataSyncControllerProvider =
-    Provider<MetadataSyncController>((ref) {
+final metadataSyncControllerProvider = Provider<MetadataSyncController>((ref) {
   return MetadataSyncController(
     client: ref.read(metadataClientProvider),
     repository: ref.read(metadataCacheRepositoryProvider),
@@ -71,10 +70,9 @@ class TorrentConsentState {
   }
 }
 
-class TorrentConsentNotifier extends StateNotifier<TorrentConsentState> {
-  TorrentConsentNotifier() : super(_initialState());
-
-  static TorrentConsentState _initialState() {
+class TorrentConsentNotifier extends Notifier<TorrentConsentState> {
+  @override
+  TorrentConsentState build() {
     final bool granted = (GStorage.setting
                 .get(SettingBoxKey.torrentConsentAccepted, defaultValue: false)
             as bool?) ??
@@ -112,6 +110,6 @@ class TorrentConsentNotifier extends StateNotifier<TorrentConsentState> {
 }
 
 final torrentConsentProvider =
-    StateNotifierProvider<TorrentConsentNotifier, TorrentConsentState>((ref) {
-  return TorrentConsentNotifier();
-});
+    NotifierProvider<TorrentConsentNotifier, TorrentConsentState>(
+  TorrentConsentNotifier.new,
+);

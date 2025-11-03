@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
@@ -37,15 +38,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       return;
     }
     ref.read(navigationProvider.notifier).updateSelectedIndex(0);
-    context.go('/tab/popular');
+    context.go(Routes.popular);
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.t; // Get translations
     final webDavState = ref.watch(webDavSettingsProvider);
-    final webDavController =
-        ref.read(webDavSettingsProvider.notifier);
+    final webDavController = ref.read(webDavSettingsProvider.notifier);
     final metadataState = ref.watch(metadataSettingsProvider);
     final metadataController = ref.read(metadataSettingsProvider.notifier);
     final localeState = ref.watch(localeSettingsProvider);
@@ -86,14 +86,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
       appLocaleLabel = appLocaleOptions.first.label;
     } else {
       appLocaleLabel = appLocaleOptions
-              .firstWhere(
-                (option) => option.locale == localeState.appLocale,
-                orElse: () => _AppLocaleOption(
-                  label: localeState.appLocale.flutterLocale.toLanguageTag(),
-                  locale: localeState.appLocale,
-                ),
-              )
-              .label;
+          .firstWhere(
+            (option) => option.locale == localeState.appLocale,
+            orElse: () => _AppLocaleOption(
+              label: localeState.appLocale.flutterLocale.toLanguageTag(),
+              locale: localeState.appLocale,
+            ),
+          )
+          .label;
     }
 
     final isDesktop = Utils.isDesktop();
@@ -118,14 +118,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/theme');
+                    context.push(Routes.settingsTheme);
                   },
                   title: Text(t.settings.general.appearance),
                   description: Text(t.settings.general.appearanceDesc),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/language');
+                    context.push(Routes.settingsLanguage);
                   },
                   title: Text(t.settings.general.language),
                   description: Text(t.settings.general.languageDesc),
@@ -134,7 +134,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
                 if (isDesktop)
                   SettingsTile.navigation(
                     onPressed: (_) {
-                      context.push('/settings/exit-behavior');
+                      context.push(Routes.settingsExitBehavior);
                     },
                     title: Text(t.settings.general.exitBehavior),
                     value: Text(exitBehaviorTitles[exitBehavior]),
@@ -146,7 +146,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/plugin');
+                    context.push(Routes.settingsPlugin);
                   },
                   title: Text(t.settings.source.ruleManagement),
                   description: Text(t.settings.source.ruleManagementDesc),
@@ -197,14 +197,14 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/player');
+                    context.push(Routes.settingsPlayer);
                   },
                   title: Text(t.settings.player.playerSettings),
                   description: Text(t.settings.player.playerSettingsDesc),
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/danmaku');
+                    context.push(Routes.settingsDanmaku);
                   },
                   title: Text(t.settings.player.danmakuSettings),
                   description: Text(t.settings.player.danmakuSettingsDesc),
@@ -216,7 +216,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/webdav');
+                    context.push(Routes.settingsWebdav);
                   },
                   title: Text(t.settings.webdav.title),
                   description: Text(t.settings.webdav.desc),
@@ -228,7 +228,7 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/about');
+                    context.push(Routes.settingsAbout);
                   },
                   title: Text(t.settings.other.about),
                 ),

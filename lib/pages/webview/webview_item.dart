@@ -30,8 +30,8 @@ class _WebviewItemState extends State<WebviewItem> {
   Widget build(BuildContext context) {
     if (Platform.isWindows) {
       return WebviewWindowsItemImpel(
-        webviewController:
-            widget.webviewController as WebviewItemController<WebviewController>,
+        webviewController: widget.webviewController
+            as WebviewItemController<WebviewController>,
         videoPageController: widget.videoPageController,
       );
     }
@@ -47,8 +47,8 @@ class _WebviewItemState extends State<WebviewItem> {
     }
     if (Platform.isAndroid && Utils.isDocumentStartScriptSupported) {
       return WebviewAndroidItemImpel(
-        webviewController: widget.webviewController
-            as WebviewAndroidItemControllerImpel,
+        webviewController:
+            widget.webviewController as WebviewAndroidItemControllerImpel,
       );
     }
     return WebviewItemImpel(

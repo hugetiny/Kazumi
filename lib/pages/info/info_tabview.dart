@@ -185,8 +185,7 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
     final Widget? refreshButton = widget.onRefreshMetadata == null
         ? null
         : TextButton.icon(
-            onPressed:
-                widget.metadataLoading ? null : widget.onRefreshMetadata,
+            onPressed: widget.metadataLoading ? null : widget.onRefreshMetadata,
             icon: const Icon(Icons.refresh_rounded),
             label: Text(metadataTexts.refresh),
           );
@@ -287,10 +286,10 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
     final episodesTexts = context.t.library.info.episodes;
     final List<EpisodeMetadata> episodes = record.episodes;
     // ✅ Watch showAllEpisodes state from Riverpod provider
-    final showAllEpisodes = ref.watch(infoUIProvider.select((s) => s.showAllEpisodes));
-    final List<EpisodeMetadata> visibleEpisodes = showAllEpisodes
-        ? episodes
-        : episodes.take(10).toList(growable: false);
+    final showAllEpisodes =
+        ref.watch(infoUIProvider.select((s) => s.showAllEpisodes));
+    final List<EpisodeMetadata> visibleEpisodes =
+        showAllEpisodes ? episodes : episodes.take(10).toList(growable: false);
 
     return <Widget>[
       Row(
@@ -334,10 +333,10 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
 
   Widget _buildEpisodeTile(EpisodeMetadata episode) {
     final ThemeData theme = Theme.of(context);
-  final episodesTexts = context.t.library.info.episodes;
+    final episodesTexts = context.t.library.info.episodes;
     final String title = (episode.title?.trim().isNotEmpty ?? false)
         ? episode.title!.trim()
-    : episodesTexts.numberedEpisode(number: episode.number);
+        : episodesTexts.numberedEpisode(number: episode.number);
     final String metadataLine =
         '${_formatEpisodeDate(episode.airDate)} · ${_formatEpisodeRuntime(episode.runtimeMinutes)}';
     final String synopsis = (episode.synopsis ?? '').trim();
@@ -462,8 +461,7 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
           key: const PageStorageKey<String>('comments'),
           slivers: <Widget>[
             SliverOverlapInjector(
-              handle:
-                  NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+              handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
             ),
             SliverLayoutBuilder(builder: (context, _) {
               if (widget.commentsList.isNotEmpty) {
@@ -476,8 +474,7 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
                       bottom: false,
                       child: Center(
                         child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: SizedBox(
                             width: MediaQuery.sizeOf(context).width > maxWidth
                                 ? maxWidth
@@ -496,8 +493,7 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
                       bottom: false,
                       child: Center(
                         child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: SizedBox(
                             width: MediaQuery.sizeOf(context).width > maxWidth
                                 ? maxWidth
@@ -553,7 +549,8 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
         final appTexts = context.t.app;
 
         // ✅ Use Riverpod provider for staff
-        final staffAsync = ref.watch(bangumiStaffsProvider(widget.bangumiItem.id));
+        final staffAsync =
+            ref.watch(bangumiStaffsProvider(widget.bangumiItem.id));
 
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
@@ -619,7 +616,8 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
-                          ref.invalidate(bangumiStaffsProvider(widget.bangumiItem.id));
+                          ref.invalidate(
+                              bangumiStaffsProvider(widget.bangumiItem.id));
                         },
                         text: appTexts.retry,
                       ),
@@ -642,7 +640,8 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
         final appTexts = context.t.app;
 
         // ✅ Use Riverpod provider for characters
-        final charactersAsync = ref.watch(bangumiCharactersProvider(widget.bangumiItem.id));
+        final charactersAsync =
+            ref.watch(bangumiCharactersProvider(widget.bangumiItem.id));
 
         return CustomScrollView(
           scrollBehavior: const ScrollBehavior().copyWith(
@@ -708,7 +707,8 @@ class _InfoTabViewState extends ConsumerState<InfoTabView>
                     actions: [
                       GeneralErrorButton(
                         onPressed: () {
-                          ref.invalidate(bangumiCharactersProvider(widget.bangumiItem.id));
+                          ref.invalidate(
+                              bangumiCharactersProvider(widget.bangumiItem.id));
                         },
                         text: appTexts.retry,
                       ),

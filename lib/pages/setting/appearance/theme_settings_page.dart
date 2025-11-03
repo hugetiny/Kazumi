@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/card/palette_card.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
@@ -34,7 +35,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
   void setTheme(Color? color) {
     final seed = color ?? Colors.green;
     ref.read(themeProvider.notifier).setSeedColor(seed);
-    defaultThemeColor = color != null ? color.toARGB32().toRadixString(16) : 'default';
+    defaultThemeColor =
+        color != null ? color.toARGB32().toRadixString(16) : 'default';
     setting.put(SettingBoxKey.themeColor, defaultThemeColor);
   }
 
@@ -56,7 +58,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
   }
 
   void updateOledEnhance() {
-    final oledEnhance = setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
+    final oledEnhance =
+        setting.get(SettingBoxKey.oledEnhance, defaultValue: false);
     ref.read(themeProvider.notifier).setOledEnhance(oledEnhance);
   }
 
@@ -67,7 +70,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
     final showWindowButton = ref.watch(showWindowButtonProvider);
 
     // ✅ Get theme mode string from ThemeState
-    final defaultThemeMode = setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
+    final defaultThemeMode =
+        setting.get(SettingBoxKey.themeMode, defaultValue: 'system');
     final useDynamicColor = themeState.useDynamicColor;
     final oledEnhance = themeState.oledEnhance;
     String colorLabel(String key) {
@@ -95,6 +99,7 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
           return key;
       }
     }
+
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -146,16 +151,14 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                  Text(
-                                    t.settings.appearancePage.mode.system,
-                                    style: TextStyle(
-                                      color: defaultThemeMode == 'system'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null,
-                                    ),
+                                Text(
+                                  t.settings.appearancePage.mode.system,
+                                  style: TextStyle(
+                                    color: defaultThemeMode == 'system'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
                                   ),
+                                ),
                               ],
                             ),
                           ),
@@ -178,16 +181,14 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                  Text(
-                                    t.settings.appearancePage.mode.light,
-                                    style: TextStyle(
-                                      color: defaultThemeMode == 'light'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null,
-                                    ),
+                                Text(
+                                  t.settings.appearancePage.mode.light,
+                                  style: TextStyle(
+                                    color: defaultThemeMode == 'light'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
                                   ),
+                                ),
                               ],
                             ),
                           ),
@@ -210,16 +211,14 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                       : null,
                                 ),
                                 const SizedBox(width: 8),
-                                  Text(
-                                    t.settings.appearancePage.mode.dark,
-                                    style: TextStyle(
-                                      color: defaultThemeMode == 'dark'
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                          : null,
-                                    ),
+                                Text(
+                                  t.settings.appearancePage.mode.dark,
+                                  style: TextStyle(
+                                    color: defaultThemeMode == 'dark'
+                                        ? Theme.of(context).colorScheme.primary
+                                        : null,
                                   ),
+                                ),
                               ],
                             ),
                           ),
@@ -234,8 +233,8 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                     KazumiDialog.show(builder: (context) {
                       final colorThemes = colorThemeTypes;
                       return AlertDialog(
-                        title:
-                            Text(t.settings.appearancePage.colorScheme.dialogTitle),
+                        title: Text(
+                            t.settings.appearancePage.colorScheme.dialogTitle),
                         content: Wrap(
                           alignment: WrapAlignment.center,
                           spacing: 8,
@@ -261,8 +260,7 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                                                   .toRadixString(16) ==
                                               defaultThemeColor ||
                                           (defaultThemeColor == 'default' &&
-                                              colorThemes.indexOf(theme) ==
-                                                  0)),
+                                              colorThemes.indexOf(theme) == 0)),
                                     ),
                                     Text(colorLabel(theme['label'] as String)),
                                   ],
@@ -278,7 +276,6 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                 SettingsTile.switchTile(
                   enabled: !Platform.isIOS,
                   onToggle: (value) async {
-
                     final newValue = value ?? !useDynamicColor;
                     await setting.put(
                       SettingBoxKey.useDynamicColor,
@@ -301,14 +298,12 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-
                     final newValue = value ?? !oledEnhance;
                     await setting.put(SettingBoxKey.oledEnhance, newValue);
                     ref.read(themeProvider.notifier).setOledEnhance(newValue);
                   },
                   title: Text(t.settings.appearancePage.oled.title),
-                  description:
-                      Text(t.settings.appearancePage.oled.description),
+                  description: Text(t.settings.appearancePage.oled.description),
                   initialValue: oledEnhance,
                 ),
               ],
@@ -318,13 +313,13 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                 tiles: [
                   SettingsTile.switchTile(
                     onToggle: (value) async {
-
                       final newValue = value ?? !showWindowButton;
                       await setting.put(
                         SettingBoxKey.showWindowButton,
                         newValue,
                       );
-                      ref.read(showWindowButtonProvider.notifier).state = newValue;
+                      ref.read(showWindowButtonProvider.notifier).state =
+                          newValue;
                     },
                     title: Text(t.settings.appearancePage.window.title),
                     description:
@@ -338,10 +333,9 @@ class _ThemeSettingsPageState extends ConsumerState<ThemeSettingsPage> {
                 tiles: [
                   SettingsTile.navigation(
                     onPressed: (_) async {
-                      context.push('/settings/theme/display');
+                      context.push(Routes.settingsThemeDisplay);
                     },
-                    title:
-                        Text(t.settings.appearancePage.refreshRate.title),
+                    title: Text(t.settings.appearancePage.refreshRate.title),
                   ),
                 ],
               ),

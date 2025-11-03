@@ -14,14 +14,14 @@ class QueryManager {
   final PluginsController pluginsController;
   StreamController<PluginSearchResponse>? _controller;
   bool _isCancelled = false;
-  
+
   // Temporary storage to replace removed InfoController properties
   final List<PluginSearchResponse> _searchResponses = [];
   final Map<String, String> _searchStatus = {};
 
   Future<void> querySource(String keyword, String pluginName) async {
-    final existingIndex =
-        _searchResponses.indexWhere((response) => response.pluginName == pluginName);
+    final existingIndex = _searchResponses
+        .indexWhere((response) => response.pluginName == pluginName);
     if (existingIndex != -1) {
       _searchResponses.removeAt(existingIndex);
     }
@@ -46,7 +46,7 @@ class QueryManager {
   }
 
   Future<void> queryAllSource(String keyword) async {
-  _controller = StreamController<PluginSearchResponse>();
+    _controller = StreamController<PluginSearchResponse>();
     _searchResponses.clear();
 
     for (Plugin plugin in pluginsController.pluginList) {
@@ -63,7 +63,7 @@ class QueryManager {
         if (result.data.isNotEmpty) {
           pluginsController.validityTracker.markSearchValid(plugin.name);
         }
-  _controller?.add(result);
+        _controller?.add(result);
       }).catchError((error) {
         if (_isCancelled) return;
 

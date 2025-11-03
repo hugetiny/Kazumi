@@ -9,7 +9,10 @@ import 'package:kazumi/modules/collect/collect_module.dart';
 import 'package:kazumi/modules/collect/collect_change_module.dart';
 import 'package:kazumi/modules/search/search_history_module.dart';
 import 'package:kazumi/modules/metadata_sync/models/metadata_record.dart';
+import 'package:kazumi/modules/parse_failure/parse_failure_module.dart';
 import 'package:kazumi/utils/api_credentials.dart';
+import 'package:kazumi/utils/logger.dart';
+import 'package:logger/logger.dart';
 
 class GStorage {
   /// Don't use favorites box, it's replaced by collectibles.
@@ -21,6 +24,7 @@ class GStorage {
   static late final Box<dynamic> setting;
   static late Box<SearchHistory> searchHistory;
   static late Box<MetadataRecord> metadataCache;
+  static late Box<ParseFailureRecord> parseFailures;
   static late Box<dynamic> downloadTasks;
   static late Box<dynamic> torrentEntries;
   static late Box<dynamic> playbackProfiles;
@@ -36,6 +40,7 @@ class GStorage {
     Hive.registerAdapter(EpisodeMetadataAdapter());
     Hive.registerAdapter(MetadataSourceSnapshotAdapter());
     Hive.registerAdapter(MetadataRecordAdapter());
+    Hive.registerAdapter(ParseFailureRecordAdapter());
     favorites = await Hive.openBox('favorites');
     collectibles = await Hive.openBox('collectibles');
     histories = await Hive.openBox('histories');
@@ -44,6 +49,7 @@ class GStorage {
     shieldList = await Hive.openBox('shieldList');
     searchHistory = await Hive.openBox('searchHistory');
     metadataCache = await Hive.openBox<MetadataRecord>('metadataCache');
+    parseFailures = await Hive.openBox<ParseFailureRecord>('parseFailures');
     downloadTasks = await Hive.openBox('downloadTasks');
     torrentEntries = await Hive.openBox('torrentEntries');
     playbackProfiles = await Hive.openBox('playbackProfiles');
@@ -56,9 +62,9 @@ class GStorage {
     final hiveBoxFile = File('${appDocumentDir.path}/hive/$boxName.hive');
     if (await hiveBoxFile.exists()) {
       await hiveBoxFile.copy(backupFilePath);
-      print('Backup success: $backupFilePath');
+      KazumiLogger().log(Level.info, 'Backup success: $backupFilePath');
     } else {
-      print('Hive box not exists');
+      KazumiLogger().log(Level.warning, 'Hive box not exists');
     }
   }
 

@@ -142,7 +142,7 @@ class Utils {
     if (formatType == 'detail') {
       currentYearStr = 'MM-DD hh:mm';
       lastYearStr = 'YY-MM-DD hh:mm';
-      return CustomStamp_str(
+      return customStampStr(
           timestamp: timeStamp,
           date: lastYearStr,
           toInt: false,
@@ -156,13 +156,13 @@ class Utils {
       return '${(distance / 60 / 60).floor()}小时前';
     } else if (DateTime.fromMillisecondsSinceEpoch(time * 1000).year ==
         DateTime.fromMillisecondsSinceEpoch(timeStamp * 1000).year) {
-      return CustomStamp_str(
+      return customStampStr(
           timestamp: timeStamp,
           date: currentYearStr,
           toInt: false,
           formatType: formatType);
     } else {
-      return CustomStamp_str(
+      return customStampStr(
           timestamp: timeStamp,
           date: lastYearStr,
           toInt: false,
@@ -171,7 +171,7 @@ class Utils {
   }
 
   // 时间戳转时间
-  static String CustomStamp_str(
+  static String customStampStr(
       {int? timestamp, // 为空则显示当前时间
       String? date, // 显示格式，比如：'YY年MM月DD日 hh:mm:ss'
       bool toInt = true, // 去除0开头
@@ -183,43 +183,43 @@ class Utils {
     dynamic dateArr = timeStr.split(' ')[0];
     dynamic timeArr = timeStr.split(' ')[1];
 
-    String YY = dateArr.split('-')[0];
-    String MM = dateArr.split('-')[1];
-    String DD = dateArr.split('-')[2];
+    String yy = dateArr.split('-')[0];
+    String mm = dateArr.split('-')[1];
+    String dd = dateArr.split('-')[2];
 
     String hh = timeArr.split(':')[0];
-    String mm = timeArr.split(':')[1];
+    String min = timeArr.split(':')[1];
     String ss = timeArr.split(':')[2];
 
     ss = ss.split('.')[0];
 
     // 去除0开头
     if (toInt) {
-      MM = (int.parse(MM)).toString();
-      DD = (int.parse(DD)).toString();
-      hh = (int.parse(hh)).toString();
       mm = (int.parse(mm)).toString();
+      dd = (int.parse(dd)).toString();
+      hh = (int.parse(hh)).toString();
+      min = (int.parse(min)).toString();
     }
 
     if (date == null) {
       return timeStr;
     }
 
-    // if (formatType == 'list' && int.parse(DD) > DateTime.now().day - 2) {
+    // if (formatType == 'list' && int.parse(dd) > DateTime.now().day - 2) {
     //   return '昨天';
     // }
 
     date = date
-        .replaceAll('YY', YY)
-        .replaceAll('MM', MM)
-        .replaceAll('DD', DD)
+        .replaceAll('YY', yy)
+        .replaceAll('MM', mm)
+        .replaceAll('DD', dd)
         .replaceAll('hh', hh)
-        .replaceAll('mm', mm)
+        .replaceAll('mm', min)
         .replaceAll('ss', ss);
-    if (int.parse(YY) == DateTime.now().year &&
-        int.parse(MM) == DateTime.now().month) {
+    if (int.parse(yy) == DateTime.now().year &&
+        int.parse(mm) == DateTime.now().month) {
       // 当天
-      if (int.parse(DD) == DateTime.now().day) {
+      if (int.parse(dd) == DateTime.now().day) {
         return '今天';
       }
     }
@@ -362,7 +362,8 @@ class Utils {
             await platform.invokeMethod('checkIfInMultiWindowMode');
         return result;
       } on PlatformException catch (e) {
-        print("Failed to check multi window mode: '${e.message}'.");
+        KazumiLogger().log(Level.warning,
+            "Failed to check multi window mode: '${e.message}'.");
         return false;
       }
     }

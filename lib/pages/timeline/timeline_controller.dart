@@ -28,7 +28,8 @@ class TimelineState {
     bool? isTimeOut,
     int? sortType,
     DateTime? selectedDate,
-  }) => TimelineState(
+  }) =>
+      TimelineState(
         bangumiCalendar: bangumiCalendar ?? this.bangumiCalendar,
         seasonString: seasonString ?? this.seasonString,
         isLoading: isLoading ?? this.isLoading,
@@ -52,7 +53,8 @@ class TimelineController extends Notifier<TimelineState> {
   }
 
   Future<void> getSchedules() async {
-    state = state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
+    state =
+        state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
     final res = await BangumiHTTP.getCalendar();
     final sorted = _sortCalendar(res, state.sortType);
     state = state.copyWith(
@@ -63,7 +65,8 @@ class TimelineController extends Notifier<TimelineState> {
   }
 
   Future<void> getSchedulesBySeason() async {
-    state = state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
+    state =
+        state.copyWith(isLoading: true, isTimeOut: false, bangumiCalendar: []);
     const maxTime = 4;
     const limit = 20;
     var aggregated = List.generate(7, (_) => <BangumiItem>[]);
@@ -77,7 +80,8 @@ class TimelineController extends Notifier<TimelineState> {
       for (int i = 0; i < aggregated.length; ++i) {
         aggregated[i].addAll(newList[i]);
       }
-      state = state.copyWith(bangumiCalendar: aggregated.map((e) => [...e]).toList());
+      state = state.copyWith(
+          bangumiCalendar: aggregated.map((e) => [...e]).toList());
     }
     final empty = aggregated.every((l) => l.isEmpty);
     if (!empty) {
@@ -104,7 +108,8 @@ class TimelineController extends Notifier<TimelineState> {
     state = state.copyWith(sortType: type, bangumiCalendar: sorted);
   }
 
-  List<List<BangumiItem>> _sortCalendar(List<List<BangumiItem>> calendar, int sortType) {
+  List<List<BangumiItem>> _sortCalendar(
+      List<List<BangumiItem>> calendar, int sortType) {
     final copy = calendar.map((d) => [...d]).toList();
     for (var dayList in copy) {
       switch (sortType) {

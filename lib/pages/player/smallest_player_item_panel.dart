@@ -163,9 +163,8 @@ class _SmallestPlayerItemPanelState
   Widget build(BuildContext context) {
     final playerState = ref.watch(playerProvider);
     final videoState = ref.watch(videoProvider);
-    final shouldShowOverlay = widget.disableAnimations
-        ? playerState.showVideoController
-        : true;
+    final shouldShowOverlay =
+        widget.disableAnimations ? playerState.showVideoController : true;
     final canShowControls = !playerState.lockPanel && shouldShowOverlay;
 
     return Stack(
@@ -493,7 +492,8 @@ class _SmallestPlayerItemPanelState
                     ),
                   ),
                 ),
-                child: _buildMenuItem(title: t.playback.controls.aspectRatio.label),
+                child: _buildMenuItem(
+                    title: t.playback.controls.aspectRatio.label),
               ),
               SubmenuButton(
                 menuChildren: [
@@ -508,7 +508,8 @@ class _SmallestPlayerItemPanelState
                       ),
                     ),
                 ],
-                child: _buildMenuItem(title: t.playback.controls.speedMenu.label),
+                child:
+                    _buildMenuItem(title: t.playback.controls.speedMenu.label),
               ),
               SubmenuButton(
                 menuChildren: List<MenuItemButton>.generate(
@@ -522,12 +523,12 @@ class _SmallestPlayerItemPanelState
                           : index + 1 == 2
                               ? t.playback.controls.superResolution.balanced
                               : t.playback.controls.superResolution.quality,
-                      highlighted:
-                          playerState.superResolutionType == index + 1,
+                      highlighted: playerState.superResolutionType == index + 1,
                     ),
                   ),
                 ),
-                child: _buildMenuItem(title: t.playback.controls.superResolution.label),
+                child: _buildMenuItem(
+                    title: t.playback.controls.superResolution.label),
               ),
               SubmenuButton(
                 menuChildren: [
@@ -567,19 +568,20 @@ class _SmallestPlayerItemPanelState
                         title: t.playback.controls.syncplay.disconnect),
                   ),
                 ],
-                child: _buildMenuItem(title: t.playback.controls.syncplay.label),
+                child:
+                    _buildMenuItem(title: t.playback.controls.syncplay.label),
               ),
               MenuItemButton(
                 onPressed: widget.showDanmakuSwitch,
-                child: _buildMenuItem(title: t.playback.controls.menu.danmakuToggle),
+                child: _buildMenuItem(
+                    title: t.playback.controls.menu.danmakuToggle),
               ),
               MenuItemButton(
                 onPressed: () {
                   showModalBottomSheet(
                     isScrollControlled: true,
                     constraints: BoxConstraints(
-                      maxHeight:
-                          MediaQuery.of(context).size.height * 3 / 4,
+                      maxHeight: MediaQuery.of(context).size.height * 3 / 4,
                       maxWidth: (Utils.isDesktop() || Utils.isTablet())
                           ? MediaQuery.of(context).size.width * 9 / 16
                           : MediaQuery.of(context).size.width,
@@ -597,7 +599,8 @@ class _SmallestPlayerItemPanelState
               ),
               MenuItemButton(
                 onPressed: widget.showVideoInfo,
-                child: _buildMenuItem(title: t.playback.controls.menu.videoInfo),
+                child:
+                    _buildMenuItem(title: t.playback.controls.menu.videoInfo),
               ),
               MenuItemButton(
                 onPressed: () {
@@ -605,9 +608,9 @@ class _SmallestPlayerItemPanelState
                   playerController.pause();
                   RemotePlay()
                       .castVideo(
-                        playerController.videoUrl,
-                        videoPageController.currentPlugin.referer,
-                      )
+                    playerController.videoUrl,
+                    videoPageController.currentPlugin.referer,
+                  )
                       .whenComplete(() {
                     if (needRestart) {
                       playerController.play();
@@ -646,10 +649,10 @@ class _SmallestPlayerItemPanelState
 
   String _buildSeekStatusText(PlayerState playerState) {
     final t = context.t;
-    final diffSeconds = (playerState.currentPosition -
-            playerController.playerPosition)
-        .inSeconds
-        .abs();
+    final diffSeconds =
+        (playerState.currentPosition - playerController.playerPosition)
+            .inSeconds
+            .abs();
     final template =
         playerState.currentPosition.compareTo(playerController.playerPosition) >
                 0

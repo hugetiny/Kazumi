@@ -9,7 +9,8 @@ import 'package:kazumi/utils/storage.dart';
 import 'package:kazumi/utils/webdav.dart';
 
 /// Provider for password visibility toggle
-final webdavPasswordVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
+final webdavPasswordVisibleProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 
 class WebDavEditorPage extends ConsumerStatefulWidget {
   const WebDavEditorPage({
@@ -87,7 +88,8 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       onPressed: () {
-                        ref.read(webdavPasswordVisibleProvider.notifier).state = !passwordVisible;
+                        ref.read(webdavPasswordVisibleProvider.notifier).state =
+                            !passwordVisible;
                       },
                       icon: Icon(passwordVisible
                           ? Icons.visibility_rounded
@@ -109,10 +111,10 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
         child: const Icon(Icons.save),
         onPressed: () async {
           await setting.put(SettingBoxKey.webDavURL, webDavURLController.text);
-          await setting.put(SettingBoxKey.webDavUsername,
-              webDavUsernameController.text);
-          await setting.put(SettingBoxKey.webDavPassword,
-              webDavPasswordController.text);
+          await setting.put(
+              SettingBoxKey.webDavUsername, webDavUsernameController.text);
+          await setting.put(
+              SettingBoxKey.webDavPassword, webDavPasswordController.text);
           final webDav = WebDav();
           try {
             await webDav.init();
@@ -142,9 +144,7 @@ class _WebDavEditorPageState extends ConsumerState<WebDavEditorPage> {
             );
             await setting.put(SettingBoxKey.webDavEnable, false);
           }
-          await ref
-              .read(webDavSettingsProvider.notifier)
-              .refreshFromStorage();
+          await ref.read(webDavSettingsProvider.notifier).refreshFromStorage();
         },
       ),
     );

@@ -9,7 +9,8 @@ import 'package:logger/logger.dart';
 import 'package:kazumi/utils/logger.dart';
 
 /// Provider for DLNA device list in remote play dialog
-final dlnaDeviceListProvider = StateProvider.autoDispose<List<Widget>>((ref) => []);
+final dlnaDeviceListProvider =
+    StateProvider.autoDispose<List<Widget>>((ref) => []);
 
 class RemotePlay {
   Future<void> castVideo(String video, String referer) async {
@@ -55,32 +56,30 @@ class RemotePlay {
                       debugPrint(
                           'Value: ${value.info.friendlyName} ${value.info.deviceType} ${value.info.URLBase}');
                       devices.add(ListTile(
-                            leading: _deviceUPnPIcon(
-                                value.info.deviceType.split(':')[3]),
-                            title: Text(value.info.friendlyName),
-                            subtitle: Text(value.info.deviceType.split(':')[3]),
-                            onTap: () {
-                              try {
-                                KazumiDialog.showToast(
-                                  message: remoteTexts.toast.casting
-                                      .replaceFirst(
-                                    '{device}',
-                                    value.info.friendlyName,
-                                  ),
-                                );
-                                DLNADevice(value.info).setUrl(video);
-                                DLNADevice(value.info).play();
-                              } catch (e) {
-                                KazumiLogger()
-                                    .log(Level.error, 'DLNA Error: $e');
-                                KazumiDialog.showToast(
-                                  message: remoteTexts.toast.error.replaceFirst(
-                                    '{details}',
-                                    e.toString(),
-                                  ),
-                                );
-                              }
-                            }));
+                          leading: _deviceUPnPIcon(
+                              value.info.deviceType.split(':')[3]),
+                          title: Text(value.info.friendlyName),
+                          subtitle: Text(value.info.deviceType.split(':')[3]),
+                          onTap: () {
+                            try {
+                              KazumiDialog.showToast(
+                                message: remoteTexts.toast.casting.replaceFirst(
+                                  '{device}',
+                                  value.info.friendlyName,
+                                ),
+                              );
+                              DLNADevice(value.info).setUrl(video);
+                              DLNADevice(value.info).play();
+                            } catch (e) {
+                              KazumiLogger().log(Level.error, 'DLNA Error: $e');
+                              KazumiDialog.showToast(
+                                message: remoteTexts.toast.error.replaceFirst(
+                                  '{details}',
+                                  e.toString(),
+                                ),
+                              );
+                            }
+                          }));
                       ref.read(dlnaDeviceListProvider.notifier).state = devices;
                     });
                   });

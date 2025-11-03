@@ -96,6 +96,7 @@ Future<bool> clearLogs() async {
       await file.writeAsString('');
     });
   } catch (e) {
+    // ignore: avoid_print
     print('Error clearing file: $e');
     return false;
   }

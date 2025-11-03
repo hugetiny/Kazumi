@@ -147,6 +147,8 @@ class WebviewAppleItemControllerImpel
         count++;
         if (count >= 15) {
           timer.cancel();
+          isIframeLoaded = true;
+          videoLoadingEventController.add(false);
 
           logEventController.add('clear');
           logEventController.add('解析视频资源超时');

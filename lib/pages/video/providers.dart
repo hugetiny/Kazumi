@@ -17,24 +17,26 @@ import 'package:logger/logger.dart';
 /// await controller.changeEpisode(episodeIndex, roadIndex);
 /// ```
 final videoProvider =
-    NotifierProvider<VideoPageController, VideoPageState>(
+    NotifierProvider.autoDispose<VideoPageController, VideoPageState>(
   VideoPageController.new,
 );
 
 /// AsyncNotifier for episode comments
 /// Provides cleaner async state management for loading comments
-class EpisodeCommentsNotifier
-    extends AutoDisposeFamilyAsyncNotifier<List<EpisodeCommentItem>, (int, int)> {
+class EpisodeCommentsNotifier extends AutoDisposeFamilyAsyncNotifier<
+    List<EpisodeCommentItem>, (int, int)> {
   @override
   Future<List<EpisodeCommentItem>> build((int, int) arg) async {
     final (bangumiId, episode) = arg;
 
     try {
       // Load episode info
-      final episodeInfo = await BangumiHTTP.getBangumiEpisodeByID(bangumiId, episode);
+      final episodeInfo =
+          await BangumiHTTP.getBangumiEpisodeByID(bangumiId, episode);
 
       // Load comments for this episode
-      final result = await BangumiHTTP.getBangumiCommentsByEpisodeID(episodeInfo.id);
+      final result =
+          await BangumiHTTP.getBangumiCommentsByEpisodeID(episodeInfo.id);
 
       KazumiLogger().log(
         Level.info,
@@ -71,7 +73,8 @@ final selectedEpisodeProvider = StateProvider.autoDispose<int?>((ref) => null);
 
 // ✅ Video Page UI State Providers
 final showDebugLogProvider = StateProvider.autoDispose<bool>((ref) => false);
-final webviewLogLinesProvider = StateProvider.autoDispose<List<String>>((ref) => []);
+final webviewLogLinesProvider =
+    StateProvider.autoDispose<List<String>>((ref) => []);
 final currentRoadProvider = StateProvider.autoDispose<int>((ref) => 0);
 
 /// Provider for current episode number (replaces EpisodeInfo InheritedWidget)

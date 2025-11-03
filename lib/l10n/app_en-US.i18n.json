@@ -102,6 +102,17 @@
         "updateAll": "Update all",
         "addRule": "Add rule"
       },
+      "sort": {
+        "title": "Sort order",
+        "tooltip": "Sort",
+        "options": {
+          "original": "Original order",
+          "nameAsc": "Name (A → Z)",
+          "nameDesc": "Name (Z → A)",
+          "failureAsc": "Failures (Low → High)",
+          "failureDesc": "Failures (High → Low)"
+        }
+      },
       "multiSelect": {
         "selectedCount": "{count} selected"
       },
@@ -668,11 +679,14 @@
           "removed": "Removed source {plugin}."
         },
         "sort": {
+          "title": "Sort order",
           "tooltip": "Sort: {label}",
           "options": {
             "original": "Original order",
             "nameAsc": "Name (A → Z)",
-            "nameDesc": "Name (Z → A)"
+            "nameDesc": "Name (Z → A)",
+            "failureAsc": "Failures (Low → High)",
+            "failureDesc": "Failures (High → Low)"
           }
         },
         "card": {
@@ -812,6 +826,7 @@
     },
     "loading": {
       "parsing": "Parsing video source…",
+      "parseFailed": "Video source parsing failed",
       "player": "Video source parsed, loading player",
       "danmakuSearch": "Searching danmaku…"
     },

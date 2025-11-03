@@ -172,7 +172,8 @@ class Plugin {
     return pluginSearchResponse;
   }
 
-  Future<List<Road>> querychapterRoads(String url, {CancelToken? cancelToken}) async {
+  Future<List<Road>> querychapterRoads(String url,
+      {CancelToken? cancelToken}) async {
     List<Road> roadList = [];
     // 预处理
     if (!url.contains('https')) {
@@ -190,8 +191,8 @@ class Plugin {
       'Connection': 'keep-alive',
     };
     try {
-      var resp =
-          await Request().get(queryURL, options: Options(headers: httpHeaders), cancelToken: cancelToken);
+      var resp = await Request().get(queryURL,
+          options: Options(headers: httpHeaders), cancelToken: cancelToken);
       var htmlString = resp.data.toString();
       var htmlElement = parse(htmlString).documentElement!;
       int count = 1;

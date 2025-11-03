@@ -62,7 +62,8 @@ class CollectController extends Notifier<CollectState> {
       await deleteCollect(bangumiItem);
       return;
     }
-    final collectedBangumi = CollectedBangumi(bangumiItem, DateTime.now(), type);
+    final collectedBangumi =
+        CollectedBangumi(bangumiItem, DateTime.now(), type);
     await GStorage.collectibles.put(bangumiItem.id, collectedBangumi);
     await GStorage.collectibles.flush();
     final collectChangeId = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
@@ -104,8 +105,8 @@ class CollectController extends Notifier<CollectState> {
   }
 
   Future<void> syncCollectibles() async {
-  final translations = ref.read(translationsProvider);
-  final webDavToast = translations.settings.webdav.toast;
+    final translations = ref.read(translationsProvider);
+    final webDavToast = translations.settings.webdav.toast;
     if (!WebDav().initialized) {
       KazumiDialog.showToast(message: webDavToast.notConfigured);
       return;
@@ -117,8 +118,8 @@ class CollectController extends Notifier<CollectState> {
     } catch (e) {
       KazumiLogger().log(Level.error, 'WebDav连接失败: $e');
       KazumiDialog.showToast(
-        message: webDavToast.connectionFailed
-            .replaceFirst('{error}', e.toString()),
+        message:
+            webDavToast.connectionFailed.replaceFirst('{error}', e.toString()),
       );
       ok = false;
     }
@@ -127,8 +128,7 @@ class CollectController extends Notifier<CollectState> {
         await WebDav().syncCollectibles();
       } catch (e) {
         KazumiDialog.showToast(
-          message: webDavToast.syncFailed
-              .replaceFirst('{error}', e.toString()),
+          message: webDavToast.syncFailed.replaceFirst('{error}', e.toString()),
         );
       }
       loadCollectibles();

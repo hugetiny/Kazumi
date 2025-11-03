@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:card_settings_ui/card_settings_ui.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/setting/providers.dart';
@@ -26,31 +26,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize provider immediately instead of deferring to next frame
-    final notifier = ref.read(playerSettingsProvider.notifier);
-    final initialState = PlayerSettingsState(
-      defaultPlaySpeed:
-          (setting.get(SettingBoxKey.defaultPlaySpeed, defaultValue: 1.0) as num)
-              .toDouble(),
-      defaultAspectRatioType:
-          setting.get(SettingBoxKey.defaultAspectRatioType, defaultValue: 1) as int,
-      hAenable: setting.get(SettingBoxKey.hAenable, defaultValue: true) as bool,
-      androidEnableOpenSLES:
-          setting.get(SettingBoxKey.androidEnableOpenSLES, defaultValue: true) as bool,
-      lowMemoryMode:
-          setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false) as bool,
-      playResume: setting.get(SettingBoxKey.playResume, defaultValue: true) as bool,
-      showPlayerError:
-          setting.get(SettingBoxKey.showPlayerError, defaultValue: true) as bool,
-      privateMode: setting.get(SettingBoxKey.privateMode, defaultValue: false) as bool,
-      playerDebugMode:
-      setting.get(SettingBoxKey.playerDebugMode, defaultValue: kDebugMode) as bool,
-      playerDisableAnimations: setting.get(
-        SettingBoxKey.playerDisableAnimations,
-        defaultValue: false,
-      ) as bool,
-    );
-    notifier.initialize(initialState);
+    // Provider will initialize itself from storage in its build() method.
   }
 
   void onBackPressed(BuildContext context) {
@@ -101,7 +77,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                 ),
                 SettingsTile.navigation(
                   onPressed: (_) async {
-                    context.push('/settings/player/decoder');
+                    context.push(Routes.settingsPlayerDecoder);
                   },
                   title: Text(t.settings.player.hardwareDecoder),
                   description: Text(t.settings.player.hardwareDecoderDesc),
@@ -133,7 +109,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                   ),
                 SettingsTile.navigation(
                   onPressed: (_) async {
-                    context.push('/settings/player/super');
+                    context.push(Routes.settingsPlayerSuper);
                   },
                   title: Text(t.settings.player.superResolution),
                 ),
@@ -160,8 +136,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                         .setPlayerDisableAnimations(v);
                   },
                   title: Text(t.settings.player.disableAnimations),
-                  description:
-                      Text(t.settings.player.disableAnimationsDesc),
+                  description: Text(t.settings.player.disableAnimationsDesc),
                   initialValue: playerState.playerDisableAnimations,
                 ),
                 SettingsTile.switchTile(
@@ -192,9 +167,7 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                   onToggle: (value) async {
                     final v = value ?? !playerState.privateMode;
                     await setting.put(SettingBoxKey.privateMode, v);
-                    ref
-                        .read(playerSettingsProvider.notifier)
-                        .setPrivateMode(v);
+                    ref.read(playerSettingsProvider.notifier).setPrivateMode(v);
                   },
                   title: Text(t.settings.player.privateMode),
                   description: Text(t.settings.player.privateModeDesc),
@@ -241,7 +214,8 @@ class _PlayerSettingsPageState extends ConsumerState<PlayerSettingsPage> {
                       for (final entry in aspectRatioTypeMap.entries)
                         MenuItemButton(
                           requestFocusOnHover: false,
-                          onPressed: () => updateDefaultAspectRatioType(entry.key),
+                          onPressed: () =>
+                              updateDefaultAspectRatioType(entry.key),
                           child: Container(
                             height: 48,
                             constraints: const BoxConstraints(minWidth: 112),

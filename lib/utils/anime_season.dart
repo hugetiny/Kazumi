@@ -2,7 +2,12 @@
 class AnimeSeason {
   late DateTime _date;
   final _seasons = ['冬季', '春季', '夏季', '秋季'];
-  static const List<String> _seasonKeys = ['winter', 'spring', 'summer', 'autumn'];
+  static const List<String> _seasonKeys = [
+    'winter',
+    'spring',
+    'summer',
+    'autumn'
+  ];
 
   AnimeSeason(DateTime date) {
     _date = date;

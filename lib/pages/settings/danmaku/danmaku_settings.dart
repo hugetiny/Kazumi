@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
@@ -28,7 +29,8 @@ class DanmakuSettingsPage extends ConsumerWidget {
     return '${secret.substring(0, 2)}****${secret.substring(secret.length - 2)}';
   }
 
-  String _credentialModeLabel(BuildContext context, String appId, String apiKey) {
+  String _credentialModeLabel(
+      BuildContext context, String appId, String apiKey) {
     final playerTexts = context.t.settings.player;
     return appId.isEmpty && apiKey.isEmpty
         ? playerTexts.danmakuCredentialModeBuiltIn
@@ -85,7 +87,9 @@ class DanmakuSettingsPage extends ConsumerWidget {
             TextButton(
               onPressed: () async {
                 final NavigatorState navigator = Navigator.of(dialogContext);
-                await ref.read(danmakuSettingsProvider.notifier).setDanDanCredentials('', '');
+                await ref
+                    .read(danmakuSettingsProvider.notifier)
+                    .setDanDanCredentials('', '');
                 navigator.pop();
                 KazumiDialog.showToast(
                   message: toastTexts.danmakuCredentialsRestored,
@@ -98,7 +102,9 @@ class DanmakuSettingsPage extends ConsumerWidget {
                 final String appId = appIdController.text.trim();
                 final String apiKey = apiKeyController.text.trim();
                 final NavigatorState navigator = Navigator.of(dialogContext);
-                await ref.read(danmakuSettingsProvider.notifier).setDanDanCredentials(appId, apiKey);
+                await ref
+                    .read(danmakuSettingsProvider.notifier)
+                    .setDanDanCredentials(appId, apiKey);
                 navigator.pop();
                 KazumiDialog.showToast(
                   message: toastTexts.danmakuCredentialsUpdated,
@@ -124,7 +130,8 @@ class DanmakuSettingsPage extends ConsumerWidget {
     // ✅ Watch danmaku settings from Riverpod provider
     final danmakuSettings = ref.watch(danmakuSettingsProvider);
 
-    final String maskedApiKey = _maskSecret(context, danmakuSettings.danDanApiKeyOverride);
+    final String maskedApiKey =
+        _maskSecret(context, danmakuSettings.danDanApiKeyOverride);
     final String displayAppId = danmakuSettings.danDanAppIdOverride.isEmpty
         ? playerTexts.danmakuCredentialNotConfigured
         : danmakuSettings.danDanAppIdOverride;
@@ -146,8 +153,10 @@ class DanmakuSettingsPage extends ConsumerWidget {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuEnabledByDefault(value ?? !danmakuSettings.danmakuEnabledByDefault);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuEnabledByDefault(
+                            value ?? !danmakuSettings.danmakuEnabledByDefault);
                   },
                   title: Text(playerTexts.danmakuDefaultOn),
                   description: Text(playerTexts.danmakuDefaultOnDesc),
@@ -160,24 +169,30 @@ class DanmakuSettingsPage extends ConsumerWidget {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuBiliBiliSource(value ?? !danmakuSettings.danmakuBiliBiliSource);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBiliBiliSource(
+                            value ?? !danmakuSettings.danmakuBiliBiliSource);
                   },
                   title: Text(sourcesTexts.bilibili),
                   initialValue: danmakuSettings.danmakuBiliBiliSource,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuGamerSource(value ?? !danmakuSettings.danmakuGamerSource);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuGamerSource(
+                            value ?? !danmakuSettings.danmakuGamerSource);
                   },
                   title: Text(sourcesTexts.gamer),
                   initialValue: danmakuSettings.danmakuGamerSource,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuDanDanSource(value ?? !danmakuSettings.danmakuDanDanSource);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuDanDanSource(
+                            value ?? !danmakuSettings.danmakuDanDanSource);
                   },
                   title: Text(sourcesTexts.dandan),
                   initialValue: danmakuSettings.danmakuDanDanSource,
@@ -211,7 +226,7 @@ class DanmakuSettingsPage extends ConsumerWidget {
               tiles: [
                 SettingsTile.navigation(
                   onPressed: (_) {
-                    context.push('/settings/danmaku/shield');
+                    context.push(Routes.settingsDanmakuShield);
                   },
                   title: Text(playerTexts.danmakuKeywordShield),
                 ),
@@ -229,13 +244,16 @@ class DanmakuSettingsPage extends ConsumerWidget {
                     divisions: 4,
                     label: '${(danmakuSettings.danmakuArea * 100).round()}%',
                     onChanged: (value) {
-                      ref.read(danmakuSettingsProvider.notifier).setDanmakuArea(value);
+                      ref
+                          .read(danmakuSettingsProvider.notifier)
+                          .setDanmakuArea(value);
                     },
                   ),
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
                         .setDanmakuTop(value ?? !danmakuSettings.danmakuTop);
                   },
                   title: Text(playerTexts.danmakuTopDisplay),
@@ -243,24 +261,30 @@ class DanmakuSettingsPage extends ConsumerWidget {
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuBottom(value ?? !danmakuSettings.danmakuBottom);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBottom(
+                            value ?? !danmakuSettings.danmakuBottom);
                   },
                   title: Text(playerTexts.danmakuBottomDisplay),
                   initialValue: danmakuSettings.danmakuBottom,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuScroll(value ?? !danmakuSettings.danmakuScroll);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuScroll(
+                            value ?? !danmakuSettings.danmakuScroll);
                   },
                   title: Text(playerTexts.danmakuScrollDisplay),
                   initialValue: danmakuSettings.danmakuScroll,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuMassive(value ?? !danmakuSettings.danmakuMassive);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuMassive(
+                            value ?? !danmakuSettings.danmakuMassive);
                   },
                   title: Text(playerTexts.danmakuMassiveDisplay),
                   description: Text(playerTexts.danmakuMassiveDescription),
@@ -273,16 +297,20 @@ class DanmakuSettingsPage extends ConsumerWidget {
               tiles: [
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuBorder(value ?? !danmakuSettings.danmakuBorder);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuBorder(
+                            value ?? !danmakuSettings.danmakuBorder);
                   },
                   title: Text(playerTexts.danmakuOutline),
                   initialValue: danmakuSettings.danmakuBorder,
                 ),
                 SettingsTile.switchTile(
                   onToggle: (value) async {
-                    await ref.read(danmakuSettingsProvider.notifier)
-                        .setDanmakuColor(value ?? !danmakuSettings.danmakuColor);
+                    await ref
+                        .read(danmakuSettingsProvider.notifier)
+                        .setDanmakuColor(
+                            value ?? !danmakuSettings.danmakuColor);
                   },
                   title: Text(playerTexts.danmakuColor),
                   initialValue: danmakuSettings.danmakuColor,
@@ -295,7 +323,8 @@ class DanmakuSettingsPage extends ConsumerWidget {
                     max: Utils.isCompact() ? 32 : 48,
                     label: '${danmakuSettings.danmakuFontSize.floorToDouble()}',
                     onChanged: (value) {
-                      ref.read(danmakuSettingsProvider.notifier)
+                      ref
+                          .read(danmakuSettingsProvider.notifier)
                           .setDanmakuFontSize(value.floorToDouble());
                     },
                   ),
@@ -309,7 +338,8 @@ class DanmakuSettingsPage extends ConsumerWidget {
                     divisions: 8,
                     label: '${danmakuSettings.danmakuFontWeight}',
                     onChanged: (value) {
-                      ref.read(danmakuSettingsProvider.notifier)
+                      ref
+                          .read(danmakuSettingsProvider.notifier)
                           .setDanmakuFontWeight(value.toInt());
                     },
                   ),
@@ -322,8 +352,10 @@ class DanmakuSettingsPage extends ConsumerWidget {
                     max: 1,
                     label: '${(danmakuSettings.danmakuOpacity * 100).round()}%',
                     onChanged: (value) {
-                      ref.read(danmakuSettingsProvider.notifier)
-                          .setDanmakuOpacity(double.parse(value.toStringAsFixed(2)));
+                      ref
+                          .read(danmakuSettingsProvider.notifier)
+                          .setDanmakuOpacity(
+                              double.parse(value.toStringAsFixed(2)));
                     },
                   ),
                 ),

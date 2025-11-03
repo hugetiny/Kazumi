@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/timeline/timeline_controller.dart';
 import 'package:kazumi/pages/timeline/providers.dart';
@@ -69,8 +70,8 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
       KazumiDialog.dismiss();
       return;
     }
-  ref.read(navigationProvider.notifier).updateSelectedIndex(0);
-    context.go('/tab/popular');
+    ref.read(navigationProvider.notifier).updateSelectedIndex(0);
+    context.go(Routes.popular);
   }
 
   DateTime generateDateTime(int year, _TimelineSeason season) {
@@ -445,14 +446,16 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
             return Center(
               child: SizedBox(
                 height: 400,
-                child: GeneralErrorWidget(errMsg: commonTexts.emptyState, actions: [
-                  GeneralErrorButton(
-                    onPressed: () {
-                      onSeasonSelected(state.selectedDate);
-                    },
-                    text: commonTexts.retry,
-                  ),
-                ]),
+                child: GeneralErrorWidget(
+                    errMsg: commonTexts.emptyState,
+                    actions: [
+                      GeneralErrorButton(
+                        onPressed: () {
+                          onSeasonSelected(state.selectedDate);
+                        },
+                        text: commonTexts.retry,
+                      ),
+                    ]),
               ),
             );
           }
@@ -469,7 +472,8 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     // Ensure tab content count matches TabController length to avoid runtime mismatches.
     final normalizedCalendar = List<List<BangumiItem>>.generate(
       _weekdayCount,
-      (index) => index < bangumiCalendar.length ? bangumiCalendar[index] : const [],
+      (index) =>
+          index < bangumiCalendar.length ? bangumiCalendar[index] : const [],
     );
 
     List<Widget> gridViewList = [];
@@ -482,7 +486,7 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     }
     double cardHeight =
         Utils.isDesktop() ? 160 : (Utils.isTablet() ? 140 : 120);
-  for (var bangumiList in normalizedCalendar) {
+    for (var bangumiList in normalizedCalendar) {
       gridViewList.add(
         CustomScrollView(
           slivers: [

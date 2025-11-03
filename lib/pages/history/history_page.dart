@@ -16,7 +16,8 @@ class HistoryPage extends ConsumerStatefulWidget {
 }
 
 /// Provider for show delete button state
-final historyShowDeleteProvider = StateProvider.autoDispose<bool>((ref) => false);
+final historyShowDeleteProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 
 class _HistoryPageState extends ConsumerState<HistoryPage>
     with SingleTickerProviderStateMixin {
@@ -84,7 +85,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
             actions: [
               IconButton(
                   onPressed: () {
-                    ref.read(historyShowDeleteProvider.notifier).state = !showDelete;
+                    ref.read(historyShowDeleteProvider.notifier).state =
+                        !showDelete;
                   },
                   icon: showDelete
                       ? const Icon(Icons.edit_outlined)
@@ -142,9 +144,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage>
                       historyItem: state.histories[index])
                   : null;
             },
-            childCount: state.histories.isNotEmpty
-                ? state.histories.length
-                : 10,
+            childCount:
+                state.histories.isNotEmpty ? state.histories.length : 10,
           ),
         ),
       ],

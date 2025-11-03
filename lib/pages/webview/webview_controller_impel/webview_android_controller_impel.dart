@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/utils/logger.dart';
 import 'package:kazumi/pages/webview/webview_controller.dart';
 import 'package:flutter_inappwebview_platform_interface/flutter_inappwebview_platform_interface.dart';
+import 'package:logger/logger.dart';
 
 class WebviewAndroidItemControllerImpel
     extends WebviewItemController<PlatformInAppWebViewController> {
@@ -27,7 +29,7 @@ class WebviewAndroidItemControllerImpel
           geolocationEnabled: false,
         ),
         onWebViewCreated: (controller) {
-          print('[WebView] Created');
+          KazumiLogger().log(Level.info, '[WebView] Created');
           webviewController = controller;
           initEventController.add(true);
         },
@@ -70,7 +72,10 @@ class WebviewAndroidItemControllerImpel
         count++;
         if (count >= 15) {
           timer.cancel();
-
+          // Mark as loaded (failed) to stop loading state
+          isIframeLoaded = true;
+          videoLoadingEventController.add(false);
+          
           logEventController.add('clear');
           logEventController.add('解析视频资源超时');
           logEventController.add('请切换到其他播放列表或视频源');
@@ -184,7 +189,7 @@ class WebviewAndroidItemControllerImpel
                 }
               });
             }
-          });  
+          });
         });
 
         _observer.observe(document.documentElement, {
@@ -352,7 +357,7 @@ class WebviewAndroidItemControllerImpel
             attributeFilter: ["src"],
           });
         }
-        
+
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', setupIframeProcessing);
         } else {

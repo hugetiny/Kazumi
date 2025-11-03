@@ -118,6 +118,7 @@ class WebviewItemControllerImpel
           if (count >= 15) {
             timer.cancel();
             isIframeLoaded = true;
+            videoLoadingEventController.add(false);
             logEventController.add('clear');
             logEventController.add('解析视频资源超时');
             logEventController.add('请切换到其他播放列表或视频源');

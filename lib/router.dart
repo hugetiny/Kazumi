@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/modules/bangumi/bangumi_item.dart';
 import 'package:kazumi/pages/about/about_page.dart';
 import 'package:kazumi/pages/my/favorites_page.dart';
@@ -33,8 +34,53 @@ import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
+/// 全局路由配置
+///
+/// 使用 go_router 管理应用导航
+/// - 支持深度链接
+/// - 统一错误处理
+/// - 路由重定向
 final GoRouter router = GoRouter(
   observers: [KazumiDialog.observer],
+
+  // 初始路由
+  initialLocation: Routes.popular,
+
+  // 全局错误处理
+  errorBuilder: (context, state) {
+    final t = context.t;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(t.app.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Route Error',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.error?.toString() ?? 'Unknown error',
+              style: Theme.of(context).textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.go(Routes.popular),
+              icon: const Icon(Icons.home),
+              label: const Text('Back to Home'),
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+
   routes: [
     GoRoute(
       path: '/',
@@ -44,46 +90,46 @@ final GoRouter router = GoRouter(
       builder: (context, state, child) => ScaffoldMenu(child: child),
       routes: [
         GoRoute(
-          path: '/tab/popular',
+          path: Routes.popular,
           builder: (context, state) => const PopularPage(),
         ),
         GoRoute(
-          path: '/tab/timeline',
+          path: Routes.timeline,
           builder: (context, state) => const TimelinePage(),
         ),
         GoRoute(
-          path: '/tab/my',
+          path: Routes.my,
           builder: (context, state) => const MyPage(),
         ),
         GoRoute(
-          path: '/tab/setting',
+          path: Routes.settings,
           builder: (context, state) => const SettingPage(),
         ),
       ],
     ),
     GoRoute(
-      path: '/my/favorites',
+      path: Routes.favorites,
       builder: (context, state) => const FavoritesPage(),
     ),
     GoRoute(
-      path: '/my/history',
+      path: Routes.history,
       builder: (context, state) => const HistoryPage(),
     ),
     GoRoute(
-      path: '/video',
+      path: Routes.video,
       builder: (context, state) => const VideoPage(),
     ),
     GoRoute(
-      path: '/info',
+      path: Routes.info,
       builder: (context, state) => InfoPage(
         bangumi: state.extra is BangumiItem ? state.extra as BangumiItem : null,
       ),
     ),
     GoRoute(
-      path: '/settings',
+      path: Routes.settingsRoot,
       redirect: (context, state) {
-        if (state.uri.path == '/settings') {
-          return '/settings/theme';
+        if (state.uri.path == Routes.settingsRoot) {
+          return Routes.settingsTheme;
         }
         return null;
       },
@@ -133,8 +179,7 @@ final GoRouter router = GoRouter(
               builder: (context, state) => LicensePage(
                 applicationName: 'Kazumi',
                 applicationVersion: Api.version,
-                applicationLegalese:
-                    context.t.dialogs.about.licenseLegalese,
+                applicationLegalese: context.t.dialogs.about.licenseLegalese,
               ),
             ),
           ],
@@ -178,13 +223,12 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // TODO: Add other settings routes
       ],
     ),
     GoRoute(
-      path: '/search',
+      path: Routes.search,
       builder: (context, state) => SearchPage(
-        inputTag: (state.extra is String) ? state.extra as String : '',
+        inputTag: Routes.getSearchTag(state.uri.queryParameters),
       ),
     ),
   ],

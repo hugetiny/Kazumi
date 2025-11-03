@@ -19,7 +19,8 @@ import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/tray_localization.dart';
 
 /// Provider for exit dialog "don't ask again" checkbox state
-final _exitDialogSavePreferenceProvider = StateProvider.autoDispose<bool>((ref) => false);
+final _exitDialogSavePreferenceProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 
 class AppWidget extends ConsumerStatefulWidget {
   const AppWidget({super.key});
@@ -130,7 +131,8 @@ class _AppWidgetState extends ConsumerState<AppWidget>
           final t = context.t;
 
           return Consumer(builder: (context, ref, child) {
-            final saveExitBehavior = ref.watch(_exitDialogSavePreferenceProvider);
+            final saveExitBehavior =
+                ref.watch(_exitDialogSavePreferenceProvider);
 
             return AlertDialog(
               title: Text(t.exitDialog.title),
@@ -147,7 +149,9 @@ class _AppWidgetState extends ConsumerState<AppWidget>
                       Checkbox(
                         value: saveExitBehavior,
                         onChanged: (value) {
-                          ref.read(_exitDialogSavePreferenceProvider.notifier).state = value ?? false;
+                          ref
+                              .read(_exitDialogSavePreferenceProvider.notifier)
+                              .state = value ?? false;
                         },
                       ),
                       Text(t.exitDialog.dontAskAgain),
@@ -257,6 +261,23 @@ class _AppWidgetState extends ConsumerState<AppWidget>
         useMaterial3: true,
         colorScheme: dynamicScheme,
         brightness: Brightness.light,
+        appBarTheme: AppBarTheme(
+          backgroundColor: dynamicScheme.surface,
+          foregroundColor: dynamicScheme.onSurface,
+          elevation: 0.5,
+          scrolledUnderElevation: 0,
+          toolbarHeight: 40,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: IconThemeData(size: 22, color: dynamicScheme.onSurface),
+          titleTextStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4)),
+            iconSize: const WidgetStatePropertyAll(22.0),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
         progressIndicatorTheme: progressIndicatorTheme2024,
         sliderTheme: sliderTheme2024,
         pageTransitionsTheme: pageTransitionsTheme2024,
@@ -266,6 +287,21 @@ class _AppWidgetState extends ConsumerState<AppWidget>
       useMaterial3: true,
       brightness: Brightness.light,
       colorSchemeSeed: seedColor,
+      appBarTheme: const AppBarTheme(
+        elevation: 0.5,
+        scrolledUnderElevation: 0,
+        toolbarHeight: 40,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(size: 22),
+        titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+      iconButtonTheme: const IconButtonThemeData(
+        style: ButtonStyle(
+          padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4)),
+          iconSize: WidgetStatePropertyAll(22.0),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
       progressIndicatorTheme: progressIndicatorTheme2024,
       sliderTheme: sliderTheme2024,
       pageTransitionsTheme: pageTransitionsTheme2024,
@@ -283,6 +319,23 @@ class _AppWidgetState extends ConsumerState<AppWidget>
         useMaterial3: true,
         colorScheme: dynamicScheme,
         brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(
+          backgroundColor: dynamicScheme.surface,
+          foregroundColor: dynamicScheme.onSurface,
+          elevation: 0.5,
+          scrolledUnderElevation: 0,
+          toolbarHeight: 40,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: IconThemeData(size: 22, color: dynamicScheme.onSurface),
+          titleTextStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        iconButtonTheme: IconButtonThemeData(
+          style: ButtonStyle(
+            padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4)),
+            iconSize: const WidgetStatePropertyAll(22.0),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
         progressIndicatorTheme: progressIndicatorTheme2024,
         sliderTheme: sliderTheme2024,
         pageTransitionsTheme: pageTransitionsTheme2024,
@@ -292,6 +345,21 @@ class _AppWidgetState extends ConsumerState<AppWidget>
         useMaterial3: true,
         brightness: Brightness.dark,
         colorSchemeSeed: seedColor,
+        appBarTheme: const AppBarTheme(
+          elevation: 0.5,
+          scrolledUnderElevation: 0,
+          toolbarHeight: 40,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: IconThemeData(size: 22),
+          titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        iconButtonTheme: const IconButtonThemeData(
+          style: ButtonStyle(
+            padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 4)),
+            iconSize: WidgetStatePropertyAll(22.0),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
         progressIndicatorTheme: progressIndicatorTheme2024,
         sliderTheme: sliderTheme2024,
         pageTransitionsTheme: pageTransitionsTheme2024,

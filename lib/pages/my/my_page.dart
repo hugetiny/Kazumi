@@ -2,6 +2,7 @@ import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
@@ -21,7 +22,7 @@ class _MyPageState extends ConsumerState<MyPage> {
       return;
     }
     ref.read(navigationProvider.notifier).updateSelectedIndex(0);
-    context.go('/tab/popular');
+    context.go(Routes.popular);
   }
 
   @override
@@ -36,7 +37,8 @@ class _MyPageState extends ConsumerState<MyPage> {
         _onBackPressed(context);
       },
       child: Scaffold(
-        appBar: SysAppBar(title: Text(t.library.my.title), needTopOffset: false),
+        appBar:
+            SysAppBar(title: Text(t.library.my.title), needTopOffset: false),
         body: SettingsList(
           maxWidth: 1000,
           sections: [
@@ -44,13 +46,13 @@ class _MyPageState extends ConsumerState<MyPage> {
               title: Text(t.library.my.sections.video),
               tiles: [
                 SettingsTile.navigation(
-                  onPressed: (_) => context.push('/my/favorites'),
+                  onPressed: (_) => context.push(Routes.favorites),
                   leading: const Icon(Icons.collections_bookmark_outlined),
                   title: Text(t.library.my.favorites.title),
                   description: Text(t.library.my.favorites.description),
                 ),
                 SettingsTile.navigation(
-                  onPressed: (_) => context.push('/my/history'),
+                  onPressed: (_) => context.push(Routes.history),
                   leading: const Icon(Icons.history_rounded),
                   title: Text(t.library.my.history.title),
                   description: Text(t.library.my.history.description),

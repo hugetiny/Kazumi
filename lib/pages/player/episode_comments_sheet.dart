@@ -199,9 +199,8 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
     }
 
     // Watch async comments provider
-    final commentsAsync = ref.watch(
-      episodeCommentsProvider((bangumiId, targetEpisode))
-    );
+    final commentsAsync =
+        ref.watch(episodeCommentsProvider((bangumiId, targetEpisode)));
 
     return Scaffold(
       body: commentsAsync.when(
@@ -209,7 +208,8 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
           return RefreshIndicator(
             key: _refreshIndicatorKey,
             onRefresh: () async {
-              ref.invalidate(episodeCommentsProvider((bangumiId, targetEpisode)));
+              ref.invalidate(
+                  episodeCommentsProvider((bangumiId, targetEpisode)));
             },
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

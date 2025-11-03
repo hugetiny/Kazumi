@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/card/bangumi_card.dart';
@@ -50,14 +51,16 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
       return;
     }
     ref.read(navigationProvider.notifier).updateSelectedIndex(0);
-    context.go('/tab/popular');
+    context.go(Routes.popular);
   }
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
     final favoritesTexts = t.library.my.favorites;
-    final collectibles = ref.watch(collectionsProvider).collectibles
+    final collectibles = ref
+        .watch(collectionsProvider)
+        .collectibles
         .where((item) => _visibleTypes.contains(item.type))
         .toList();
 
@@ -87,7 +90,8 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
             IconButton(
               onPressed: () {
                 // ✅ Update state via Riverpod provider
-                ref.read(favoritesShowDeleteProvider.notifier).state = !showDelete;
+                ref.read(favoritesShowDeleteProvider.notifier).state =
+                    !showDelete;
               },
               icon: showDelete
                   ? const Icon(Icons.edit_outlined)
@@ -97,10 +101,9 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            final webDavEnable =
-                setting.get(SettingBoxKey.webDavEnable, defaultValue: false)
-                        as bool? ??
-                    false;
+            final webDavEnable = setting.get(SettingBoxKey.webDavEnable,
+                    defaultValue: false) as bool? ??
+                false;
             if (!webDavEnable) {
               KazumiDialog.showToast(
                 message: favoritesTexts.sync.disabled,
@@ -161,9 +164,7 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
     int type,
     String emptyText,
   ) {
-    final filtered = collectibles
-        .where((item) => item.type == type)
-        .toList()
+    final filtered = collectibles.where((item) => item.type == type).toList()
       ..sort(
         (a, b) => b.time.millisecondsSinceEpoch
             .compareTo(a.time.millisecondsSinceEpoch),
@@ -258,7 +259,6 @@ class _FavoritesPageState extends ConsumerState<FavoritesPage>
   double _resolveMainAxisExtent(BuildContext context, int crossCount) {
     final width = MediaQuery.of(context).size.width;
     final cardWidth = width / crossCount;
-    return cardWidth / 0.65 +
-        MediaQuery.textScalerOf(context).scale(32.0);
+    return cardWidth / 0.65 + MediaQuery.textScalerOf(context).scale(32.0);
   }
 }

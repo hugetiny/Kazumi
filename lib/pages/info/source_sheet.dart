@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/modules/search/plugin_search_module.dart';
 import 'package:kazumi/pages/my/my_controller.dart';
@@ -14,11 +15,18 @@ import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/plugins/plugins_providers.dart';
 import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/utils/parse_failure_helper.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 
-enum SourceSortOption { original, nameAsc, nameDesc }
+enum SourceSortOption { 
+  original, 
+  nameAsc, 
+  nameDesc, 
+  failureAsc,  // 失败次数升序 (可靠的在前)
+  failureDesc, // 失败次数降序 (不可靠的在前)
+}
 
 /// Provider for source sort option
 final sourceSortOptionProvider = StateProvider.autoDispose<SourceSortOption>(
@@ -111,8 +119,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                                       KazumiDialog.dismiss();
                                       final updated = List<String>.from(
                                         widget.infoController.bangumiItem.alias,
-                                      )
-                                        ..removeAt(index);
+                                      )..removeAt(index);
                                       widget.infoController.bangumiItem.alias =
                                           updated;
                                       aliasNotifier.value = List<String>.from(
@@ -158,19 +165,54 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
         return options.nameAsc;
       case SourceSortOption.nameDesc:
         return options.nameDesc;
+      case SourceSortOption.failureAsc:
+        return options.failureAsc;
+      case SourceSortOption.failureDesc:
+        return options.failureDesc;
     }
   }
 
-  List<_SourceEntry> _sortedEntries(List<_SourceEntry> entries, SourceSortOption sortOption) {
+  List<_SourceEntry> _sortedEntries(
+      List<_SourceEntry> entries, SourceSortOption sortOption) {
+    final bangumiItem = widget.infoController.bangumiItem;
+    
     switch (sortOption) {
       case SourceSortOption.original:
         return entries;
       case SourceSortOption.nameAsc:
-        return [...entries]
-          ..sort((a, b) => a.item.name.compareTo(b.item.name));
+        return [...entries]..sort((a, b) => a.item.name.compareTo(b.item.name));
       case SourceSortOption.nameDesc:
-        return [...entries]
-          ..sort((a, b) => b.item.name.compareTo(a.item.name));
+        return [...entries]..sort((a, b) => b.item.name.compareTo(a.item.name));
+      case SourceSortOption.failureAsc:
+        // 失败次数升序 (可靠的在前)
+        return [...entries]..sort((a, b) {
+          final aCount = ParseFailureHelper.getFailureCount(
+            bangumiId: bangumiItem.id,
+            pluginName: a.plugin.name,
+            src: a.item.src,
+          );
+          final bCount = ParseFailureHelper.getFailureCount(
+            bangumiId: bangumiItem.id,
+            pluginName: b.plugin.name,
+            src: b.item.src,
+          );
+          return aCount.compareTo(bCount);
+        });
+      case SourceSortOption.failureDesc:
+        // 失败次数降序 (不可靠的在前)
+        return [...entries]..sort((a, b) {
+          final aCount = ParseFailureHelper.getFailureCount(
+            bangumiId: bangumiItem.id,
+            pluginName: a.plugin.name,
+            src: a.item.src,
+          );
+          final bCount = ParseFailureHelper.getFailureCount(
+            bangumiId: bangumiItem.id,
+            pluginName: b.plugin.name,
+            src: b.item.src,
+          );
+          return bCount.compareTo(aCount);
+        });
     }
   }
 
@@ -206,7 +248,6 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     );
 
     videoPageController.bangumiItem = widget.infoController.bangumiItem;
-    videoPageController.currentPlugin = plugin;
     videoPageController.title = searchItem.name;
     videoPageController.src = searchItem.src;
 
@@ -214,11 +255,148 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
       await videoPageController.queryRoads(searchItem.src, plugin.name);
       KazumiDialog.dismiss();
       if (!mounted) return;
-      context.push('/video');
+      if (context.mounted) {
+        context.push(Routes.video);
+      }
     } catch (error) {
       KazumiLogger().log(Level.warning, '获取视频播放列表失败: $error');
       KazumiDialog.dismiss();
       KazumiDialog.showToast(message: sheetTexts.toast.loadFailed);
+    }
+  }
+
+  void _showFailureDetails(BuildContext context, Plugin plugin, SearchItem item) {
+    final bangumiItem = widget.infoController.bangumiItem;
+    final record = ParseFailureHelper.getFailureRecord(
+      bangumiId: bangumiItem.id,
+      pluginName: plugin.name,
+      src: item.src,
+    );
+
+    if (record == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final theme = Theme.of(context);
+        String reasonText;
+        switch (record.reason) {
+          case 'timeout':
+            reasonText = '解析超时 (15秒)';
+            break;
+          case 'connection_timeout':
+            reasonText = '网络连接超时';
+            break;
+          case 'receive_timeout':
+            reasonText = '接收数据超时';
+            break;
+          case 'cancelled':
+            reasonText = '请求被取消';
+            break;
+          case 'network_error':
+            reasonText = '网络错误';
+            break;
+          default:
+            if (record.reason.startsWith('bad_response_')) {
+              final code = record.reason.replaceFirst('bad_response_', '');
+              reasonText = 'HTTP错误 ($code)';
+            } else {
+              reasonText = record.reason;
+            }
+        }
+
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: theme.colorScheme.error,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '解析失败详情',
+                        style: theme.textTheme.titleLarge,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _buildDetailRow('插件名称', plugin.name, theme),
+                const SizedBox(height: 12),
+                _buildDetailRow('失败次数', '${record.failureCount} 次', theme),
+                const SizedBox(height: 12),
+                _buildDetailRow('最后失败', _formatTime(record.lastFailureTime), theme),
+                const SizedBox(height: 12),
+                _buildDetailRow('失败原因', reasonText, theme),
+                const SizedBox(height: 12),
+                _buildDetailRow('视频源', item.src, theme, maxLines: 3),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('关闭'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, ThemeData theme, {int maxLines = 1}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: maxLines,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final diff = now.difference(time);
+
+    if (diff.inMinutes < 1) {
+      return '刚才';
+    } else if (diff.inHours < 1) {
+      return '${diff.inMinutes}分钟前';
+    } else if (diff.inDays < 1) {
+      return '${diff.inHours}小时前';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}天前';
+    } else {
+      return '${time.year}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')}';
     }
   }
 
@@ -229,6 +407,15 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   ) {
     final sheetTexts = context.t.library.info.sourceSheet;
     final theme = Theme.of(context);
+    
+    // 获取该源的解析失败次数
+    final bangumiItem = widget.infoController.bangumiItem;
+    final failureCount = ParseFailureHelper.getFailureCount(
+      bangumiId: bangumiItem.id,
+      pluginName: plugin.name,
+      src: item.src,
+    );
+    
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -240,12 +427,58 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                sheetTexts.card.title
-                    .replaceFirst('{plugin}', plugin.name),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge,
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      sheetTexts.card.title.replaceFirst('{plugin}', plugin.name),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelLarge,
+                    ),
+                  ),
+                  if (failureCount > 0) ...[
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => _showFailureDetails(context, plugin, item),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Tooltip(
+                        message: '历史解析失败 $failureCount 次,点击查看详情',
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: failureCount >= 3 
+                                ? theme.colorScheme.errorContainer
+                                : theme.colorScheme.tertiaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 14,
+                                color: failureCount >= 3
+                                    ? theme.colorScheme.onErrorContainer
+                                    : theme.colorScheme.onTertiaryContainer,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '$failureCount',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: failureCount >= 3
+                                      ? theme.colorScheme.onErrorContainer
+                                      : theme.colorScheme.onTertiaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 8),
               Text(
@@ -283,34 +516,59 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     );
   }
 
-  PopupMenuButton<SourceSortOption> _buildSortMenu() {
+  Widget _buildSortButton() {
     final sortTexts = context.t.library.info.sourceSheet.sort;
     final sortOption = ref.watch(sourceSortOptionProvider);
 
-    return PopupMenuButton<SourceSortOption>(
+    return IconButton(
       tooltip: sortTexts.tooltip
           .replaceFirst('{label}', _sortOptionLabel(sortOption)),
       icon: const Icon(Icons.sort_rounded),
-      onSelected: (option) {
-        ref.read(sourceSortOptionProvider.notifier).state = option;
-      },
-      itemBuilder: (context) {
-        return SourceSortOption.values.map((option) {
-          final selected = option == sortOption;
-          return PopupMenuItem<SourceSortOption>(
-            value: option,
-            child: Row(
-              children: [
-                if (selected)
-                  const Icon(Icons.check_rounded, size: 18)
-                else
-                  const SizedBox(width: 18),
-                const SizedBox(width: 12),
-                Text(_sortOptionLabel(option)),
-              ],
-            ),
-          );
-        }).toList();
+      onPressed: () => _showSortDialog(),
+    );
+  }
+
+  void _showSortDialog() {
+    final sortTexts = context.t.library.info.sourceSheet.sort;
+    final sortOption = ref.read(sourceSortOptionProvider);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Text(
+                      sortTexts.title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+              ...SourceSortOption.values.map((option) {
+                final selected = option == sortOption;
+                return ListTile(
+                  leading: Icon(
+                    selected ? Icons.check_circle : Icons.circle_outlined,
+                    color: selected ? Theme.of(context).colorScheme.primary : null,
+                  ),
+                  title: Text(_sortOptionLabel(option)),
+                  selected: selected,
+                  onTap: () {
+                    ref.read(sourceSortOptionProvider.notifier).state = option;
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
       },
     );
   }
@@ -332,8 +590,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     for (final plugin in plugins) {
       final status =
           searchState.statuses[plugin.name] ?? PluginSearchStatus.pending;
-      final results =
-          searchState.results[plugin.name] ?? const <SearchItem>[];
+      final results = searchState.results[plugin.name] ?? const <SearchItem>[];
       switch (status) {
         case PluginSearchStatus.pending:
           pending.add(plugin);
@@ -448,13 +705,11 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     KazumiDialog.show(
       builder: (dialogContext) {
         final theme = Theme.of(dialogContext);
-        final dialogTexts =
-            dialogContext.t.library.info.sourceSheet.dialog;
+        final dialogTexts = dialogContext.t.library.info.sourceSheet.dialog;
         return AlertDialog(
           title: Text(dialogTexts.removeTitle),
           content: Text(
-            dialogTexts.removeMessage
-                .replaceFirst('{plugin}', plugin.name),
+            dialogTexts.removeMessage.replaceFirst('{plugin}', plugin.name),
           ),
           actions: [
             TextButton(
@@ -467,14 +722,14 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
             TextButton(
               onPressed: () async {
                 KazumiDialog.dismiss();
-                await ref
-                    .read(pluginsProvider.notifier)
-                    .removePlugin(plugin);
-                KazumiDialog.showToast(
-                  message: dialogContext
-                      .t.library.info.sourceSheet.toast.removed
-                      .replaceFirst('{plugin}', plugin.name),
-                );
+                await ref.read(pluginsProvider.notifier).removePlugin(plugin);
+                if (dialogContext.mounted) {
+                  KazumiDialog.showToast(
+                    message: dialogContext
+                        .t.library.info.sourceSheet.toast.removed
+                        .replaceFirst('{plugin}', plugin.name),
+                  );
+                }
               },
               child: Text(dialogContext.t.app.delete),
             ),
@@ -567,8 +822,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                     ((maxWidth + spacing) / (minTileWidth + spacing)).floor();
                 crossAxisCount = math.max(1, crossAxisCount);
                 final totalSpacing = spacing * (crossAxisCount - 1);
-                final itemWidth =
-                    (maxWidth - totalSpacing) / crossAxisCount;
+                final itemWidth = (maxWidth - totalSpacing) / crossAxisCount;
 
                 return Align(
                   alignment: Alignment.topLeft,
@@ -632,7 +886,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
           sheetTexts.title.replaceFirst('{name}', bangumiName),
         ),
         actions: [
-          _buildSortMenu(),
+          _buildSortButton(),
           const SizedBox(width: 8),
         ],
       ),

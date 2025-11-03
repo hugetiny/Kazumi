@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:kazumi/router_constants.dart';
 import 'package:kazumi/bean/widget/embedded_native_control_area.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 // import 'package:kazumi/pages/router.dart';
@@ -14,13 +15,12 @@ class ScaffoldMenu extends ConsumerStatefulWidget {
   @override
   ConsumerState<ScaffoldMenu> createState() => _ScaffoldMenu();
 }
-class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
 
+class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
   @override
   Widget build(BuildContext context) {
     final navigationState = ref.watch(navigationProvider);
-    final navigationController =
-        ref.read(navigationProvider.notifier);
+    final navigationController = ref.read(navigationProvider.notifier);
 
     return OrientationBuilder(builder: (context, orientation) {
       final bool isPortrait = orientation == Orientation.portrait;
@@ -79,16 +79,16 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   controller.updateSelectedIndex(index);
                   switch (index) {
                     case 0:
-                      context.go('/tab/popular');
+                      context.go(Routes.popular);
                       break;
                     case 1:
-                      context.go('/tab/timeline');
+                      context.go(Routes.timeline);
                       break;
                     case 2:
-                      context.go('/tab/my');
+                      context.go(Routes.my);
                       break;
                     case 3:
-                      context.go('/tab/setting');
+                      context.go(Routes.settings);
                       break;
                   }
                 },
@@ -115,7 +115,7 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   elevation: 0,
                   heroTag: null,
                   onPressed: () {
-                    context.push('/search');
+                    context.push(Routes.search);
                   },
                   tooltip: t.navigation.actions.search,
                   child: const Icon(Icons.search),
@@ -148,16 +148,16 @@ class _ScaffoldMenu extends ConsumerState<ScaffoldMenu> {
                   controller.updateSelectedIndex(index);
                   switch (index) {
                     case 0:
-                      context.go('/tab/popular');
+                      context.go(Routes.popular);
                       break;
                     case 1:
-                      context.go('/tab/timeline');
+                      context.go(Routes.timeline);
                       break;
                     case 2:
-                      context.go('/tab/my');
+                      context.go(Routes.my);
                       break;
                     case 3:
-                      context.go('/tab/setting');
+                      context.go(Routes.settings);
                       break;
                   }
                 },

@@ -12,7 +12,8 @@ import 'generated/BBCodeParser.dart';
 import 'generated/BBCodeLexer.dart';
 
 /// Provider for BBCode masked content visibility
-final bbcodeMaskedVisibilityProvider = StateProvider.autoDispose<bool>((ref) => false);
+final bbcodeMaskedVisibilityProvider =
+    StateProvider.autoDispose<bool>((ref) => false);
 
 class BBCodeWidget extends ConsumerStatefulWidget {
   const BBCodeWidget({super.key, required this.bbcode});
@@ -24,7 +25,6 @@ class BBCodeWidget extends ConsumerStatefulWidget {
 }
 
 class _BBCodeWidgetState extends ConsumerState<BBCodeWidget> {
-
   /// color 可以为三种表现形式
   ///
   /// `ARGB: #FFFFFFFF`
@@ -101,7 +101,9 @@ class _BBCodeWidgetState extends ConsumerState<BBCodeWidget> {
                             if ((!e.masked || isVisible) && e.link != null) {
                               launchUrl(Uri.parse(e.link!));
                             } else if (e.masked) {
-                              ref.read(bbcodeMaskedVisibilityProvider.notifier).state = !isVisible;
+                              ref
+                                  .read(bbcodeMaskedVisibilityProvider.notifier)
+                                  .state = !isVisible;
                             }
                           }
                         : null,

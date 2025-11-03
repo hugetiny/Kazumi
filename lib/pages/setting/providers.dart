@@ -162,14 +162,44 @@ class PlayerSettingsState {
 
 class PlayerSettingsNotifier extends Notifier<PlayerSettingsState> {
   @override
-  PlayerSettingsState build() => const PlayerSettingsState();
+  PlayerSettingsState build() {
+    // Initialize from persistent storage (Hive) to avoid mutating providers during widget build
+    final setting = GStorage.setting;
+    final double defaultPlaySpeed =
+        (setting.get(SettingBoxKey.defaultPlaySpeed, defaultValue: 1.0) as num)
+            .toDouble();
+    final int defaultAspectRatioType = setting
+        .get(SettingBoxKey.defaultAspectRatioType, defaultValue: 1) as int;
+    final bool hAenable =
+        setting.get(SettingBoxKey.hAenable, defaultValue: true) as bool;
+    final bool androidEnableOpenSLES = setting
+        .get(SettingBoxKey.androidEnableOpenSLES, defaultValue: true) as bool;
+    final bool lowMemoryMode =
+        setting.get(SettingBoxKey.lowMemoryMode, defaultValue: false) as bool;
+    final bool playResume =
+        setting.get(SettingBoxKey.playResume, defaultValue: true) as bool;
+    final bool showPlayerError =
+        setting.get(SettingBoxKey.showPlayerError, defaultValue: true) as bool;
+    final bool privateMode =
+        setting.get(SettingBoxKey.privateMode, defaultValue: false) as bool;
+    final bool playerDebugMode =
+        setting.get(SettingBoxKey.playerDebugMode, defaultValue: false) as bool;
+    final bool playerDisableAnimations =
+        setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false)
+            as bool;
 
-  bool _initialized = false;
-
-  void initialize(PlayerSettingsState initialState) {
-    if (_initialized) return;
-    state = initialState;
-    _initialized = true;
+    return PlayerSettingsState(
+      defaultPlaySpeed: defaultPlaySpeed,
+      defaultAspectRatioType: defaultAspectRatioType,
+      hAenable: hAenable,
+      androidEnableOpenSLES: androidEnableOpenSLES,
+      lowMemoryMode: lowMemoryMode,
+      playResume: playResume,
+      showPlayerError: showPlayerError,
+      privateMode: privateMode,
+      playerDebugMode: playerDebugMode,
+      playerDisableAnimations: playerDisableAnimations,
+    );
   }
 
   void setDefaultPlaySpeed(double speed) {
@@ -267,9 +297,9 @@ class MetadataSettingsNotifier extends Notifier<MetadataSettingsState> {
         ) as bool? ??
         true;
     final String? rawLocaleTag = GStorage.setting.get(
-          SettingBoxKey.metadataPreferredLocale,
-          defaultValue: '',
-        ) as String?;
+      SettingBoxKey.metadataPreferredLocale,
+      defaultValue: '',
+    ) as String?;
     final String? manualLocaleTag =
         (rawLocaleTag == null || rawLocaleTag.isEmpty) ? null : rawLocaleTag;
     return MetadataSettingsState(

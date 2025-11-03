@@ -276,8 +276,7 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
             FilteringTextInputFormatter.digitsOnly, // 只允许输入数字
           ],
           decoration: InputDecoration(
-            floatingLabelBehavior:
-                FloatingLabelBehavior.never, // 控制label的显示方式
+            floatingLabelBehavior: FloatingLabelBehavior.never, // 控制label的显示方式
             labelText: playerController.forwardTime.toString(),
           ),
           onChanged: (value) {
