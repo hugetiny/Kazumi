@@ -20,10 +20,10 @@ import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 
-enum SourceSortOption { 
-  original, 
-  nameAsc, 
-  nameDesc, 
+enum SourceSortOption {
+  original,
+  nameAsc,
+  nameDesc,
   failureAsc,  // 失败次数升序 (可靠的在前)
   failureDesc, // 失败次数降序 (不可靠的在前)
 }
@@ -175,7 +175,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   List<_SourceEntry> _sortedEntries(
       List<_SourceEntry> entries, SourceSortOption sortOption) {
     final bangumiItem = widget.infoController.bangumiItem;
-    
+
     switch (sortOption) {
       case SourceSortOption.original:
         return entries;
@@ -407,7 +407,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
   ) {
     final sheetTexts = context.t.library.info.sourceSheet;
     final theme = Theme.of(context);
-    
+
     // 获取该源的解析失败次数
     final bangumiItem = widget.infoController.bangumiItem;
     final failureCount = ParseFailureHelper.getFailureCount(
@@ -415,7 +415,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
       pluginName: plugin.name,
       src: item.src,
     );
-    
+
     return Card(
       elevation: 0,
       clipBehavior: Clip.antiAlias,
@@ -447,7 +447,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: failureCount >= 3 
+                            color: failureCount >= 3
                                 ? theme.colorScheme.errorContainer
                                 : theme.colorScheme.tertiaryContainer,
                             borderRadius: BorderRadius.circular(4),

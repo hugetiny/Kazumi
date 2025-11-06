@@ -347,7 +347,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
             : Builder(builder: (context) {
                 final sortOption = ref.watch(pluginSortOptionProvider);
                 final sortedList = _sortedPlugins(pluginList, sortOption);
-                
+
                 return ListView.builder(
                     itemCount: sortedList.length,
                     itemBuilder: (context, index) {
@@ -357,7 +357,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
                               'updatable';
                       // 获取插件总失败次数
                       final failureCount = ParseFailureHelper.getPluginTotalFailures(plugin.name);
-                      
+
                       return Card(
                         key: ValueKey(plugin.name),
                         margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
@@ -546,7 +546,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
 
   void _showPluginMenu(BuildContext context, Plugin plugin) {
     final pluginTexts = context.t.settings.plugins;
-    
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -651,7 +651,7 @@ class _PluginViewPageState extends ConsumerState<PluginViewPage> {
 
   void _showPluginFailureDetails(BuildContext context, Plugin plugin, int totalFailures) {
     final theme = Theme.of(context);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

@@ -220,7 +220,7 @@ class VideoPageController extends AutoDisposeNotifier<VideoPageState> {
       }
     } catch (e) {
       KazumiLogger().log(Level.error, '查询播放列表失败: $e');
-      
+
       // 记录查询失败(非解析失败,是获取播放列表失败)
       String reason = 'network_error';
       if (e is DioException) {
@@ -234,7 +234,7 @@ class VideoPageController extends AutoDisposeNotifier<VideoPageState> {
           reason = 'cancelled';
         }
       }
-      
+
       // 记录失败
       ParseFailureHelper.recordFailure(
         bangumiId: bangumiItem.id,
@@ -242,7 +242,7 @@ class VideoPageController extends AutoDisposeNotifier<VideoPageState> {
         src: url,
         reason: reason,
       );
-      
+
       state = state.copyWith(
         roadList: const [],
         currentPlugin: matched,

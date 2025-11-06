@@ -248,8 +248,8 @@
       "superResolution": "Super Resolution",
       "autoJump": "Auto Jump",
       "autoJumpDesc": "Jump to last playback position",
-  "disableAnimations": "Disable Videos",
-  "disableAnimationsDesc": "Disable transition videos in the player",
+      "disableAnimations": "Disable transition animations",
+      "disableAnimationsDesc": "Disable transition animations in the player",
       "errorPrompt": "Error Prompt",
       "errorPromptDesc": "Show player internal error prompts",
       "debugMode": "Debug Mode",
@@ -277,14 +277,14 @@
       "danmakuCredentials": "Credentials",
       "danmakuDanDanCredentials": "DanDan API Credentials",
       "danmakuDanDanCredentialsDesc": "Customize DanDan credentials",
-  "danmakuCredentialModeBuiltIn": "Built-in",
-  "danmakuCredentialModeCustom": "Custom",
-  "danmakuCredentialHint": "Leave blank to use built-in credentials",
+      "danmakuCredentialModeBuiltIn": "Built-in",
+      "danmakuCredentialModeCustom": "Custom",
+      "danmakuCredentialHint": "Leave blank to use built-in credentials",
       "danmakuCredentialNotConfigured": "Not configured",
       "danmakuCredentialsSummary": "App ID: {appId}\nAPI Key: {apiKey}",
       "danmakuShield": "Danmaku Shield",
       "danmakuKeywordShield": "Keyword Shield",
-  "danmakuShieldInputHint": "Enter a keyword or regular expression",
+      "danmakuShieldInputHint": "Enter a keyword or regular expression",
       "danmakuShieldDescription": "Text starting and ending with \"/\" will be treated as regular expressions, e.g. \"/\\\\d+/\" blocks all numbers",
       "danmakuShieldCount": "Added {count} keywords",
       "danmakuStyle": "Danmaku Style",
@@ -405,7 +405,7 @@
       },
       "toast": {
         "alreadyLatest": "You're up to date.",
-  "checkFailed": "Failed to check for updates. Please try again later.",
+        "checkFailed": "Failed to check for updates. Please try again later.",
         "autoUpdateDisabled": "Automatic updates disabled.",
         "downloadLinkMissing": "No download available for {type}.",
         "downloadFailed": "Download failed: {error}",
@@ -443,6 +443,10 @@
         }
       }
     },
+    "other": {
+      "title": "Other",
+      "about": "About"
+    },
     "about": {
       "title": "About",
       "sections": {
@@ -479,10 +483,6 @@
           "clearFailed": "Failed to clear logs."
         }
       }
-    },
-    "other": {
-      "title": "Other",
-      "about": "About"
     }
   },
   "exitDialog": {
@@ -635,19 +635,19 @@
         "syncingSubtitle": "The first sync may take a few seconds.",
         "emptyTitle": "No official metadata yet",
         "emptySubtitle": "Try again later or check the metadata settings.",
-  "source": "Metadata source: $source",
-  "updated": "Last updated: $timestamp · Language: $language",
+        "source": "Metadata source: $source",
+        "updated": "Last updated: $timestamp · Language: $language",
         "languageSystem": "System default",
         "multiSource": "Merged sources"
       },
       "episodes": {
         "title": "Episodes",
         "collapse": "Collapse",
-  "expand": "Show all ($count)",
-  "numberedEpisode": "Episode $number",
+        "expand": "Show all ($count)",
+        "numberedEpisode": "Episode $number",
         "dateUnknown": "Date TBD",
         "runtimeUnknown": "Runtime unknown",
-  "runtimeMinutes": "$minutes min"
+        "runtimeMinutes": "$minutes minutes"
       },
       "errors": {
         "fetchFailed": "Failed to load, please try again."
@@ -752,10 +752,10 @@
       "danmakuEmpty": "Danmaku content cannot be empty",
       "danmakuTooLong": "Danmaku content is too long",
       "waitForVideo": "Please wait until the video finishes loading",
-    "enableDanmakuFirst": "Turn on danmaku first",
-    "danmakuSearchError": "Danmaku search failed: {error}",
-    "danmakuSearchEmpty": "No matching results found",
-    "danmakuSwitching": "Switching danmaku",
+      "enableDanmakuFirst": "Turn on danmaku first",
+      "danmakuSearchError": "Danmaku search failed: {error}",
+      "danmakuSearchEmpty": "No matching results found",
+      "danmakuSwitching": "Switching danmaku",
       "clipboardCopied": "Copied to clipboard",
       "internalError": "Player internal error: {details}"
     },

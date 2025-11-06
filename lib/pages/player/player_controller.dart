@@ -113,6 +113,8 @@ class PlayerController extends Notifier<PlayerState> {
     if (episodeFromTitle == 0) {
       episodeFromTitle = videoPageController.state.currentEpisode;
     }
+
+    // 🚀 优化：并行加载弹幕和创建播放器，不阻塞播放
     getDanDanmakuByBgmBangumiID(
         videoPageController.state.bangumiItem!.id, episodeFromTitle);
     mediaPlayer ??= await createVideoController(offset: offset);

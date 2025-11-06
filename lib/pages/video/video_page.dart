@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:canvas_danmaku/models/danmaku_content_item.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/pages/player/player_controller.dart';
@@ -32,6 +33,7 @@ import 'package:kazumi/pages/webview/providers.dart';
 import 'package:kazumi/pages/video/video_state.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/utils/parse_failure_helper.dart';
+import 'package:kazumi/plugins/plugins.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
 class VideoPage extends ConsumerStatefulWidget {
@@ -145,12 +147,12 @@ class _VideoPageState extends ConsumerState<VideoPage>
         showDebugConsole();
         return;
       }
-      
+
       // 检测解析失败并记录
       if (event.contains('解析视频资源超时')) {
         _handleParseFailure();
       }
-      
+
       // ✅ Update webviewLogLines via Riverpod provider
       final currentLogs = ref.read(webviewLogLinesProvider);
       ref.read(webviewLogLinesProvider.notifier).state = [
@@ -167,7 +169,7 @@ class _VideoPageState extends ConsumerState<VideoPage>
       final videoState = ref.read(videoProvider);
       final plugin = videoState.currentPlugin;
       final src = videoPageController.src;
-      
+
       if (plugin != null && src.isNotEmpty) {
         ParseFailureHelper.recordFailure(
           bangumiId: bangumiItem.id,
@@ -698,8 +700,8 @@ class _VideoPageState extends ConsumerState<VideoPage>
               ),
               // Top control bar: Always visible during loading, fullscreen, or parse failure
               // This ensures users can always navigate back even when parsing fails
-              if (isLoading || 
-                  isFullscreen || 
+              if (isLoading ||
+                  isFullscreen ||
                   webviewLogLines.any((log) => log.contains('解析视频资源超时')))
                 Positioned(
                   top: 0,
@@ -922,9 +924,9 @@ class _VideoPageState extends ConsumerState<VideoPage>
       _buildKeyValue(
           '原生播放器', useNativePlayer ? '是' : '否', labelStyle, valueStyle),
       _buildKeyValue(
-          '原生播放器(从插件)', 
-          plugin?.useNativePlayer == true ? '是' : (plugin?.useNativePlayer == false ? '否' : '--'), 
-          labelStyle, 
+          '原生播放器(从插件)',
+          plugin?.useNativePlayer == true ? '是' : (plugin?.useNativePlayer == false ? '否' : '--'),
+          labelStyle,
           valueStyle),
       _buildKeyValue('解析中', isLoading ? '是' : '否', labelStyle, valueStyle),
       _buildKeyValue(
@@ -1027,6 +1029,32 @@ class _VideoPageState extends ConsumerState<VideoPage>
                       '调试信息',
                       style: titleStyle,
                     ),
+                  ),
+                  IconButton(
+                    tooltip: '复制所有调试信息',
+                    onPressed: () => _copyAllDebugInfo(
+                      bangumiName: bangumiName,
+                      plugin: plugin,
+                      roadName: roadName,
+                      episodeText: episodeText,
+                      roadCount: roadCount,
+                      videoState: videoState,
+                      playerController: playerController,
+                      syncRoom: syncRoom,
+                      syncRtt: syncRtt,
+                      useNativePlayer: useNativePlayer,
+                      isLoading: isLoading,
+                      isPlayerLoading: isPlayerLoading,
+                      playerState: playerState,
+                      resolution: resolution,
+                      aspectRatioLabel: aspectRatioLabel,
+                      superResolutionLabel: superResolutionLabel,
+                      volumeText: volumeText,
+                      brightnessText: brightnessText,
+                      recentPlayerLogs: recentPlayerLogs,
+                      recentWebviewLogs: recentWebviewLogs,
+                    ),
+                    icon: const Icon(Icons.copy, color: Colors.white),
                   ),
                   IconButton(
                     tooltip: '关闭调试信息',
@@ -1169,6 +1197,113 @@ class _VideoPageState extends ConsumerState<VideoPage>
           ),
         ],
       ),
+    );
+  }
+
+  void _copyAllDebugInfo({
+    required String bangumiName,
+    required Plugin? plugin,
+    required String roadName,
+    required String episodeText,
+    required int roadCount,
+    required VideoPageState videoState,
+    required PlayerController playerController,
+    required String syncRoom,
+    required String syncRtt,
+    required bool useNativePlayer,
+    required bool isLoading,
+    required bool isPlayerLoading,
+    required PlayerState playerState,
+    required String resolution,
+    required String aspectRatioLabel,
+    required String superResolutionLabel,
+    required String volumeText,
+    required String brightnessText,
+    required List<String> recentPlayerLogs,
+    required List<String> recentWebviewLogs,
+  }) {
+    final hasPlayer = playerController.mediaPlayer != null;
+
+    final buffer = StringBuffer();
+    buffer.writeln('=== Kazumi 调试信息 ===');
+    buffer.writeln();
+
+    // 播放源
+    buffer.writeln('【播放源】');
+    buffer.writeln('番剧: $bangumiName');
+    buffer.writeln('插件: ${plugin?.name ?? '--'}');
+    buffer.writeln('线路: $roadName');
+    buffer.writeln('集数: $episodeText');
+    buffer.writeln('线路数量: $roadCount');
+    buffer.writeln('源标题: ${videoState.title}');
+    buffer.writeln('解析地址: ${videoState.src}');
+    buffer.writeln('播放地址: ${playerController.videoUrl.isEmpty ? '--' : playerController.videoUrl}');
+    buffer.writeln('DanDan ID: ${playerController.bangumiID == 0 ? '--' : playerController.bangumiID}');
+    buffer.writeln('SyncPlay 房间: $syncRoom');
+    buffer.writeln('SyncPlay RTT: $syncRtt');
+    buffer.writeln();
+
+    // 播放器状态
+    buffer.writeln('【播放器状态】');
+    buffer.writeln('插件名称: ${plugin?.name ?? '--'}');
+    buffer.writeln('原生播放器: ${useNativePlayer ? '是' : '否'}');
+    buffer.writeln('原生播放器(从插件): ${plugin?.useNativePlayer == true ? '是' : (plugin?.useNativePlayer == false ? '否' : '--')}');
+    buffer.writeln('解析中: ${isLoading ? '是' : '否'}');
+    buffer.writeln('播放器加载: ${isPlayerLoading ? '是' : '否'}');
+    buffer.writeln('播放器初始化: ${playerState.loading ? '是' : '否'}');
+    buffer.writeln('播放中: ${hasPlayer ? (playerController.playerPlaying ? '是' : '否') : '--'}');
+    buffer.writeln('缓冲中: ${hasPlayer ? (playerController.playerBuffering ? '是' : '否') : '--'}');
+    buffer.writeln('播放完成: ${hasPlayer ? (playerController.playerCompleted ? '是' : '否') : '--'}');
+    buffer.writeln('缓冲标志: ${playerState.isBuffering ? '是' : '否'}');
+    buffer.writeln();
+
+    // 时间与参数
+    buffer.writeln('【时间与参数】');
+    buffer.writeln('当前位置: ${_formatDuration(playerState.currentPosition)}');
+    buffer.writeln('缓冲进度: ${_formatDuration(playerState.buffer)}');
+    buffer.writeln('总时长: ${_formatDuration(playerState.duration)}');
+    buffer.writeln('播放速度: ${playerState.playerSpeed.toStringAsFixed(2)}x');
+    buffer.writeln('音量: $volumeText');
+    buffer.writeln('亮度: $brightnessText');
+    buffer.writeln('分辨率: $resolution');
+    buffer.writeln('Aspect Ratio: $aspectRatioLabel');
+    buffer.writeln('超分辨率: $superResolutionLabel');
+    buffer.writeln();
+
+    // 媒体轨道
+    buffer.writeln('【媒体轨道】');
+    buffer.writeln('视频参数: ${playerState.playerVideoParams}');
+    buffer.writeln('音频参数: ${playerState.playerAudioParams}');
+    buffer.writeln('播放列表: ${playerState.playerPlaylist}');
+    buffer.writeln('音频轨: ${playerState.playerAudioTracks}');
+    buffer.writeln('视频轨: ${playerState.playerVideoTracks}');
+    buffer.writeln('音频码率: ${playerState.playerAudioBitrate.isEmpty ? '--' : playerState.playerAudioBitrate}');
+    buffer.writeln();
+
+    // WebView 日志
+    buffer.writeln('【WebView 日志】');
+    if (recentWebviewLogs.isEmpty) {
+      buffer.writeln('--');
+    } else {
+      for (final log in recentWebviewLogs) {
+        buffer.writeln(log);
+      }
+    }
+    buffer.writeln();
+
+    // 播放器日志
+    buffer.writeln('【播放器日志】');
+    if (recentPlayerLogs.isEmpty) {
+      buffer.writeln('--');
+    } else {
+      for (final log in recentPlayerLogs) {
+        buffer.writeln(log);
+      }
+    }
+
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    KazumiDialog.showToast(
+      message: context.t.playback.toast.clipboardCopied,
     );
   }
 

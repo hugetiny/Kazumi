@@ -115,7 +115,7 @@ class WebviewItemControllerImpel
         if (isVideoSourceLoaded) {
           timer.cancel();
         } else {
-          if (count >= 15) {
+          if (count >= 30) {
             timer.cancel();
             isIframeLoaded = true;
             videoLoadingEventController.add(false);
@@ -168,7 +168,7 @@ class WebviewItemControllerImpel
 
           if (src && src.trim() !== '' && (src.startsWith('http') || src.startsWith('//')) && !src.includes('googleads') && !src.includes('adtrafficquality') && !src.includes('googlesyndication.com') && !src.includes('google.com') && !src.includes('prestrain.html') && !src.includes('prestrain%2Ehtml')) {
               IframeRedirectBridge.postMessage(src);
-              break; 
+              break;
           }
       }
   ''');
@@ -188,7 +188,7 @@ class WebviewItemControllerImpel
         if (src && src.trim() !== '' && !src.startsWith('blob:') && !src.includes('googleads')) {
           VideoBridgeDebug.postMessage(src);
           break;
-        } 
+        }
       }
       document.querySelectorAll('iframe').forEach((iframe) => {
         try {
@@ -199,7 +199,7 @@ class WebviewItemControllerImpel
               var src = videos[i].getAttribute('src');
               if (src && src.trim() !== '' && !src.startsWith('blob:') && !src.includes('googleads')) {
                 window.parent.postMessage({ message: 'videoMessage:' + src }, "*");
-              } 
+              }
             }
                   `);
         } catch { }
@@ -234,12 +234,12 @@ class WebviewItemControllerImpel
           });
           return _open.apply(this, args);
       }
-      
+
       function injectIntoIframe(iframe) {
         try {
           const iframeWindow = iframe.contentWindow;
           if (!iframeWindow) return;
-          
+
           const iframe_r_text = iframeWindow.Response.prototype.text;
           iframeWindow.Response.prototype.text = function () {
             return new Promise((resolve, reject) => {
@@ -251,7 +251,7 @@ class WebviewItemControllerImpel
               }).catch(reject);
             });
           }
-          
+
           const iframe_open = iframeWindow.XMLHttpRequest.prototype.open;
           iframeWindow.XMLHttpRequest.prototype.open = function (...args) {
             this.addEventListener("load", () => {
@@ -277,7 +277,7 @@ class WebviewItemControllerImpel
           }
           iframe.addEventListener('load', () => injectIntoIframe(iframe));
         });
-        
+
         const observer = new MutationObserver(mutations => {
           mutations.forEach(mutation => {
             if (mutation.type === 'childList') {
@@ -294,7 +294,7 @@ class WebviewItemControllerImpel
             }
           });
         });
-        
+
         observer.observe(document.body, { childList: true, subtree: true });
       }
 
@@ -302,7 +302,7 @@ class WebviewItemControllerImpel
         document.addEventListener('DOMContentLoaded', setupIframeListeners);
       } else {
         setupIframeListeners();
-      } 
+      }
     ''');
   }
 

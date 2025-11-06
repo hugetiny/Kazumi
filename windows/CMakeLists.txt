@@ -45,6 +45,10 @@ function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
 endfunction()
 
+# Load local resource cache module for build dependencies
+# This allows using local cached files (in build_resources/) before downloading from GitHub
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/LocalResourceCache.cmake)
+
 # Flutter library and tool build rules.
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})

@@ -69,7 +69,8 @@ class Plugin {
         searchResult: json['searchResult'],
         chapterRoads: json['chapterRoads'],
         chapterResult: json['chapterResult'],
-        referer: json['referer'] ?? '');
+        // Use referer if provided, otherwise fallback to baseURL
+        referer: json['referer'] ?? json['baseURL'] ?? '');
   }
 
   factory Plugin.fromTemplate() {

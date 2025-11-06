@@ -64,21 +64,27 @@ class WebviewAndroidItemControllerImpel
     this.useNativePlayer = useNativePlayer;
     videoLoadingEventController.add(true);
 
+    logEventController.add('🔍 开始解析: $url');
+
     await webviewController?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
     loadingMonitorTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (isVideoSourceLoaded || isIframeLoaded) {
         timer.cancel();
       } else {
         count++;
-        if (count >= 15) {
+        // Log progress every 5 seconds
+        if (count % 5 == 0) {
+          logEventController.add('⏳ 解析中... $count秒');
+        }
+        if (count >= 30) {
           timer.cancel();
           // Mark as loaded (failed) to stop loading state
           isIframeLoaded = true;
           videoLoadingEventController.add(false);
-          
+
           logEventController.add('clear');
-          logEventController.add('解析视频资源超时');
-          logEventController.add('请切换到其他播放列表或视频源');
+          logEventController.add('❌ 解析视频资源超时');
+          logEventController.add('💡 请切换到其他播放列表或视频源');
           logEventController.add('showDebug');
         }
       }
@@ -224,11 +230,22 @@ class WebviewAndroidItemControllerImpel
         window.XMLHttpRequest.prototype.open = function (...args) {
             this.addEventListener("load", () => {
                 try {
-                    let content = this.responseText;
-                    if (content.trim().startsWith("#EXTM3U")) {
-                        window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 source found: ' + args[1]);
-                        window.flutter_inappwebview.callHandler('VideoBridgeDebug', args[1]);
-                    };
+                    // Check if the URL looks like M3U8
+                    const url = args[1];
+                    if (url && (url.includes('.m3u8') || url.includes('m3u8'))) {
+                        window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 URL detected: ' + url);
+                        window.flutter_inappwebview.callHandler('VideoBridgeDebug', url);
+                        return;
+                    }
+
+                    // Try to read response content (only if responseType allows it)
+                    if (this.responseType === '' || this.responseType === 'text') {
+                        let content = this.responseText;
+                        if (content && content.trim().startsWith("#EXTM3U")) {
+                            window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 content found: ' + url);
+                            window.flutter_inappwebview.callHandler('VideoBridgeDebug', url);
+                        }
+                    }
                 } catch {}
             });
             return _open.apply(this, args);

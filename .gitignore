@@ -139,4 +139,8 @@ app.*.map.json
 # Project specific
 aria2/
 pubspec.lock
-.claude
+.claude/
+packages/
+
+# Windows build dependencies cache
+build_resources/

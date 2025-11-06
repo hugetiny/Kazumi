@@ -1,965 +1,981 @@
 {
-  "@@locale": "zh-TW",
-  "app": {
-    "title": "Kazumi",
-    "loading": "載入中…",
-    "retry": "重試",
-    "confirm": "確認",
-    "cancel": "取消",
-    "delete": "刪除"
-  },
-  "metadata": {
-    "sectionTitle": "作品資訊",
-    "refresh": "重新整理中繼資料",
-    "source": {
-      "bangumi": "Bangumi",
-      "tmdb": "TMDb"
-    },
-    "lastSynced": "最後同步：{timestamp}"
-  },
-  "downloads": {
-    "sectionTitle": "下載佇列",
-    "aria2Offline": "aria2 未連線",
-    "queued": "排隊中",
-    "running": "下載中",
-    "completed": "已完成"
-  },
-  "torrent": {
-    "consent": {
-      "title": "BitTorrent 使用提示",
-      "description": "啟用 BT 下載前，請確認遵守所在地法律並了解使用風險。",
-      "agree": "我已知悉，繼續",
-      "decline": "暫不開啟"
-    },
-    "error": {
-      "submit": "無法提交磁力連結，稍後重試"
-    }
-  },
-  "settings": {
-    "title": "設定",
-    "downloads": "下載設定",
-    "playback": "播放偏好",
-    "general": {
-      "title": "通用",
-      "appearance": "外觀",
-      "appearanceDesc": "設定應用程式主題和更新率",
-      "language": "應用程式語言",
-      "languageDesc": "選擇應用程式介面顯示語言",
-      "followSystem": "系統",
-      "exitBehavior": "關閉時",
-      "exitApp": "結束 Kazumi",
-      "minimizeToTray": "最小化至系統匣",
-      "askEveryTime": "每次都詢問"
-    },
-    "appearancePage": {
-      "title": "外觀設定",
-      "mode": {
-        "title": "主題模式",
-        "system": "系統",
-        "light": "淺色",
-        "dark": "深色"
-      },
-      "colorScheme": {
-        "title": "主題色",
-        "dialogTitle": "選擇主題色",
-        "dynamicColor": "使用動態配色",
-        "dynamicColorInfo": "在支援的裝置上會依據桌布產生調色盤（Android 12+/Windows 11）。",
-        "labels": {
-          "defaultLabel": "預設",
-          "teal": "青綠",
-          "blue": "藍色",
-          "indigo": "靛藍",
-          "violet": "紫羅蘭",
-          "pink": "粉紅",
-          "yellow": "黃色",
-          "orange": "橙色",
-          "deepOrange": "深橙色"
-        }
-      },
-      "oled": {
-        "title": "OLED 強化",
-        "description": "套用針對 OLED 顯示器最佳化的純黑主題。"
-      },
-      "window": {
-        "title": "視窗按鈕",
-        "description": "在標題列顯示視窗控制按鈕。"
-      },
-      "refreshRate": {
-        "title": "螢幕更新率"
-      }
-    },
-    "source": {
-      "title": "資訊來源",
-      "ruleManagement": "規則管理",
-      "ruleManagementDesc": "管理動畫資源規則與來源",
-      "githubProxy": "GitHub 代理",
-      "githubProxyDesc": "使用代理以存取規則倉庫"
-    },
-    "plugins": {
-      "title": "規則管理",
-      "empty": "目前沒有可用的規則",
-      "tooltip": {
-        "updateAll": "全部更新",
-        "addRule": "新增規則"
-      },
-      "multiSelect": {
-        "selectedCount": "已選取 {count} 項"
-      },
-      "loading": {
-        "updating": "正在更新規則…",
-        "updatingSingle": "更新中…",
-        "importing": "匯入中…"
-      },
-      "labels": {
-        "version": "版本: {version}",
-        "statusUpdatable": "可更新",
-        "statusSearchValid": "搜尋有效"
-      },
-      "actions": {
-        "newRule": "建立規則",
-        "importFromRepo": "從倉庫匯入",
-        "importFromClipboard": "從剪貼簿匯入",
+    "@@locale": "zh-TW",
+    "app": {
+        "title": "Kazumi",
+        "loading": "載入中…",
+        "retry": "重試",
+        "confirm": "確認",
         "cancel": "取消",
-        "import": "匯入",
-        "update": "更新",
-        "edit": "編輯",
-        "copyToClipboard": "複製到剪貼簿",
-        "share": "分享",
         "delete": "刪除"
-      },
-      "dialogs": {
-        "deleteTitle": "刪除規則",
-        "deleteMessage": "要刪除已選取的 {count} 項規則嗎？",
-        "importTitle": "匯入規則",
-        "shareTitle": "規則連結"
-      },
-      "toast": {
-        "allUpToDate": "所有規則皆為最新。",
-        "updateCount": "已更新 {count} 項規則。",
-        "importSuccess": "匯入成功。",
-        "importFailed": "匯入失敗: {error}",
-        "repoMissing": "倉庫中不包含此規則。",
-        "alreadyLatest": "規則已為最新。",
-        "updateSuccess": "更新成功。",
-        "updateIncompatible": "Kazumi 版本過舊，此規則不相容。",
-        "updateFailed": "更新規則失敗。",
-        "copySuccess": "已複製到剪貼簿。"
-      },
-      "editor": {
-        "title": "編輯規則",
-        "fields": {
-          "name": "規則名稱",
-          "version": "版本",
-          "baseUrl": "基礎 URL",
-          "searchUrl": "搜尋 URL",
-          "searchList": "搜尋列表 XPath",
-          "searchName": "搜尋標題 XPath",
-          "searchResult": "搜尋結果 XPath",
-          "chapterRoads": "劇集路徑 XPath",
-          "chapterResult": "劇集結果 XPath",
-          "userAgent": "User-Agent",
-          "referer": "Referer"
-        },
-        "advanced": {
-          "title": "進階設定",
-          "legacyParser": {
-            "title": "啟用舊版解析",
-            "subtitle": "使用舊版 XPath 解析邏輯以提升相容性。"
-          },
-          "httpPost": {
-            "title": "以 POST 發送搜尋",
-            "subtitle": "以 HTTP POST 方式送出搜尋請求。"
-          },
-          "nativePlayer": {
-            "title": "強制使用原生播放器",
-            "subtitle": "播放時優先使用內建播放器。"
-          }
-        }
-      },
-      "shop": {
-        "title": "規則倉庫",
-        "tooltip": {
-          "sortByName": "依名稱排序",
-          "sortByUpdate": "依更新時間排序",
-          "refresh": "重新整理規則清單"
-        },
-        "labels": {
-          "playerType": {
-            "native": "原生",
-            "webview": "WebView"
-          },
-          "lastUpdated": "最後更新：{timestamp}"
-        },
-        "buttons": {
-          "install": "新增",
-          "installed": "已新增",
-          "update": "更新",
-          "toggleMirrorEnable": "啟用鏡像",
-          "toggleMirrorDisable": "停用鏡像",
-          "refresh": "重新整理"
-        },
-        "toast": {
-          "importFailed": "匯入規則失敗。"
-        },
-        "error": {
-          "unreachable": "無法連線至倉庫\n{status}",
-          "mirrorEnabled": "已啟用鏡像",
-          "mirrorDisabled": "已停用鏡像"
-        }
-      }
     },
     "metadata": {
-      "title": "資訊來源",
-      "enableBangumi": "啟用 Bangumi 資訊來源",
-      "enableBangumiDesc": "從 Bangumi 取得番劇資訊",
-      "enableTmdb": "啟用 TMDb 資訊來源",
-      "enableTmdbDesc": "從 TMDb 補充多語系資料",
-      "preferredLanguage": "優先語言",
-      "preferredLanguageDesc": "設定中繼資料同步時要使用的語言",
-      "followSystemLanguage": "跟隨系統語言",
-      "simplifiedChinese": "簡體中文 (zh-CN)",
-      "traditionalChinese": "繁體中文 (zh-TW)",
-      "japanese": "日語 (ja-JP)",
-      "english": "英語 (en-US)",
-      "custom": "自訂"
-    },
-    "player": {
-      "title": "播放器設定",
-      "playerSettings": "播放器設定",
-      "playerSettingsDesc": "設定播放器參數",
-      "hardwareDecoding": "硬體解碼",
-      "hardwareDecoder": "硬體解碼器",
-      "hardwareDecoderDesc": "僅在啟用硬體解碼時生效",
-      "lowMemoryMode": "低記憶體模式",
-      "lowMemoryModeDesc": "停用進階快取以降低記憶體使用",
-      "lowLatencyAudio": "低延遲音訊",
-      "lowLatencyAudioDesc": "啟用 OpenSLES 音訊輸出以降低延遲",
-      "superResolution": "超解析度",
-      "autoJump": "自動跳轉",
-      "autoJumpDesc": "跳轉至上次播放位置",
-  "disableAnimations": "禁用影片",
-  "disableAnimationsDesc": "禁用播放器內的過渡影片",
-      "errorPrompt": "錯誤提示",
-      "errorPromptDesc": "顯示播放器內部錯誤提示",
-      "debugMode": "除錯模式",
-      "debugModeDesc": "記錄播放器內部日誌",
-      "privateMode": "私人模式",
-      "privateModeDesc": "不保留觀看紀錄",
-      "defaultPlaySpeed": "預設播放速度",
-      "defaultVideoAspectRatio": "預設影片長寬比",
-      "aspectRatio": {
-        "auto": "自動",
-        "crop": "裁切填滿",
-        "stretch": "拉伸填滿"
-      },
-      "danmakuSettings": "彈幕設定",
-      "danmakuSettingsDesc": "設定彈幕參數",
-      "danmaku": "彈幕",
-      "danmakuDefaultOn": "預設開啟",
-      "danmakuDefaultOnDesc": "是否預設與影片一同顯示彈幕",
-      "danmakuSource": "彈幕來源",
-      "danmakuSources": {
-        "bilibili": "Bilibili",
-        "gamer": "Gamer",
-        "dandan": "DanDan"
-      },
-      "danmakuCredentials": "憑證",
-      "danmakuDanDanCredentials": "DanDan API 憑證",
-      "danmakuDanDanCredentialsDesc": "自訂 DanDan 憑證",
-      "danmakuCredentialModeBuiltIn": "內建",
-      "danmakuCredentialModeCustom": "自訂",
-      "danmakuCredentialHint": "留空以使用內建憑證",
-      "danmakuCredentialNotConfigured": "未設定",
-      "danmakuCredentialsSummary": "App ID: {appId}\nAPI Key: {apiKey}",
-      "danmakuShield": "彈幕屏蔽",
-      "danmakuKeywordShield": "關鍵字屏蔽",
-      "danmakuShieldInputHint": "輸入關鍵字或正則表達式",
-  "danmakuShieldDescription": "以 \"/\" 包裹的文字會被視為正則表示式，例如 \"/\\d+/\" 可屏蔽所有數字",
-      "danmakuShieldCount": "已新增 {count} 筆關鍵字",
-      "danmakuStyle": "彈幕樣式",
-      "danmakuDisplay": "彈幕顯示",
-      "danmakuArea": "彈幕顯示區域",
-      "danmakuTopDisplay": "頂部彈幕",
-      "danmakuBottomDisplay": "底部彈幕",
-      "danmakuScrollDisplay": "滾動彈幕",
-      "danmakuMassiveDisplay": "大量彈幕",
-      "danmakuMassiveDescription": "畫面人多時以覆蓋方式渲染",
-      "danmakuOutline": "彈幕描邊",
-      "danmakuColor": "彈幕顏色",
-      "danmakuFontSize": "字型大小",
-      "danmakuFontWeight": "字重",
-      "danmakuOpacity": "彈幕不透明度",
-      "add": "新增",
-      "save": "儲存",
-      "restoreDefault": "還原預設",
-      "superResolutionTitle": "超解析度",
-      "superResolutionHint": "選擇預設的放大方案",
-      "superResolutionOptions": {
-        "off": {
-          "label": "關閉",
-          "description": "停用所有放大增強。"
+        "sectionTitle": "媒體資訊",
+        "refresh": "重新整理中繼資料",
+        "source": {
+            "bangumi": "Bangumi",
+            "tmdb": "TMDb"
         },
-        "efficiency": {
-          "label": "均衡",
-          "description": "在效能與畫質間取得平衡。"
+        "lastSynced": "最後同步：{timestamp}"
+    },
+    "downloads": {
+        "sectionTitle": "下載佇列",
+        "aria2Offline": "aria2 未連線",
+        "queued": "排隊中",
+        "running": "下載中",
+        "completed": "已完成"
+    },
+    "torrent": {
+        "consent": {
+            "title": "BitTorrent 使用通知",
+            "description": "啟用 BT 下載前，請確認遵守所在地法律並了解使用風險。",
+            "agree": "我已知悉，繼續",
+            "decline": "暫不開啟"
         },
-        "quality": {
-          "label": "畫質優先",
-          "description": "以資源換取最佳畫質。"
-        }
-      },
-      "superResolutionDefaultBehavior": "預設行為",
-      "superResolutionClosePrompt": "關閉提示",
-      "superResolutionClosePromptDesc": "啟用超解析度時關閉提示",
-      "toast": {
-        "danmakuKeywordEmpty": "請輸入關鍵字。",
-        "danmakuKeywordTooLong": "關鍵字過長。",
-        "danmakuKeywordExists": "關鍵字已存在。",
-        "danmakuCredentialsRestored": "已恢復為內建憑證。",
-        "danmakuCredentialsUpdated": "憑證已更新。"
-      }
-    },
-    "webdav": {
-      "title": "WebDAV",
-      "desc": "Configure sync parameters",
-      "pageTitle": "Sync Settings",
-      "editor": {
-        "title": "WebDAV Configuration",
-        "url": "URL",
-        "username": "Username",
-        "password": "Password",
-        "toast": {
-          "saveSuccess": "Configuration saved. Starting test...",
-          "saveFailed": "Failed to save configuration: {error}",
-          "testSuccess": "Test succeeded.",
-          "testFailed": "Test failed: {error}"
-        }
-      },
-      "section": {
-        "webdav": "WebDAV"
-      },
-      "tile": {
-        "webdavToggle": "WebDAV Sync",
-        "historyToggle": "Watch History Sync",
-        "historyDescription": "Allow automatic syncing of watch history",
-        "config": "WebDAV Configuration",
-        "manualUpload": "Manual Upload",
-        "manualDownload": "Manual Download"
-      },
-      "info": {
-        "upload": "Upload your watch history to WebDAV immediately.",
-        "download": "Sync your watch history to this device immediately."
-      },
-      "toast": {
-        "uploading": "Attempting to upload to WebDAV...",
-        "downloading": "Attempting to sync from WebDAV...",
-        "notConfigured": "WebDAV sync is disabled or configuration is invalid.",
-        "connectionFailed": "Failed to connect to WebDAV: {error}",
-        "syncFailed": "WebDAV sync failed: {error}"
-      },
-      "result": {
-        "initFailed": "WebDAV initialization failed: {error}",
-        "requireEnable": "Please enable WebDAV sync first.",
-        "disabled": "WebDAV sync is disabled or configuration is invalid.",
-        "connectionFailed": "Failed to connect to WebDAV.",
-        "syncSuccess": "Sync succeeded.",
-        "syncFailed": "Sync failed: {error}"
-      }
-    },
-    "update": {
-      "fallbackDescription": "No release notes provided.",
-      "error": {
-        "invalidResponse": "Invalid update response."
-      },
-      "dialog": {
-        "title": "New version {version} available",
-        "publishedAt": "Released on {date}",
-        "installationTypeLabel": "Select installation package",
-        "actions": {
-          "disableAutoUpdate": "Disable auto update",
-          "remindLater": "Remind me later",
-          "viewDetails": "View details",
-          "updateNow": "Update now"
-        }
-      },
-      "installationType": {
-        "windowsMsix": "Windows installer (MSIX)",
-        "windowsPortable": "Windows portable (ZIP)",
-        "linuxDeb": "Linux package (DEB)",
-        "linuxTar": "Linux archive (TAR.GZ)",
-        "macosDmg": "macOS installer (DMG)",
-        "androidApk": "Android package (APK)",
-        "ios": "iOS app (open GitHub)",
-        "unknown": "Other platform"
-      },
-      "toast": {
-        "alreadyLatest": "You're up to date.",
-        "checkFailed": "Failed to check for updates. Please try again later.",
-        "autoUpdateDisabled": "Automatic updates disabled.",
-        "downloadLinkMissing": "No download available for {type}.",
-        "downloadFailed": "Download failed: {error}",
-        "noCompatibleLink": "No compatible download link found.",
-        "prepareToInstall": "Preparing to install the update. The app will exit…",
-        "openInstallerFailed": "Unable to open installer: {error}",
-        "launchInstallerFailed": "Failed to launch installer: {error}",
-        "revealFailed": "Unable to open the file manager.",
-        "unknownReason": "Unknown reason"
-      },
-      "download": {
-        "progressTitle": "Downloading update",
-        "cancel": "Cancel",
         "error": {
-          "title": "Download failed",
-          "general": "The update could not be downloaded.",
-          "permission": "Insufficient permissions to write the file.",
-          "diskFull": "Not enough disk space.",
-          "network": "Network connection failed.",
-          "integrity": "File integrity check failed. Please try again.",
-          "details": "Technical details: {error}",
-          "confirm": "OK",
-          "retry": "Retry"
-        },
-        "complete": {
-          "title": "Download complete",
-          "message": "Kazumi {version} downloaded.",
-          "quitNotice": "The app will exit during installation.",
-          "fileLocation": "File saved to",
-          "buttons": {
-            "later": "Later",
-            "openFolder": "Open folder",
-            "installNow": "Install now"
-          }
+            "submit": "無法提交磁力連結，稍後重試"
         }
-      }
     },
-    "about": {
-      "title": "About",
-      "sections": {
-        "licenses": {
-          "title": "Open source licenses",
-          "description": "View all open source licenses"
+    "settings": {
+        "title": "設定",
+        "downloads": "下載設定",
+        "playback": "播放偏好",
+        "general": {
+            "title": "一般",
+            "appearance": "外觀",
+            "appearanceDesc": "設定應用程式主題和刷新率",
+            "language": "應用程式語言",
+            "languageDesc": "選擇應用程式介面的顯示語言",
+            "followSystem": "系統",
+            "exitBehavior": "關閉時",
+            "exitApp": "結束 Kazumi",
+            "minimizeToTray": "最小化至系統匣",
+            "askEveryTime": "每次詢問"
         },
-        "links": {
-          "title": "External links",
-          "project": "Project homepage",
-          "repository": "Source repository",
-          "icon": "Icon design",
-          "index": "Anime index",
-          "danmaku": "Danmaku provider",
-          "danmakuId": "ID: {id}"
+        "appearancePage": {
+            "title": "外觀",
+            "mode": {
+                "title": "主題模式",
+                "system": "系統",
+                "light": "淺色",
+                "dark": "深色"
+            },
+            "colorScheme": {
+                "title": "強調色",
+                "dialogTitle": "選擇強調色",
+                "dynamicColor": "使用動態色彩",
+                "dynamicColorInfo": "在支援的裝置上根據您的桌布生成調色板（Android 12+ / Windows 11）。",
+                "labels": {
+                    "defaultLabel": "預設",
+                    "teal": "青色",
+                    "blue": "藍色",
+                    "indigo": "靛藍",
+                    "violet": "紫羅蘭",
+                    "pink": "粉色",
+                    "yellow": "黃色",
+                    "orange": "橙色",
+                    "deepOrange": "深橙色"
+                }
+            },
+            "oled": {
+                "title": "OLED 對比",
+                "description": "使用針對 OLED 顯示器最佳化的更深黑色。"
+            },
+            "window": {
+                "title": "視窗按鈕",
+                "description": "在標題欄顯示視窗控制按鈕。"
+            },
+            "refreshRate": {
+                "title": "刷新率"
+            }
+        },
+        "source": {
+            "title": "來源",
+            "ruleManagement": "規則管理",
+            "ruleManagementDesc": "管理動畫資源規則",
+            "githubProxy": "GitHub 代理",
+            "githubProxyDesc": "使用代理存取規則儲存庫"
+        },
+        "plugins": {
+            "title": "規則管理",
+            "empty": "沒有可用的規則",
+            "tooltip": {
+                "updateAll": "全部更新",
+                "addRule": "新增規則"
+            },
+            "sort": {
+                "title": "排序方式",
+                "tooltip": "排序",
+                "options": {
+                    "original": "原始順序",
+                    "nameAsc": "名稱（Ａ → ３）",
+                    "nameDesc": "名稱（３ → Ａ）",
+                    "failureAsc": "失敗次數（低 → 高）",
+                    "failureDesc": "失敗次數（高 → 低）"
+                }
+            },
+            "multiSelect": {
+                "selectedCount": "已選擇 {count} 項"
+            },
+            "loading": {
+                "updating": "正在更新規則…",
+                "updatingSingle": "更新中…",
+                "importing": "導入中…"
+            },
+            "labels": {
+                "version": "版本：{version}",
+                "statusUpdatable": "可更新",
+                "statusSearchValid": "搜尋有效"
+            },
+            "actions": {
+                "newRule": "建立規則",
+                "importFromRepo": "從儲存庫匯入",
+                "importFromClipboard": "從剪貼簿匯入",
+                "cancel": "取消",
+                "import": "匯入",
+                "update": "更新",
+                "edit": "編輯",
+                "copyToClipboard": "複製到剪貼簿",
+                "share": "分享",
+                "delete": "刪除"
+            },
+            "dialogs": {
+                "deleteTitle": "刪除規則",
+                "deleteMessage": "確定要刪除選定的 {count} 個規則嗎？",
+                "importTitle": "匯入規則",
+                "shareTitle": "規則連結"
+            },
+            "toast": {
+                "allUpToDate": "所有規則都是最新的。",
+                "updateCount": "已更新 {count} 個規則。",
+                "importSuccess": "匯入成功。",
+                "importFailed": "匯入失敗：{error}",
+                "repoMissing": "儲存庫中沒有此規則。",
+                "alreadyLatest": "規則已經是最新的。",
+                "updateSuccess": "更新成功。",
+                "updateIncompatible": "Kazumi 版本過舊；此規則不相容。",
+                "updateFailed": "規則更新失敗。",
+                "copySuccess": "已複製到剪貼簿。"
+            },
+            "editor": {
+                "title": "編輯規則",
+                "fields": {
+                    "name": "規則名稱",
+                    "version": "版本",
+                    "baseUrl": "基礎 URL",
+                    "searchUrl": "搜尋 URL",
+                    "searchList": "搜尋列表 XPath",
+                    "searchName": "搜尋標題 XPath",
+                    "searchResult": "搜尋結果 XPath",
+                    "chapterRoads": "播放清單 XPath",
+                    "chapterResult": "播放清單結果 XPath",
+                    "userAgent": "User-Agent",
+                    "referer": "Referer"
+                },
+                "advanced": {
+                    "title": "進階選項",
+                    "legacyParser": {
+                        "title": "啟用舊版解析器",
+                        "subtitle": "使用舊版 XPath 解析器以保持相容性。"
+                    },
+                    "httpPost": {
+                        "title": "透過 POST 發送搜尋",
+                        "subtitle": "使用 HTTP POST 提交搜尋要求。"
+                    },
+                    "nativePlayer": {
+                        "title": "強制原生播放器",
+                        "subtitle": "啟動播放時優先使用內建播放器。"
+                    }
+                }
+            },
+            "shop": {
+                "title": "規則儲存庫",
+                "tooltip": {
+                    "sortByName": "按名稱排序",
+                    "sortByUpdate": "按最後更新排序",
+                    "refresh": "重新整理規則列表"
+                },
+                "labels": {
+                    "playerType": {
+                        "native": "原生",
+                        "webview": "網頁檢視"
+                    },
+                    "lastUpdated": "最後更新：{timestamp}"
+                },
+                "buttons": {
+                    "install": "新增",
+                    "installed": "已新增",
+                    "update": "更新",
+                    "toggleMirrorEnable": "啟用鏡像",
+                    "toggleMirrorDisable": "停用鏡像",
+                    "refresh": "重新整理"
+                },
+                "toast": {
+                    "importFailed": "規則匯入失敗。"
+                },
+                "error": {
+                    "unreachable": "無法連線到儲存庫\n{status}",
+                    "mirrorEnabled": "鏡像已啟用",
+                    "mirrorDisabled": "鏡像已停用"
+                }
+            }
+        },
+        "metadata": {
+            "title": "資訊來源",
+            "enableBangumi": "啟用 Bangumi 資訊來源",
+            "enableBangumiDesc": "從 Bangumi 獲取動畫資訊",
+            "enableTmdb": "啟用 TMDb 資訊來源",
+            "enableTmdbDesc": "從 TMDb 補充多語言資料",
+            "preferredLanguage": "偏好語言",
+            "preferredLanguageDesc": "設定中繼資料同步的語言",
+            "followSystemLanguage": "跟隨系統語言",
+            "simplifiedChinese": "簡體中文（zh-CN）",
+            "traditionalChinese": "繁體中文（zh-TW）",
+            "japanese": "日語（ja-JP）",
+            "english": "英語（en-US）",
+            "custom": "自訂"
+        },
+        "player": {
+            "title": "播放器設定",
+            "playerSettings": "播放器設定",
+            "playerSettingsDesc": "設定播放器參數",
+            "hardwareDecoding": "硬體解碼",
+            "hardwareDecoder": "硬體解碼器",
+            "hardwareDecoderDesc": "僅在硬體解碼啟用時生效",
+            "lowMemoryMode": "低記憶體模式",
+            "lowMemoryModeDesc": "停用進階快取以減少記憶體使用量",
+            "lowLatencyAudio": "低延遲音訊",
+            "lowLatencyAudioDesc": "啟用 OpenSLES 音訊輸出以降低延遲",
+            "superResolution": "超解析度",
+            "autoJump": "自動跳轉",
+            "autoJumpDesc": "跳轉到上次播放位置",
+            "disableAnimations": "停用過渡動畫",
+            "disableAnimationsDesc": "停用播放器內的過渡動畫",
+            "errorPrompt": "錯誤提示",
+            "errorPromptDesc": "顯示播放器內部錯誤提示",
+            "debugMode": "除錯模式",
+            "debugModeDesc": "記錄播放器內部日誌",
+            "privateMode": "私密模式",
+            "privateModeDesc": "不保留觀看歷史",
+            "defaultPlaySpeed": "預設播放速度",
+            "defaultVideoAspectRatio": "預設影片比例",
+            "aspectRatio": {
+                "auto": "自動",
+                "crop": "裁切填充",
+                "stretch": "拉伸填充"
+            },
+            "danmakuSettings": "彈幕設定",
+            "danmakuSettingsDesc": "設定彈幕參數",
+            "danmaku": "彈幕",
+            "danmakuDefaultOn": "預設開啟",
+            "danmakuDefaultOnDesc": "是否預設與影片一起播放彈幕",
+            "danmakuSource": "彈幕來源",
+            "danmakuSources": {
+                "bilibili": "Bilibili",
+                "gamer": "Gamer",
+                "dandan": "DanDan"
+            },
+            "danmakuCredentials": "憑證",
+            "danmakuDanDanCredentials": "DanDan API 憑證",
+            "danmakuDanDanCredentialsDesc": "自訂 DanDan 憑證",
+            "danmakuCredentialModeBuiltIn": "內建",
+            "danmakuCredentialModeCustom": "自訂",
+            "danmakuCredentialHint": "留空使用內建憑證",
+            "danmakuCredentialNotConfigured": "未設定",
+            "danmakuCredentialsSummary": "App ID: {appId}\nAPI Key: {apiKey}",
+            "danmakuShield": "彈幕遮罩",
+            "danmakuKeywordShield": "關鍵字遮罩",
+            "danmakuShieldInputHint": "輸入關鍵字或正規表示式",
+            "danmakuShieldDescription": "以「/」開頭和結尾的文字將視為正規表示式，例如「/\\\\d+/」遮罩所有數字",
+            "danmakuShieldCount": "已新增 {count} 個關鍵字",
+            "danmakuStyle": "彈幕樣式",
+            "danmakuDisplay": "彈幕顯示",
+            "danmakuArea": "彈幕區域",
+            "danmakuTopDisplay": "頂部彈幕",
+            "danmakuBottomDisplay": "底部彈幕",
+            "danmakuScrollDisplay": "滾動彈幕",
+            "danmakuMassiveDisplay": "大量彈幕",
+            "danmakuMassiveDescription": "當螢幕擁擠時以重疊方式渲染",
+            "danmakuOutline": "彈幕描邊",
+            "danmakuColor": "彈幕顏色",
+            "danmakuFontSize": "字體大小",
+            "danmakuFontWeight": "字體粗細",
+            "danmakuOpacity": "彈幕透明度",
+            "add": "新增",
+            "save": "儲存",
+            "restoreDefault": "恢復預設",
+            "superResolutionTitle": "超解析度",
+            "superResolutionHint": "選擇預設的升級配置",
+            "superResolutionOptions": {
+                "off": {
+                    "label": "關閉",
+                    "description": "停用所有升級增強功能。"
+                },
+                "efficiency": {
+                    "label": "平衡",
+                    "description": "平衡效能使用與畫質。"
+                },
+                "quality": {
+                    "label": "品質優先",
+                    "description": "最大化視覺品質，消耗更多資源。"
+                }
+            },
+            "superResolutionDefaultBehavior": "預設行為",
+            "superResolutionClosePrompt": "關閉提示",
+            "superResolutionClosePromptDesc": "啟用超解析度時關閉提示",
+            "toast": {
+                "danmakuKeywordEmpty": "請輸入關鍵字。",
+                "danmakuKeywordTooLong": "關鍵字太長。",
+                "danmakuKeywordExists": "關鍵字已存在。",
+                "danmakuCredentialsRestored": "已恢復內建憑證。",
+                "danmakuCredentialsUpdated": "憑證已更新。"
+            }
+        },
+        "webdav": {
+            "title": "WebDAV",
+            "desc": "設定同步參數",
+            "pageTitle": "同步設定",
+            "editor": {
+                "title": "WebDAV 設定",
+                "url": "網址",
+                "username": "使用者名稱",
+                "password": "密碼",
+                "toast": {
+                    "saveSuccess": "設定已儲存。開始測試…",
+                    "saveFailed": "儲存設定失敗：{error}",
+                    "testSuccess": "測試成功。",
+                    "testFailed": "測試失敗：{error}"
+                }
+            },
+            "section": {
+                "webdav": "WebDAV"
+            },
+            "tile": {
+                "webdavToggle": "WebDAV 同步",
+                "historyToggle": "觀看歷史同步",
+                "historyDescription": "允許自動同步觀看歷史",
+                "config": "WebDAV 設定",
+                "manualUpload": "手動上傳",
+                "manualDownload": "手動下載"
+            },
+            "info": {
+                "upload": "立即將您的觀看歷史上傳至 WebDAV。",
+                "download": "立即將您的觀看歷史同步到此裝置。"
+            },
+            "toast": {
+                "uploading": "嘗試上傳至 WebDAV…",
+                "downloading": "嘗試從 WebDAV 同步…",
+                "notConfigured": "WebDAV 同步已停用或設定無效。",
+                "connectionFailed": "連線到 WebDAV 失敗：{error}",
+                "syncFailed": "WebDAV 同步失敗：{error}"
+            },
+            "result": {
+                "initFailed": "WebDAV 初始化失敗：{error}",
+                "requireEnable": "請先啟用 WebDAV 同步。",
+                "disabled": "WebDAV 同步已停用或設定無效。",
+                "connectionFailed": "連線到 WebDAV 失敗。",
+                "syncSuccess": "同步成功。",
+                "syncFailed": "同步失敗：{error}"
+            }
+        },
+        "update": {
+            "fallbackDescription": "未提供發行說明。",
+            "error": {
+                "invalidResponse": "無效的更新回應。"
+            },
+            "dialog": {
+                "title": "有新的版本 {version} 可用",
+                "publishedAt": "發布於 {date}",
+                "installationTypeLabel": "選擇安裝套件",
+                "actions": {
+                    "disableAutoUpdate": "停用自動更新",
+                    "remindLater": "稍後提醒",
+                    "viewDetails": "檢視詳情",
+                    "updateNow": "立即更新"
+                }
+            },
+            "installationType": {
+                "windowsMsix": "Windows 安裝程式 (MSIX)",
+                "windowsPortable": "Windows 攜帶版 (ZIP)",
+                "linuxDeb": "Linux 套件 (DEB)",
+                "linuxTar": "Linux 封存檔 (TAR.GZ)",
+                "macosDmg": "macOS 安裝程式 (DMG)",
+                "androidApk": "Android 套件 (APK)",
+                "ios": "iOS 應用程式（開啟 GitHub）",
+                "unknown": "其他平台"
+            },
+            "toast": {
+                "alreadyLatest": "您已是最新版本。",
+                "checkFailed": "檢查更新失敗。請稍後再試。",
+                "autoUpdateDisabled": "自動更新已停用。",
+                "downloadLinkMissing": "沒有 {type} 的下載連結。",
+                "downloadFailed": "下載失敗：{error}",
+                "noCompatibleLink": "找不到相容的下載連結。",
+                "prepareToInstall": "正在準備安裝更新。應用程式將離開…",
+                "openInstallerFailed": "無法開啟安裝程式：{error}",
+                "launchInstallerFailed": "啟動安裝程式失敗：{error}",
+                "revealFailed": "無法開啟檔案管理器。",
+                "unknownReason": "未知原因"
+            },
+            "download": {
+                "progressTitle": "正在下載更新",
+                "cancel": "取消",
+                "error": {
+                    "title": "下載失敗",
+                    "general": "無法下載更新。",
+                    "permission": "權限不足，無法寫入檔案。",
+                    "diskFull": "磁碟空間不足。",
+                    "network": "網路連線失敗。",
+                    "integrity": "檔案完整性檢查失敗。請重試。",
+                    "details": "技術詳情：{error}",
+                    "confirm": "確定",
+                    "retry": "重試"
+                },
+                "complete": {
+                    "title": "下載完成",
+                    "message": "已下載 Kazumi {version}。",
+                    "quitNotice": "應用程式將在安裝期間離開。",
+                    "fileLocation": "檔案儲存至",
+                    "buttons": {
+                        "later": "稍後",
+                        "openFolder": "開啟資料夾",
+                        "installNow": "立即安裝"
+                    }
+                }
+            }
+        },
+        "other": {
+            "title": "其他",
+            "about": "关于"
+        },
+        "about": {
+            "title": "關於",
+            "sections": {
+                "licenses": {
+                    "title": "開源許可證",
+                    "description": "查看所有開源許可證"
+                },
+                "links": {
+                    "title": "外部連結",
+                    "project": "專案首頁",
+                    "repository": "原始碼儲存庫",
+                    "icon": "圖標設計",
+                    "index": "動畫索引",
+                    "danmaku": "彈幕提供者",
+                    "danmakuId": "ID：{id}"
+                },
+                "cache": {
+                    "clearAction": "清除快取",
+                    "sizePending": "計算中…",
+                    "sizeLabel": "{size} MB"
+                },
+                "updates": {
+                    "title": "應用程式更新",
+                    "autoUpdate": "自動更新",
+                    "check": "檢查更新",
+                    "currentVersion": "目前版本 {version}"
+                }
+            },
+            "logs": {
+                "title": "應用程式日誌",
+                "empty": "沒有可用的日誌條目。",
+                "toast": {
+                    "cleared": "日誌已清除。",
+                    "clearFailed": "清除日誌失敗。"
+                }
+            }
+        }
+    },
+    "exitDialog": {
+        "title": "結束確認",
+        "message": "您想要結束 Kazumi 嗎？",
+        "dontAskAgain": "下次不要再詢問",
+        "exit": "結束 Kazumi",
+        "minimize": "最小化至系統匣",
+        "cancel": "取消"
+    },
+    "tray": {
+        "showWindow": "顯示視窗",
+        "exit": "結束 Kazumi"
+    },
+    "navigation": {
+        "tabs": {
+            "popular": "熱門番組",
+            "timeline": "時間表",
+            "my": "我的",
+            "settings": "設定"
+        },
+        "actions": {
+            "search": "搜尋",
+            "history": "歷史紀錄",
+            "close": "關閉"
+        }
+    },
+    "dialogs": {
+        "disclaimer": {
+            "title": "免責聲明",
+            "agree": "已閱讀並同意",
+            "exit": "結束"
+        },
+        "updateMirror": {
+            "title": "更新鏡像",
+            "question": "您希望從哪裡取得應用程式更新？",
+            "description": "GitHub 鏡像適用於大多數情況。如果您使用 F-Droid 應用程式商店，請選擇 F-Droid 鏡像。",
+            "options": {
+                "github": "GitHub",
+                "fdroid": "F-Droid"
+            }
+        },
+        "pluginUpdates": {
+            "toast": "偵測到 {count} 個規則可以更新"
+        },
+        "webdav": {
+            "syncFailed": "同步觀看紀錄失敗 {error}"
+        },
+        "about": {
+            "licenseLegalese": "開放原始碼授權"
         },
         "cache": {
-          "clearAction": "Clear cache",
-          "sizePending": "Calculating…",
-          "sizeLabel": "{size} MB"
-        },
-        "updates": {
-          "title": "App updates",
-          "autoUpdate": "Auto update",
-          "check": "Check for updates",
-          "currentVersion": "Current version {version}"
+            "title": "快取管理",
+            "message": "快取包含番劇封面，清除後載入時需要重新下載，確認要清除快取嗎？"
         }
-      },
-      "logs": {
-        "title": "Application logs",
-        "empty": "No log entries available.",
+    },
+    "library": {
+        "common": {
+            "emptyState": "找不到內容",
+            "retry": "點擊重試",
+            "backHint": "再按一次以結束 Kazumi",
+            "toast": {
+                "editMode": "編輯模式已啟用。"
+            }
+        },
+        "popular": {
+            "title": "熱門番組",
+            "allTag": "全部",
+            "toast": {
+                "backPress": "再按一次以結束 Kazumi"
+            }
+        },
+        "timeline": {
+            "weekdays": {
+                "mon": "一",
+                "tue": "二",
+                "wed": "三",
+                "thu": "四",
+                "fri": "五",
+                "sat": "六",
+                "sun": "日"
+            },
+            "seasonPicker": {
+                "title": "時光機",
+                "yearLabel": "{year}"
+            },
+            "season": {
+                "title": "{season} {year}",
+                "loading": "載入中…",
+                "names": {
+                    "winter": "冬",
+                    "spring": "春",
+                    "summer": "夏",
+                    "autumn": "秋"
+                },
+                "short": {
+                    "winter": "冬",
+                    "spring": "春",
+                    "summer": "夏",
+                    "autumn": "秋"
+                }
+            },
+            "sort": {
+                "title": "排序方式",
+                "byHeat": "依人氣排序",
+                "byRating": "依評分排序",
+                "byTime": "依播出時間排序"
+            }
+        },
+        "search": {
+            "sort": {
+                "label": "搜尋排序",
+                "byHeat": "依熱門度排序",
+                "byRating": "依評分排序",
+                "byRelevance": "依相關度排序"
+            },
+            "noHistory": "尚無搜尋紀錄"
+        },
+        "history": {
+            "title": "觀看紀錄",
+            "empty": "尚無觀看紀錄",
+            "chips": {
+                "source": "來源",
+                "progress": "進度",
+                "episodeNumber": "第 {number} 集"
+            },
+            "toast": {
+                "sourceMissing": "找不到關聯的來源。"
+            },
+            "manage": {
+                "title": "紀錄管理",
+                "confirmClear": "要清除所有觀看紀錄嗎？",
+                "cancel": "取消",
+                "confirm": "確認"
+            }
+        },
+        "info": {
+            "summary": {
+                "title": "劇情簡介",
+                "expand": "顯示更多",
+                "collapse": "顯示較少"
+            },
+            "tags": {
+                "title": "標籤",
+                "more": "更多 +"
+            },
+            "metadata": {
+                "refresh": "重新整理",
+                "syncingTitle": "同步中繼資料中…",
+                "syncingSubtitle": "首次同步可能需要幾秒鐘。",
+                "emptyTitle": "尚無官方中繼資料",
+                "emptySubtitle": "請稍後重試或檢查中繼資料設定。",
+                "source": "中繼資料來源：$source",
+                "updated": "最後更新：$timestamp · 語言：$language",
+                "languageSystem": "系統預設",
+                "multiSource": "合併來源"
+            },
+            "episodes": {
+                "title": "分集",
+                "collapse": "摺疊",
+                "expand": "顯示全部（$count）",
+                "numberedEpisode": "第 $number 集",
+                "dateUnknown": "播出日期待定",
+                "runtimeUnknown": "片長未知",
+                "runtimeMinutes": "$minutes 分鐘"
+            },
+            "errors": {
+                "fetchFailed": "載入失敗，請重試。"
+            },
+            "tabs": {
+                "overview": "總覽",
+                "comments": "評論",
+                "characters": "角色",
+                "reviews": "心得",
+                "staff": "製作人員",
+                "placeholder": "即將推出"
+            },
+            "actions": {
+                "startWatching": "開始觀看"
+            },
+            "toast": {
+                "characterSortFailed": "排序角色失敗：{details}"
+            },
+            "sourceSheet": {
+                "title": "選擇播放來源 ({name})",
+                "alias": {
+                    "deleteTooltip": "刪除別名",
+                    "deleteTitle": "刪除別名",
+                    "deleteMessage": "此操作無法撤銷。確定要刪除此別名嗎？"
+                },
+                "toast": {
+                    "aliasEmpty": "沒有可用的別名。請先手動新增後再搜尋。",
+                    "loadFailed": "載入播放路線失敗。",
+                    "removed": "已移除來源 {plugin}。"
+                },
+                "sort": {
+                    "title": "排序方式",
+                    "tooltip": "排序：{label}",
+                    "options": {
+                        "original": "原始順序",
+                        "nameAsc": "名稱（Ａ → ３）",
+                        "nameDesc": "名稱（３ → Ａ）",
+                        "failureAsc": "失敗次數（低 → 高）",
+                        "failureDesc": "失敗次數（高 → 低）"
+                    }
+                },
+                "card": {
+                    "title": "來源 · {plugin}",
+                    "play": "播放"
+                },
+                "actions": {
+                    "searchAgain": "重新搜尋",
+                    "aliasSearch": "別名搜尋",
+                    "removeSource": "移除來源"
+                },
+                "status": {
+                    "searching": "{plugin} 搜尋中…",
+                    "failed": "{plugin} 搜尋失敗",
+                    "empty": "{plugin} 沒有回傳結果"
+                },
+                "empty": {
+                    "searching": "搜尋中，請稍候…",
+                    "noResults": "找不到播放來源。請嘗試重新搜尋或使用別名。"
+                },
+                "dialog": {
+                    "removeTitle": "移除來源",
+                    "removeMessage": "移除來源 {plugin}？"
+                }
+            }
+        },
+        "my": {
+            "title": "我的",
+            "sections": {
+                "video": "影片"
+            },
+            "favorites": {
+                "title": "收藏",
+                "description": "查看追看、計劃與已看完清單",
+                "empty": "尚無收藏項目。",
+                "tabs": {
+                    "watching": "觀看中",
+                    "planned": "計劃觀看",
+                    "completed": "已完成",
+                    "empty": "尚無項目。"
+                },
+                "sync": {
+                    "disabled": "WebDAV 同步已停用。",
+                    "editing": "編輯模式下無法同步。"
+                }
+            },
+            "history": {
+                "title": "播放歷史",
+                "description": "查看您看過的節目"
+            }
+        }
+    },
+    "playback": {
         "toast": {
-          "cleared": "Logs cleared.",
-          "clearFailed": "Failed to clear logs."
+            "screenshotProcessing": "正在擷取螢幕截圖…",
+            "screenshotSaved": "螢幕截圖已儲存至相簿",
+            "screenshotSaveFailed": "儲存螢幕截圖失敗：{error}",
+            "screenshotError": "螢幕截圖失敗：{error}",
+            "playlistEmpty": "播放清單為空",
+            "episodeLatest": "已經是最新的集數",
+            "loadingEpisode": "正在載入 {identifier}",
+            "danmakuUnsupported": "此集數不支援發送彈幕",
+            "danmakuEmpty": "彈幕內容不能為空",
+            "danmakuTooLong": "彈幕內容過長",
+            "waitForVideo": "請等待影片載入完成",
+            "enableDanmakuFirst": "請先開啟彈幕",
+            "danmakuSearchError": "彈幕搜尋失敗：{error}",
+            "danmakuSearchEmpty": "找不到相符的結果",
+            "danmakuSwitching": "正在切換彈幕",
+            "clipboardCopied": "已複製到剪貼簿",
+            "internalError": "播放器內部錯誤：{details}"
+        },
+        "danmaku": {
+            "inputHint": "分享友善的彈幕",
+            "inputDisabled": "彈幕已關閉",
+            "send": "發送",
+            "mobileButton": "點擊發送彈幕",
+            "mobileButtonDisabled": "彈幕已停用"
+        },
+        "externalPlayer": {
+            "launching": "正在嘗試開啟外部播放器",
+            "launchFailed": "無法開啟外部播放器",
+            "unavailable": "外部播放器不可用",
+            "unsupportedDevice": "此裝置尚未支援",
+            "unsupportedPlugin": "此外掛程式尚未支援"
+        },
+        "controls": {
+            "speed": {
+                "title": "播放速度",
+                "reset": "預設速度"
+            },
+            "skip": {
+                "title": "跳過時長",
+                "tooltip": "長按變更時長"
+            },
+            "status": {
+                "fastForward": "快進 {seconds} 秒",
+                "rewind": "快退 {seconds} 秒",
+                "speed": "倍速播放"
+            },
+            "superResolution": {
+                "label": "超解析度",
+                "off": "關閉",
+                "balanced": "平衡",
+                "quality": "品質"
+            },
+            "speedMenu": {
+                "label": "速度"
+            },
+            "aspectRatio": {
+                "label": "畫面比例",
+                "options": {
+                    "auto": "自動",
+                    "crop": "裁切填充",
+                    "stretch": "拉伸填充"
+                }
+            },
+            "tooltips": {
+                "danmakuOn": "關閉彈幕 (d)",
+                "danmakuOff": "開啟彈幕 (d)"
+            },
+            "menu": {
+                "danmakuToggle": "彈幕開關",
+                "videoInfo": "影片資訊",
+                "cast": "遠端投射",
+                "external": "使用外部播放器開啟"
+            },
+            "syncplay": {
+                "label": "SyncPlay",
+                "room": "目前房間：{name}",
+                "roomEmpty": "未加入",
+                "latency": "延遲：{ms} ms",
+                "join": "加入房間",
+                "switchServer": "切換伺服器",
+                "disconnect": "中斷連線"
+            }
+        },
+        "loading": {
+            "parsing": "正在解析影片來源…",
+            "parseFailed": "影片來源解析失敗",
+            "player": "影片來源已解析，正在載入播放器",
+            "danmakuSearch": "搜尋彈幕中…"
+        },
+        "danmakuSearch": {
+            "title": "彈幕搜尋",
+            "hint": "系列標題",
+            "submit": "提交"
+        },
+        "remote": {
+            "title": "遠端投射",
+            "toast": {
+                "searching": "搜尋中…",
+                "casting": "嘗試投射到 {device}",
+                "error": "DLNA 錯誤：{details}\n嘗試重新開啟 DLNA 面板或選擇其他裝置。"
+            }
+        },
+        "debug": {
+            "title": "除錯資訊",
+            "closeTooltip": "關閉除錯資訊",
+            "tabs": {
+                "status": "狀態",
+                "logs": "日誌"
+            },
+            "sections": {
+                "source": "播放來源",
+                "playback": "播放器狀態",
+                "timing": "時間與指標",
+                "media": "媒體軌"
+            },
+            "labels": {
+                "series": "系列",
+                "plugin": "外掛程式",
+                "route": "路線",
+                "episode": "集數",
+                "routeCount": "路線數量",
+                "sourceTitle": "來源標題",
+                "parsedUrl": "解析的網址",
+                "playUrl": "播放網址",
+                "danmakuId": "DanDan ID",
+                "syncRoom": "SyncPlay 房間",
+                "syncLatency": "SyncPlay RTT",
+                "nativePlayer": "原生播放器",
+                "parsing": "解析中",
+                "playerLoading": "播放器載入中",
+                "playerInitializing": "播放器初始化中",
+                "playing": "播放中",
+                "buffering": "緩衝中",
+                "completed": "播放完成",
+                "bufferFlag": "緩衝旗標",
+                "currentPosition": "目前位置",
+                "bufferProgress": "緩衝進度",
+                "duration": "時長",
+                "speed": "播放速度",
+                "volume": "音量",
+                "brightness": "亮度",
+                "resolution": "解析度",
+                "aspectRatio": "畫面比例",
+                "superResolution": "超解析度",
+                "videoParams": "影片參數",
+                "audioParams": "音訊參數",
+                "playlist": "播放清單",
+                "audioTracks": "音訊軌",
+                "videoTracks": "視訊軌",
+                "audioBitrate": "音訊位元率"
+            },
+            "values": {
+                "yes": "是",
+                "no": "否"
+            },
+            "logs": {
+                "playerEmpty": "播放器日誌 (0)",
+                "playerSummary": "播放器日誌（{count} 條，顯示 {displayed} 條）",
+                "webviewEmpty": "WebView 日誌 (0)",
+                "webviewSummary": "WebView 日誌（{count} 條，顯示 {displayed} 條）"
+            }
+        },
+        "syncplay": {
+            "invalidEndpoint": "SyncPlay：無效的伺服器地址 {endpoint}",
+            "disconnected": "SyncPlay：連線中斷 {reason}",
+            "actionReconnect": "重新連線",
+            "alone": "SyncPlay：您是此房間的唯一使用者",
+            "followUser": "SyncPlay：使用 {username} 的進度",
+            "userLeft": "SyncPlay：{username} 離開了房間",
+            "userJoined": "SyncPlay：{username} 加入了房間",
+            "switchEpisode": "SyncPlay：{username} 切換到第 {episode} 集",
+            "chat": "SyncPlay：{username} 說：{message}",
+            "paused": "SyncPlay：{username} 暫停了播放",
+            "resumed": "SyncPlay：{username} 恢復了播放",
+            "unknownUser": "未知",
+            "switchServerBlocked": "SyncPlay：切換伺服器前請先離開目前房間",
+            "defaultCustomEndpoint": "自訂伺服器",
+            "selectServer": {
+                "title": "選擇伺服器",
+                "customTitle": "自訂伺服器",
+                "customHint": "輸入伺服器網址",
+                "duplicateOrEmpty": "伺服器網址必須是唯一的且不能為空"
+            },
+            "join": {
+                "title": "加入房間",
+                "roomLabel": "房間 ID",
+                "roomEmpty": "輸入房間 ID",
+                "roomInvalid": "房間 ID 必須是 6 到 10 位數字",
+                "usernameLabel": "使用者名稱",
+                "usernameEmpty": "輸入使用者名稱",
+                "usernameInvalid": "使用者名稱必須是 4 到 12 個字母"
+            }
+        },
+        "playlist": {
+            "collection": "合集",
+            "list": "播放清單 {index}"
+        },
+        "tabs": {
+            "episodes": "分集",
+            "comments": "評論"
+        },
+        "comments": {
+            "sectionTitle": "集數標題",
+            "manualSwitch": "手動切換",
+            "dialogTitle": "輸入集數",
+            "dialogEmpty": "請輸入集數",
+            "dialogConfirm": "重新整理"
+        },
+        "superResolution": {
+            "warning": {
+                "title": "效能警告",
+                "message": "啟用超解析度（品質）可能會造成卡頓。是否繼續？",
+                "dontAskAgain": "不要再詢問"
+            }
         }
-      }
     },
-    "other": {
-      "title": "Other",
-      "about": "About"
-    }
-  },
-  "exitDialog": {
-    "title": "結束確認",
-    "message": "您想要結束 Kazumi 嗎？",
-    "dontAskAgain": "下次不再詢問",
-    "exit": "結束 Kazumi",
-    "minimize": "最小化至系統匣",
-    "cancel": "取消"
-  },
-  "tray": {
-    "showWindow": "顯示視窗",
-    "exit": "結束 Kazumi"
-  },
-  "navigation": {
-    "tabs": {
-      "popular": "熱門番組",
-      "timeline": "時間表",
-      "my": "我的",
-      "settings": "設定"
-    },
-    "actions": {
-      "search": "搜尋",
-      "history": "歷史記錄",
-      "close": "結束"
-    }
-  },
-  "dialogs": {
-    "disclaimer": {
-      "title": "免責聲明",
-      "agree": "已閱讀並同意",
-      "exit": "結束"
-    },
-    "updateMirror": {
-      "title": "更新鏡像",
-      "question": "您希望從哪裡取得應用程式更新？",
-      "description": "GitHub 鏡像適用於大多數情況。如果您使用 F-Droid 應用程式商店，請選擇 F-Droid 鏡像。",
-      "options": {
-        "github": "GitHub",
-        "fdroid": "F-Droid"
-      }
-    },
-    "pluginUpdates": {
-      "toast": "偵測到 {count} 條規則可以更新"
-    },
-    "webdav": {
-      "syncFailed": "同步觀看記錄失敗 {error}"
-    },
-    "about": {
-      "licenseLegalese": "開放原始碼授權"
-    },
-    "cache": {
-      "title": "快取管理",
-      "message": "快取包含番劇封面，清除後載入時需要重新下載，確認要清除快取嗎？"
-    }
-  },
-  "library": {
-    "common": {
-      "emptyState": "找不到內容",
-      "retry": "點擊重試",
-      "backHint": "再按一次以結束 Kazumi",
-      "toast": {
-        "editMode": "編輯模式已啟用。"
-      }
-    },
-    "popular": {
-      "title": "熱門番組",
-      "allTag": "全部",
-      "toast": {
-        "backPress": "再按一次以結束 Kazumi"
-      }
-    },
-    "timeline": {
-      "weekdays": {
-        "mon": "一",
-        "tue": "二",
-        "wed": "三",
-        "thu": "四",
-        "fri": "五",
-        "sat": "六",
-        "sun": "日"
-      },
-      "seasonPicker": {
-        "title": "時光機",
-        "yearLabel": "{year}"
-      },
-      "season": {
-        "title": "{season} {year}",
-        "loading": "載入中…",
-        "names": {
-          "winter": "冬",
-          "spring": "春",
-          "summer": "夏",
-          "autumn": "秋"
-        },
-        "short": {
-          "winter": "冬",
-          "spring": "春",
-          "summer": "夏",
-          "autumn": "秋"
-        }
-      },
-      "sort": {
-        "title": "排序方式",
-        "byHeat": "依人氣排序",
-        "byRating": "依評分排序",
-        "byTime": "依播出時間排序"
-      }
-    },
-    "search": {
-      "sort": {
-        "label": "搜尋排序",
-        "byHeat": "依熱門度排序",
-        "byRating": "依評分排序",
-        "byRelevance": "依相關度排序"
-      },
-      "noHistory": "尚無搜尋紀錄"
-    },
-    "history": {
-      "title": "Watch History",
-  "empty": "尚無觀看紀錄",
-      "chips": {
-        "source": "Source",
-        "progress": "Progress",
-        "episodeNumber": "Episode {number}"
-      },
-      "toast": {
-        "sourceMissing": "Associated source not found."
-      },
-      "manage": {
-        "title": "History Management",
-        "confirmClear": "Clear all watch history?",
-        "cancel": "Cancel",
-        "confirm": "Confirm"
-      }
-    },
-    "info": {
-      "summary": {
-        "title": "Synopsis",
-        "expand": "Show more",
-        "collapse": "Show less"
-      },
-      "tags": {
-        "title": "Tags",
-        "more": "More +"
-      },
-      "metadata": {
-        "refresh": "Refresh",
-        "syncingTitle": "Syncing metadata…",
-        "syncingSubtitle": "The first sync may take a few seconds.",
-        "emptyTitle": "No official metadata yet",
-        "emptySubtitle": "Try again later or check the metadata settings.",
-        "source": "Metadata source: $source",
-        "updated": "Last updated: $timestamp · Language: $language",
-        "languageSystem": "System default",
-        "multiSource": "Merged sources"
-      },
-      "episodes": {
-        "title": "Episodes",
-        "collapse": "Collapse",
-        "expand": "Show all ($count)",
-        "numberedEpisode": "Episode $number",
-        "dateUnknown": "Date TBD",
-        "runtimeUnknown": "Runtime unknown",
-        "runtimeMinutes": "$minutes min"
-      },
-      "errors": {
-        "fetchFailed": "Failed to load, please try again."
-      },
-      "tabs": {
-        "overview": "Overview",
-        "comments": "Comments",
-        "characters": "Characters",
-        "reviews": "Reviews",
-        "staff": "Staff",
-        "placeholder": "Coming soon"
-      },
-      "actions": {
-        "startWatching": "Start Watching"
-      },
-      "toast": {
-        "characterSortFailed": "Failed to sort characters: {details}"
-      },
-      "sourceSheet": {
-        "title": "Choose playback source ({name})",
-        "alias": {
-          "deleteTooltip": "Delete alias",
-          "deleteTitle": "Delete alias",
-          "deleteMessage": "This cannot be undone. Delete this alias?"
-        },
-        "toast": {
-          "aliasEmpty": "No aliases available. Add one manually before searching.",
-          "loadFailed": "Failed to load playback routes.",
-          "removed": "Removed source {plugin}."
-        },
-        "sort": {
-          "tooltip": "Sort: {label}",
-          "options": {
-            "original": "Original order",
-            "nameAsc": "Name (A → Z)",
-            "nameDesc": "Name (Z → A)"
-          }
-        },
-        "card": {
-          "title": "Source · {plugin}",
-          "play": "Play"
-        },
-        "actions": {
-          "searchAgain": "Search again",
-          "aliasSearch": "Alias search",
-          "removeSource": "Remove source"
+    "network": {
+        "error": {
+            "badCertificate": "憑證錯誤。",
+            "badResponse": "伺服器錯誤，請稍後再試。",
+            "cancel": "請求已取消，請重試。",
+            "connection": "連線錯誤，請檢查網路設定。",
+            "connectionTimeout": "連線逾時，請檢查網路設定。",
+            "receiveTimeout": "接收回應逾時，請稍後再試。",
+            "sendTimeout": "傳送逾時，請檢查網路設定。",
+            "unknown": "{status} 網路問題。"
         },
         "status": {
-          "searching": "{plugin} searching…",
-          "failed": "{plugin} search failed",
-          "empty": "{plugin} returned no results"
-        },
-        "empty": {
-          "searching": "Searching, please wait…",
-          "noResults": "No playback sources found. Try searching again or use an alias."
-        },
-        "dialog": {
-          "removeTitle": "Remove source",
-          "removeMessage": "Remove source {plugin}?"
+            "mobile": "使用行動數據",
+            "wifi": "使用 Wi‑Fi",
+            "ethernet": "使用有線網路",
+            "vpn": "使用 VPN 連線",
+            "other": "使用其他網路",
+            "none": "無網路連線"
         }
-      }
     },
-    "my": {
-      "title": "My",
-      "sections": {
-        "video": "Video"
-      },
-      "favorites": {
-  "title": "收藏",
-  "description": "查看追看、計畫與已看清單",
-  "empty": "尚無收藏項目。",
-        "tabs": {
-          "watching": "Watching",
-          "planned": "Plan to Watch",
-          "completed": "Completed",
-          "empty": "No entries yet."
-        },
-        "sync": {
-          "disabled": "WebDAV sync is disabled.",
-          "editing": "Cannot sync while in edit mode."
-        }
-      },
-      "history": {
-        "title": "Playback History",
-        "description": "See shows you've watched"
-      }
-    }
-  },
-  "playback": {
-    "toast": {
-      "screenshotProcessing": "Capturing screenshot…",
-      "screenshotSaved": "Screenshot saved to gallery",
-      "screenshotSaveFailed": "Failed to save screenshot: {error}",
-      "screenshotError": "Screenshot failed: {error}",
-      "playlistEmpty": "Playlist is empty",
-      "episodeLatest": "Already at the latest episode",
-      "loadingEpisode": "Loading {identifier}",
-      "danmakuUnsupported": "Danmaku sending is unavailable for this episode",
-      "danmakuEmpty": "Danmaku content cannot be empty",
-      "danmakuTooLong": "Danmaku content is too long",
-  "waitForVideo": "請等待影片載入完成",
-      "enableDanmakuFirst": "Turn on danmaku first",
-      "danmakuSearchError": "Danmaku search failed: {error}",
-      "danmakuSearchEmpty": "No matching results found",
-      "danmakuSwitching": "Switching danmaku",
-      "clipboardCopied": "Copied to clipboard",
-      "internalError": "Player internal error: {details}"
-    },
-    "danmaku": {
-      "inputHint": "Share a friendly danmaku in the moment",
-      "inputDisabled": "Danmaku is turned off",
-      "send": "Send",
-      "mobileButton": "Tap to send danmaku",
-      "mobileButtonDisabled": "Danmaku disabled"
-    },
-    "externalPlayer": {
-      "launching": "Trying to open external player",
-      "launchFailed": "Unable to open external player",
-      "unavailable": "External player is not available",
-      "unsupportedDevice": "This device is not supported yet",
-      "unsupportedPlugin": "This plugin is not supported yet"
-    },
-    "controls": {
-      "speed": {
-        "title": "Playback speed",
-        "reset": "Default speed"
-      },
-      "skip": {
-        "title": "Skip duration",
-        "tooltip": "Long press to change duration"
-      },
-      "status": {
-        "fastForward": "Fast forward {seconds} s",
-        "rewind": "Rewind {seconds} s",
-        "speed": "Speed playback"
-      },
-      "superResolution": {
-        "label": "Super resolution",
-        "off": "Off",
-        "balanced": "Balanced",
-        "quality": "Quality"
-      },
-      "speedMenu": {
-        "label": "Speed"
-      },
-      "aspectRatio": {
-        "label": "Aspect ratio",
-        "options": {
-          "auto": "Auto",
-          "crop": "Crop to fill",
-          "stretch": "Stretch to fill"
-        }
-      },
-      "tooltips": {
-        "danmakuOn": "Turn off danmaku (d)",
-        "danmakuOff": "Turn on danmaku (d)"
-      },
-      "menu": {
-        "danmakuToggle": "Danmaku switch",
-        "videoInfo": "Video info",
-        "cast": "Remote cast",
-        "external": "Open in external player"
-      },
-      "syncplay": {
-        "label": "SyncPlay",
-        "room": "Current room: {name}",
-        "roomEmpty": "Not joined",
-        "latency": "Latency: {ms} ms",
-        "join": "Join room",
-        "switchServer": "Switch server",
-        "disconnect": "Disconnect"
-      }
-    },
-    "loading": {
-      "parsing": "Parsing video source…",
-      "player": "Video source parsed, loading player",
-      "danmakuSearch": "Searching danmaku…"
-    },
-    "danmakuSearch": {
-      "title": "Danmaku search",
-      "hint": "Series title",
-      "submit": "Submit"
-    },
-    "remote": {
-      "title": "Remote cast",
-      "toast": {
-        "searching": "Searching…",
-        "casting": "Attempting to cast to {device}",
-        "error": "DLNA error: {details}\nTry reopening the DLNA panel or choosing another device."
-      }
-    },
-    "debug": {
-      "title": "Debug info",
-      "closeTooltip": "Close debug info",
-      "tabs": {
-        "status": "Status",
-        "logs": "Logs"
-      },
-      "sections": {
-        "source": "Playback source",
-        "playback": "Player status",
-        "timing": "Timing & metrics",
-        "media": "Media tracks"
-      },
-      "labels": {
-        "series": "Series",
-        "plugin": "Plugin",
-        "route": "Route",
-        "episode": "Episode",
-        "routeCount": "Route count",
-        "sourceTitle": "Source title",
-        "parsedUrl": "Parsed URL",
-        "playUrl": "Playback URL",
-        "danmakuId": "DanDan ID",
-        "syncRoom": "SyncPlay room",
-        "syncLatency": "SyncPlay RTT",
-        "nativePlayer": "Native player",
-        "parsing": "Parsing",
-        "playerLoading": "Player loading",
-        "playerInitializing": "Player initializing",
-        "playing": "Playing",
-        "buffering": "Buffering",
-        "completed": "Playback completed",
-        "bufferFlag": "Buffer flag",
-        "currentPosition": "Current position",
-        "bufferProgress": "Buffer progress",
-        "duration": "Duration",
-        "speed": "Playback speed",
-        "volume": "Volume",
-        "brightness": "Brightness",
-        "resolution": "Resolution",
-        "aspectRatio": "Aspect ratio",
-        "superResolution": "Super resolution",
-        "videoParams": "Video params",
-        "audioParams": "Audio params",
-        "playlist": "Playlist",
-        "audioTracks": "Audio tracks",
-        "videoTracks": "Video tracks",
-        "audioBitrate": "Audio bitrate"
-      },
-      "values": {
-        "yes": "Yes",
-        "no": "No"
-      },
-      "logs": {
-        "playerEmpty": "Player log (0)",
-        "playerSummary": "Player log ({count} entries, showing {displayed})",
-        "webviewEmpty": "WebView log (0)",
-        "webviewSummary": "WebView log ({count} entries, showing {displayed})"
-      }
-    },
-    "syncplay": {
-      "invalidEndpoint": "SyncPlay: Invalid server address {endpoint}",
-      "disconnected": "SyncPlay: Connection interrupted {reason}",
-      "actionReconnect": "Reconnect",
-      "alone": "SyncPlay: You are the only user in this room",
-      "followUser": "SyncPlay: Using {username}'s progress",
-      "userLeft": "SyncPlay: {username} left the room",
-      "userJoined": "SyncPlay: {username} joined the room",
-      "switchEpisode": "SyncPlay: {username} switched to episode {episode}",
-      "chat": "SyncPlay: {username} said: {message}",
-      "paused": "SyncPlay: {username} paused playback",
-      "resumed": "SyncPlay: {username} resumed playback",
-      "unknownUser": "unknown",
-      "switchServerBlocked": "SyncPlay: Exit the current room before switching servers",
-      "defaultCustomEndpoint": "Custom server",
-      "selectServer": {
-        "title": "Choose server",
-        "customTitle": "Custom server",
-        "customHint": "Enter server URL",
-        "duplicateOrEmpty": "Server URL must be unique and non-empty"
-      },
-      "join": {
-        "title": "Join room",
-        "roomLabel": "Room ID",
-        "roomEmpty": "Enter a room ID",
-        "roomInvalid": "Room ID must be 6 to 10 digits",
-        "usernameLabel": "Username",
-        "usernameEmpty": "Enter a username",
-        "usernameInvalid": "Username must be 4 to 12 letters"
-      }
-    },
-    "playlist": {
-      "collection": "Collection",
-      "list": "Playlist {index}"
-    },
-    "tabs": {
-      "episodes": "Episodes",
-      "comments": "Comments"
-    },
-    "comments": {
-      "sectionTitle": "Episode title",
-      "manualSwitch": "Switch manually",
-      "dialogTitle": "Enter episode number",
-      "dialogEmpty": "Please enter an episode number",
-      "dialogConfirm": "Refresh"
-    },
-    "superResolution": {
-      "warning": {
-        "title": "Performance warning",
-        "message": "Enabling super resolution (quality) may cause stutter. Continue?",
-        "dontAskAgain": "Don't ask again"
-      }
-    }
-  },
-  "network": {
-    "error": {
-      "badCertificate": "憑證錯誤。",
-      "badResponse": "伺服器錯誤，請稍後再試。",
-      "cancel": "請求已取消，請重試。",
-      "connection": "連線錯誤，請檢查網路設定。",
-      "connectionTimeout": "連線逾時，請檢查網路設定。",
-      "receiveTimeout": "接收回應逾時，請稍後再試。",
-      "sendTimeout": "傳送逾時，請檢查網路設定。",
-      "unknown": "{status} 網路問題。"
-    },
-    "status": {
-      "mobile": "使用行動數據",
-      "wifi": "使用 Wi‑Fi",
-      "ethernet": "使用有線網路",
-      "vpn": "使用 VPN 連線",
-      "other": "使用其他網路",
-      "none": "無網路連線"
-    }
-  }
+    "sync": {}
 }

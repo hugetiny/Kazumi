@@ -138,6 +138,8 @@ class WebviewAppleItemControllerImpel
     isVideoSourceLoaded = false;
     videoLoadingEventController.add(true);
 
+    logEventController.add('🔍 开始解析: $url');
+
     await webviewController?.loadUrl(urlRequest: URLRequest(url: WebUri(url)));
 
     loadingMonitorTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -145,14 +147,18 @@ class WebviewAppleItemControllerImpel
         timer.cancel();
       } else {
         count++;
-        if (count >= 15) {
+        // Log progress every 5 seconds
+        if (count % 5 == 0) {
+          logEventController.add('⏳ 解析中... $count秒');
+        }
+        if (count >= 30) {
           timer.cancel();
           isIframeLoaded = true;
           videoLoadingEventController.add(false);
 
           logEventController.add('clear');
-          logEventController.add('解析视频资源超时');
-          logEventController.add('请切换到其他播放列表或视频源');
+          logEventController.add('❌ 解析视频资源超时');
+          logEventController.add('💡 请切换到其他播放列表或视频源');
           logEventController.add('showDebug');
         }
       }
@@ -246,7 +252,7 @@ class WebviewAppleItemControllerImpel
               if (src && src.trim() !== '' && (src.startsWith('http') || src.startsWith('//')) && !src.includes('googleads') && !src.includes('adtrafficquality') && !src.includes('googlesyndication.com') && !src.includes('google.com') && !src.includes('prestrain.html') && !src.includes('prestrain%2Ehtml')) {
                   window.flutter_inappwebview.callHandler('IframeRedirectBridge', src);
                   window.location.href = src;
-                  break; 
+                  break;
               }
           }
       """;
@@ -278,6 +284,56 @@ class WebviewAppleItemControllerImpel
       logEventController.add('Adding VideoBridgeDebug UserScripts');
       const String blobParserScript = """
         window.flutter_inappwebview.callHandler('LogBridge', 'BlobParser script loaded: ' + window.location.href);
+        // Wrap fetch to detect M3U8/MP4 early and via headers/text
+        try {
+          if (typeof window.fetch === 'function' && !window.__kazumi_fetch_wrapped) {
+            window.__kazumi_fetch_wrapped = true;
+            const _fetch = window.fetch;
+            window.fetch = async function (...args) {
+              let url = '';
+              try {
+                const req = args && args[0];
+                if (typeof req === 'string') {
+                  url = req;
+                } else if (req && req.url) {
+                  url = req.url;
+                }
+                if (url && (url.includes('.m3u8') || url.includes('m3u8') || url.includes('.mp4'))) {
+                  window.flutter_inappwebview.callHandler('LogBridge', 'M3U8/MP4 URL detected (fetch): ' + url);
+                  window.flutter_inappwebview.callHandler('VideoBridgeDebug', url);
+                }
+              } catch (e) {}
+
+              const resp = await _fetch.apply(this, args);
+
+              try {
+                const ct = resp && resp.headers && resp.headers.get ? (resp.headers.get('content-type') || '') : '';
+                const respUrl = resp && (resp.url || url) ? (resp.url || url) : '';
+
+                if (ct.includes('application/vnd.apple.mpegurl') || ct.includes('application/x-mpegURL') || ct.includes('video/mp4')) {
+                  window.flutter_inappwebview.callHandler('LogBridge', 'M3U8/MP4 content-type detected (fetch): ' + respUrl);
+                  if (respUrl) {
+                    window.flutter_inappwebview.callHandler('VideoBridgeDebug', respUrl);
+                  }
+                } else {
+                  // As a fallback, try to read text to detect #EXTM3U content
+                  try {
+                    const cloned = resp.clone();
+                    cloned.text().then(function(text) {
+                      if (text && text.trim().startsWith('#EXTM3U')) {
+                        window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 content found (fetch text): ' + respUrl);
+                        window.flutter_inappwebview.callHandler('VideoBridgeDebug', respUrl);
+                      }
+                    }).catch(function(){});
+                  } catch (e) {}
+                }
+              } catch (e) {}
+
+              return resp;
+            };
+          }
+        } catch (e) {}
+
         const _r_text = window.Response.prototype.text;
         window.Response.prototype.text = function () {
             return new Promise((resolve, reject) => {
@@ -295,11 +351,22 @@ class WebviewAppleItemControllerImpel
         window.XMLHttpRequest.prototype.open = function (...args) {
             this.addEventListener("load", () => {
                 try {
-                    let content = this.responseText;
-                    if (content.trim().startsWith("#EXTM3U")) {
-                        window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 source found: ' + args[1]);
-                        window.flutter_inappwebview.callHandler('VideoBridgeDebug', args[1]);
-                    };
+                    // Check if the URL looks like M3U8
+                    const url = args[1];
+                    if (url && (url.includes('.m3u8') || url.includes('m3u8'))) {
+                        window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 URL detected: ' + url);
+                        window.flutter_inappwebview.callHandler('VideoBridgeDebug', url);
+                        return;
+                    }
+
+                    // Try to read response content (only if responseType allows it)
+                    if (this.responseType === '' || this.responseType === 'text') {
+                        let content = this.responseText;
+                        if (content && content.trim().startsWith("#EXTM3U")) {
+                            window.flutter_inappwebview.callHandler('LogBridge', 'M3U8 content found: ' + url);
+                            window.flutter_inappwebview.callHandler('VideoBridgeDebug', url);
+                        }
+                    }
                 } catch {}
             });
             return _open.apply(this, args);
@@ -341,7 +408,7 @@ class WebviewAppleItemControllerImpel
                 node.querySelectorAll('video').forEach(processVideoElement);
               }
             });
-          });  
+          });
         });
 
         _observer.observe(document.body, {

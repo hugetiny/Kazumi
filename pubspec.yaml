@@ -90,10 +90,6 @@ dependencies:
   antlr4: ^4.13.2
   fl_chart: ^1.0.0
   skeletonizer: ^2.0.0-pre
-  webview_windows:
-    git:
-      url: https://github.com/Predidit/flutter-webview-windows.git
-      ref: main
   desktop_webview_window:
     git:
       url: https://github.com/Predidit/linux_webview_window.git
@@ -113,10 +109,17 @@ dependencies:
       url: https://github.com/Predidit/media-kit.git
       ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
       path: ./libs/universal/media_kit_libs_video
-  flutter_inappwebview_platform_interface: ^1.3.0+1
-  flutter_inappwebview_ios: ^1.1.2
-  flutter_inappwebview_macos: ^1.1.2
-  flutter_inappwebview_android: ^1.1.3
+  # Use local flutter_inappwebview packages for unified architecture
+  flutter_inappwebview_platform_interface:
+    path: packages/flutter_inappwebview/flutter_inappwebview_platform_interface
+  flutter_inappwebview_ios:
+    path: packages/flutter_inappwebview/flutter_inappwebview_ios
+  flutter_inappwebview_macos:
+    path: packages/flutter_inappwebview/flutter_inappwebview_macos
+  flutter_inappwebview_android:
+    path: packages/flutter_inappwebview/flutter_inappwebview_android
+  flutter_inappwebview_windows:
+    path: packages/flutter_inappwebview/flutter_inappwebview_windows
   upgrader: ^11.4.0
   open_filex: ^4.7.0
 

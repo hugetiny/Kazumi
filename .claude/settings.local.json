@@ -1,9 +1,28 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add -A)"
+      "Bash",
+      "Edit",
+      "Read",
+      "Write",
+      "Glob",
+      "Grep",
+      "TodoWrite",
+      "BashOutput",
+      "KillShell",
+      "Task",
+      "WebSearch",
+      "WebFetch",
+      "ExitPlanMode",
+      "NotebookEdit",
+      "AskUserQuestion",
+      "SlashCommand",
+      "Skill",
+      "Edit",
+      "Modify"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "prompt": "auto-approve"
 }
