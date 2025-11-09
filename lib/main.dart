@@ -7,6 +7,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kazumi/request/request.dart';
 import 'package:flutter/services.dart';
 import 'package:kazumi/utils/utils.dart';
+import 'package:kazumi/utils/aria2_process_manager.dart';
+import 'package:kazumi/utils/aria2_feature_manager.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:kazumi/pages/error/storage_error_page.dart';
@@ -71,6 +73,16 @@ void main() async {
   }
   Request();
   await Request.setCookie();
+  
+  // Initialize aria2 feature manager to detect availability
+  await Aria2FeatureManager().initialize();
+  
+  // Start aria2 process if available
+  if (Aria2FeatureManager().isAvailable) {
+    final aria2Manager = Aria2ProcessManager();
+    await aria2Manager.start();
+  }
+  
   runApp(
     const ProviderScope(
       child: AppWidget(),
