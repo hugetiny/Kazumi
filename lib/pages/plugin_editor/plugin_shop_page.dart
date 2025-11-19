@@ -19,7 +19,7 @@ class PluginShopPage extends ConsumerStatefulWidget {
 
 class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   final Box setting = GStorage.setting;
-  late bool enableGitProxy;
+  late ValueNotifier<bool> enableGitProxyNotifier;
   late final PluginsController pluginsController;
 
   void onBackPressed(BuildContext context) {
@@ -33,8 +33,9 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
   void initState() {
     super.initState();
     pluginsController = ref.read(pluginsProvider.notifier);
-    enableGitProxy =
-        setting.get(SettingBoxKey.enableGitProxy, defaultValue: false);
+    enableGitProxyNotifier = ValueNotifier<bool>(
+      setting.get(SettingBoxKey.enableGitProxy, defaultValue: false),
+    );
 
     // Load plugin list on first visit
     if (pluginsController.pluginHTTPList.isEmpty) {
@@ -44,6 +45,12 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
         }
       });
     }
+  }
+
+  @override
+  void dispose() {
+    enableGitProxyNotifier.dispose();
+    super.dispose();
   }
 
   Future<void> _handleRefresh() async {
@@ -56,7 +63,7 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
     ref.read(pluginShopUIProvider.notifier).setLoading(true);
     ref.read(pluginShopUIProvider.notifier).setTimeout(false);
 
-    enableGitProxy =
+    enableGitProxyNotifier.value =
         setting.get(SettingBoxKey.enableGitProxy, defaultValue: false);
 
     try {
@@ -262,55 +269,58 @@ class _PluginShopPageState extends ConsumerState<PluginShopPage> {
             ),
           ],
         ),
-        body: loading
-            ? const Center(child: CircularProgressIndicator())
-            : pluginHTTPList.isEmpty
-                ? (timeout
-                    ? Center(
-                        child: GeneralErrorWidget(
-                          errMsg: shopTexts.error.unreachable.replaceFirst(
-                            '{status}',
-                            enableGitProxy
-                                ? shopTexts.error.mirrorEnabled
-                                : shopTexts.error.mirrorDisabled,
-                          ),
-                          actions: [
-                            GeneralErrorButton(
-                              onPressed: () async {
-                                if (!mounted) {
-                                  return;
-                                }
-                                // Toggle GitHub proxy setting
-                                final newValue = !enableGitProxy;
-                                await setting.put(
-                                    SettingBoxKey.enableGitProxy, newValue);
-                                setState(() {
-                                  enableGitProxy = newValue;
-                                });
-                                // Show toast notification
-                                KazumiDialog.showToast(
-                                  message: newValue
-                                      ? shopTexts.error.mirrorEnabled
-                                      : shopTexts.error.mirrorDisabled,
-                                );
-                                // Refresh plugin list with new proxy setting
-                                _handleRefresh();
-                              },
-                              text: enableGitProxy
-                                  ? shopTexts.buttons.toggleMirrorDisable
-                                  : shopTexts.buttons.toggleMirrorEnable,
+        body: ValueListenableBuilder<bool>(
+          valueListenable: enableGitProxyNotifier,
+          builder: (context, enableGitProxy, child) {
+            return loading
+                ? const Center(child: CircularProgressIndicator())
+                : pluginHTTPList.isEmpty
+                    ? (timeout
+                        ? Center(
+                            child: GeneralErrorWidget(
+                              errMsg: shopTexts.error.unreachable.replaceFirst(
+                                '{status}',
+                                enableGitProxy
+                                    ? shopTexts.error.mirrorEnabled
+                                    : shopTexts.error.mirrorDisabled,
+                              ),
+                              actions: [
+                                GeneralErrorButton(
+                                  onPressed: () async {
+                                    if (!mounted) {
+                                      return;
+                                    }
+                                    // Toggle GitHub proxy setting
+                                    final newValue = !enableGitProxy;
+                                    await setting.put(
+                                        SettingBoxKey.enableGitProxy, newValue);
+                                    enableGitProxyNotifier.value = newValue;
+                                    // Show toast notification
+                                    KazumiDialog.showToast(
+                                      message: newValue
+                                          ? shopTexts.error.mirrorEnabled
+                                          : shopTexts.error.mirrorDisabled,
+                                    );
+                                    // Refresh plugin list with new proxy setting
+                                    _handleRefresh();
+                                  },
+                                  text: enableGitProxy
+                                      ? shopTexts.buttons.toggleMirrorDisable
+                                      : shopTexts.buttons.toggleMirrorEnable,
+                                ),
+                                GeneralErrorButton(
+                                  onPressed: () {
+                                    _handleRefresh();
+                                  },
+                                  text: shopTexts.buttons.refresh,
+                                ),
+                              ],
                             ),
-                            GeneralErrorButton(
-                              onPressed: () {
-                                _handleRefresh();
-                              },
-                              text: shopTexts.buttons.refresh,
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink())
-                : buildPluginHTTPListBody(context, pluginHTTPList),
+                          )
+                        : const SizedBox.shrink())
+                    : buildPluginHTTPListBody(context, pluginHTTPList);
+          },
+        ),
       ),
     );
   }

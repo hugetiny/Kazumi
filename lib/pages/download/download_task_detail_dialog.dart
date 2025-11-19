@@ -1,11 +1,69 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/modules/download/download_task.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:open_filex/open_filex.dart';
 
-class DownloadTaskDetailDialog extends StatefulWidget {
+/// 任务详情对话框状态 Provider (family pattern for specific task)
+final taskDetailStateProvider =
+    StateNotifierProvider.family<TaskDetailNotifier, TaskDetailState, String>(
+  (ref, gid) => TaskDetailNotifier(gid),
+);
+
+/// 任务详情状态
+class TaskDetailState {
+  final bool fileExists;
+  final bool isChecking;
+  final String? errorMessage;
+
+  const TaskDetailState({
+    this.fileExists = false,
+    this.isChecking = true,
+    this.errorMessage,
+  });
+
+  TaskDetailState copyWith({
+    bool? fileExists,
+    bool? isChecking,
+    String? errorMessage,
+  }) {
+    return TaskDetailState(
+      fileExists: fileExists ?? this.fileExists,
+      isChecking: isChecking ?? this.isChecking,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+/// 任务详情状态管理器
+class TaskDetailNotifier extends StateNotifier<TaskDetailState> {
+  TaskDetailNotifier(this.gid) : super(const TaskDetailState());
+
+  final String gid;
+
+  Future<void> checkFileExists(String? filePath) async {
+    if (filePath == null || filePath.isEmpty) {
+      state = state.copyWith(isChecking: false, fileExists: false);
+      return;
+    }
+
+    try {
+      final file = File(filePath);
+      final exists = await file.exists();
+      state = state.copyWith(fileExists: exists, isChecking: false);
+    } catch (e) {
+      state = state.copyWith(
+        fileExists: false,
+        isChecking: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+}
+
+class DownloadTaskDetailDialog extends ConsumerStatefulWidget {
   final DownloadTask task;
   final VoidCallback? onRetry;
   final VoidCallback? onOpenFile;
@@ -18,53 +76,36 @@ class DownloadTaskDetailDialog extends StatefulWidget {
   });
 
   @override
-  State<DownloadTaskDetailDialog> createState() => _DownloadTaskDetailDialogState();
+  ConsumerState<DownloadTaskDetailDialog> createState() =>
+      _DownloadTaskDetailDialogState();
 }
 
-class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
-  bool _fileExists = false;
-  bool _checkingFile = true;
-
+class _DownloadTaskDetailDialogState
+    extends ConsumerState<DownloadTaskDetailDialog> {
   @override
   void initState() {
     super.initState();
-    _checkFileExists();
+    // Check file existence on init
+    Future.microtask(() {
+      ref
+          .read(taskDetailStateProvider(widget.task.gid).notifier)
+          .checkFileExists(widget.task.filePath);
+    });
   }
 
-  Future<void> _checkFileExists() async {
-    if (widget.task.isComplete && widget.task.filePath.isNotEmpty) {
-      try {
-        final file = File(widget.task.filePath);
-        final exists = await file.exists();
-        if (mounted) {
-          setState(() {
-            _fileExists = exists;
-            _checkingFile = false;
-          });
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _fileExists = false;
-            _checkingFile = false;
-          });
-        }
-      }
-    } else {
-      setState(() {
-        _checkingFile = false;
-      });
-    }
-  }
+  DownloadTask get task => widget.task;
 
   Future<void> _openFile() async {
-    if (!_fileExists || widget.task.filePath.isEmpty) {
+    final filePath = task.filePath;
+    final detailState = ref.read(taskDetailStateProvider(task.gid));
+
+    if (!detailState.fileExists || filePath == null || filePath.isEmpty) {
       KazumiDialog.showToast(message: '文件不存在或路径无效');
       return;
     }
 
     try {
-      final result = await OpenFilex.open(widget.task.filePath);
+      final result = await OpenFilex.open(filePath);
       if (result.type != ResultType.done) {
         KazumiDialog.showToast(message: '无法打开文件: ${result.message}');
       }
@@ -74,8 +115,6 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
       KazumiDialog.showToast(message: '打开文件时发生错误');
     }
   }
-
-  DownloadTask get task => widget.task;
 
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';
@@ -135,13 +174,13 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
   String _shortenPath(String path) {
     // Shorten very long paths for display
     if (path.length <= 50) return path;
-    
+
     // Try to show filename and parent directory
     final parts = path.split(Platform.pathSeparator);
     if (parts.length > 2) {
       return '...${Platform.pathSeparator}${parts[parts.length - 2]}${Platform.pathSeparator}${parts.last}';
     }
-    
+
     // Fallback: show start and end
     return '${path.substring(0, 20)}...${path.substring(path.length - 20)}';
   }
@@ -153,10 +192,10 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final detailState = ref.watch(taskDetailStateProvider(task.gid));
     final int remainingBytes = task.totalLength - task.completedLength;
-    final int etaSeconds = task.downloadSpeed > 0
-        ? remainingBytes ~/ task.downloadSpeed
-        : 0;
+    final int etaSeconds =
+        task.downloadSpeed > 0 ? remainingBytes ~/ task.downloadSpeed : 0;
 
     return Dialog(
       child: Container(
@@ -184,8 +223,10 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
                     child: Text(
                       '任务详情',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
                     ),
                   ),
                   IconButton(
@@ -206,7 +247,8 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
                     // Status chip
                     Chip(
                       label: Text(_getStatusText()),
-                      backgroundColor: _getStatusColor(context).withOpacity(0.2),
+                      backgroundColor:
+                          _getStatusColor(context).withValues(alpha: 0.2),
                       labelStyle: TextStyle(
                         color: _getStatusColor(context),
                         fontWeight: FontWeight.bold,
@@ -245,14 +287,17 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
                     ],
 
                     // File path (for completed tasks)
-                    if (task.isComplete && task.filePath.isNotEmpty) ...[
+                    if (task.isComplete &&
+                        task.filePath != null &&
+                        task.filePath!.isNotEmpty) ...[
                       _buildSection(
                         '文件路径',
-                        _shortenPath(task.filePath),
+                        _shortenPath(task.filePath!),
                         trailing: IconButton(
                           icon: const Icon(Icons.copy, size: 18),
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: task.filePath));
+                            Clipboard.setData(
+                                ClipboardData(text: task.filePath!));
                             KazumiDialog.showToast(message: '已复制路径');
                           },
                           tooltip: '复制路径',
@@ -345,7 +390,8 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
                     ),
                     const SizedBox(width: 8),
                   ],
-                  if (task.isComplete && !_checkingFile && _fileExists) ...[
+                  // Use Riverpod state instead of ValueNotifier
+                  if (task.isComplete && !detailState.isChecking && detailState.fileExists) ...[
                     FilledButton.icon(
                       icon: const Icon(Icons.folder_open),
                       label: const Text('打开文件'),
@@ -399,10 +445,5 @@ class _DownloadTaskDetailDialogState extends State<DownloadTaskDetailDialog> {
         if (trailing != null) trailing,
       ],
     );
-  }
-
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
   }
 }

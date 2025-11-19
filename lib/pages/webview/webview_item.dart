@@ -5,16 +5,9 @@ import 'package:kazumi/pages/webview/webview_controller.dart';
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_android_controller_impel.dart';
 import 'package:kazumi/pages/webview/webview_item_impel/webview_android_item_impel.dart';
 import 'package:kazumi/pages/webview/webview_item_impel/webview_item_impel.dart';
-// Old webview_windows implementation (deprecated)
-// import 'package:kazumi/pages/webview/webview_item_impel/webview_windows_item_impel.dart';
-// New flutter_inappwebview_windows implementation
-import 'package:kazumi/pages/webview/webview_item_impel/webview_inappwebview_windows_item_impel.dart';
 import 'package:kazumi/pages/webview/webview_item_impel/webview_linux_item_impel.dart';
 import 'package:kazumi/pages/webview/webview_item_impel/webview_apple_item_impel.dart';
 import 'package:kazumi/utils/utils.dart';
-import 'package:flutter_inappwebview_windows/flutter_inappwebview_windows.dart';
-// Old webview_windows package (deprecated)
-// import 'package:webview_windows/webview_windows.dart';
 
 class WebviewItem extends StatefulWidget {
   const WebviewItem({
@@ -34,11 +27,7 @@ class _WebviewItemState extends State<WebviewItem> {
   @override
   Widget build(BuildContext context) {
     if (Platform.isWindows) {
-      // Use new flutter_inappwebview_windows implementation
-      return WebviewInAppWebViewWindowsItemImpel(
-        webviewController: widget.webviewController
-            as WebviewItemController<WindowsInAppWebViewController>,
-      );
+      return const SizedBox.shrink();
     }
     if (Platform.isLinux) {
       return WebviewLinuxItemImpel(

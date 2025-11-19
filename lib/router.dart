@@ -104,6 +104,10 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const MyPage(),
         ),
         GoRoute(
+          path: Routes.download,
+          builder: (context, state) => const DownloadPage(),
+        ),
+        GoRoute(
           path: Routes.settings,
           builder: (context, state) => const SettingPage(),
         ),
@@ -116,10 +120,6 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: Routes.history,
       builder: (context, state) => const HistoryPage(),
-    ),
-    GoRoute(
-      path: '/my/download',
-      builder: (context, state) => const DownloadPage(),
     ),
     GoRoute(
       path: Routes.video,

@@ -49,6 +49,7 @@ dependencies:
   cookie_jar: ^4.0.8
   dio_cookie_manager: ^3.1.1
   connectivity_plus: ^6.0.5
+  web_socket_channel: ^2.4.0
 
   path_provider: ^2.1.1
   hive: ^2.2.3
@@ -91,66 +92,63 @@ dependencies:
   fl_chart: ^1.0.0
   skeletonizer: ^2.0.0-pre
   webview_windows:
-    path: ./packages/flutter-webview-windows
+    git:
+      url: https://github.com/Predidit/flutter-webview-windows.git
+      ref: 4399f68beab25d51b277e37e3949f9fb2d6d8304
   desktop_webview_window:
     git:
       url: https://github.com/Predidit/linux_webview_window.git
-      ref: main
+      ref: f95c8d09e66a73dce5465770f6fb41e4a13fad44
   media_kit:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./media_kit
   media_kit_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./media_kit_video
   media_kit_libs_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/universal/media_kit_libs_video
-  # Use local flutter_inappwebview packages for unified architecture
-  flutter_inappwebview_platform_interface:
-    path: packages/flutter_inappwebview/flutter_inappwebview_platform_interface
-  flutter_inappwebview_ios:
-    path: packages/flutter_inappwebview/flutter_inappwebview_ios
-  flutter_inappwebview_macos:
-    path: packages/flutter_inappwebview/flutter_inappwebview_macos
-  flutter_inappwebview_android:
-    path: packages/flutter_inappwebview/flutter_inappwebview_android
-  flutter_inappwebview_windows:
-    path: packages/flutter_inappwebview/flutter_inappwebview_windows
+  flutter_inappwebview_platform_interface: ^1.3.0+1
+  flutter_inappwebview_ios: ^1.1.2
+  flutter_inappwebview_macos: ^1.1.2
+  flutter_inappwebview_android: ^1.1.3
   upgrader: ^11.4.0
   open_filex: ^4.7.0
   archive: ^3.6.1
+  super_drag_and_drop: ^0.9.1
+  file_picker: ^8.1.6
 
 dependency_overrides:
   media_kit_libs_linux:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/linux/media_kit_libs_linux
   media_kit_libs_ios_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/ios/media_kit_libs_ios_video
   media_kit_libs_android_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/android/media_kit_libs_android_video
   media_kit_libs_windows_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/windows/media_kit_libs_windows_video
   media_kit_libs_macos_video:
     git:
       url: https://github.com/Predidit/media-kit.git
-      ref: 2f97413c42d66744239b57bbfaaf56d8aea7f136
+      ref: 13a209a0af921d117be7f1aac6f9066949e39db9
       path: ./libs/macos/media_kit_libs_macos_video
 
 dev_dependencies:

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/utils/aria2_client.dart';
@@ -8,29 +9,25 @@ import 'package:kazumi/utils/aria2_process_manager.dart';
 import 'package:kazumi/utils/aria2_updater.dart';
 import 'package:kazumi/utils/aria2_feature_manager.dart';
 import 'package:kazumi/utils/storage.dart';
+import 'package:kazumi/utils/logger.dart';
+import 'package:kazumi/providers/download_providers.dart';
+import 'package:logger/logger.dart';
 
-class DownloadSettingsPage extends StatefulWidget {
+class DownloadSettingsPage extends ConsumerStatefulWidget {
   const DownloadSettingsPage({super.key});
 
   @override
-  State<DownloadSettingsPage> createState() => _DownloadSettingsPageState();
+  ConsumerState<DownloadSettingsPage> createState() => _DownloadSettingsPageState();
 }
 
-class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
+class _DownloadSettingsPageState extends ConsumerState<DownloadSettingsPage> {
   final TextEditingController _endpointController = TextEditingController();
   final TextEditingController _secretController = TextEditingController();
   final TextEditingController _timeoutController = TextEditingController();
   final TextEditingController _maxConcurrentController =
       TextEditingController();
 
-  bool _isTestingConnection = false;
-  bool _isRestartingAria2 = false;
-  bool _isCheckingUpdate = false;
-  bool _isDownloadingUpdate = false;
-  double _updateDownloadProgress = 0.0;
-  String? _connectionStatus;
-  String? _aria2Status;
-  Aria2UpdateInfo? _updateInfo;
+  final KazumiLogger _logger = KazumiLogger();
 
   @override
   void initState() {
@@ -42,19 +39,21 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
   void _checkAria2Status() {
     if (Platform.isIOS) {
       final isAvailable = Aria2FeatureManager().isAvailable;
-      setState(() {
-        if (isAvailable) {
-          final isRunning = Aria2ProcessManager().isRunning;
-          _aria2Status = isRunning ? 'aria2 运行中（自签名版本）' : 'aria2 未运行（自签名版本）';
-        } else {
-          _aria2Status = 'iOS App Store 版本不支持 aria2\n请使用自签名 IPA 版本';
-        }
-      });
+      if (isAvailable) {
+        final isRunning = Aria2ProcessManager().isRunning;
+        ref.read(downloadSettingsProvider.notifier).setAria2Status(
+          isRunning ? 'aria2 运行中（自签名版本）' : 'aria2 未运行（自签名版本）'
+        );
+      } else {
+        ref.read(downloadSettingsProvider.notifier).setAria2Status(
+          'iOS App Store 版本不支持 aria2\n请使用自签名 IPA 版本'
+        );
+      }
     } else {
       final isRunning = Aria2ProcessManager().isRunning;
-      setState(() {
-        _aria2Status = isRunning ? 'aria2 运行中' : 'aria2 未运行';
-      });
+      ref.read(downloadSettingsProvider.notifier).setAria2Status(
+        isRunning ? 'aria2 运行中' : 'aria2 未运行'
+      );
     }
   }
 
@@ -126,142 +125,225 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
   }
 
   Future<void> _testConnection() async {
-    setState(() {
-      _isTestingConnection = true;
-      _connectionStatus = null;
-    });
+    ref.read(downloadSettingsProvider.notifier).setTestingConnection(true);
+    ref.read(downloadSettingsProvider.notifier).setConnectionStatus('');
 
     try {
-      final endpoint = Uri.parse(_endpointController.text.trim());
+      final endpoint = _endpointController.text.trim();
+      if (endpoint.isEmpty) {
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus('连接失败: 端点地址不能为空');
+        ref.read(downloadSettingsProvider.notifier).setTestingConnection(false);
+        return;
+      }
+
+      final Uri endpointUri;
+      try {
+        endpointUri = Uri.parse(endpoint);
+      } catch (e) {
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus('连接失败: 端点地址格式不正确');
+        ref.read(downloadSettingsProvider.notifier).setTestingConnection(false);
+        return;
+      }
+
       final secret = _secretController.text.trim();
       final timeoutSeconds = int.tryParse(_timeoutController.text.trim()) ?? 15;
 
+      _logger.log(Level.info, '[DownloadSettings] Testing connection to: $endpoint');
+      _logger.log(Level.info, '[DownloadSettings] Endpoint URI: ${endpointUri.toString()}');
+      _logger.log(Level.info, '[DownloadSettings] Has secret: ${secret.isNotEmpty}');
+      _logger.log(Level.info, '[DownloadSettings] Timeout: ${timeoutSeconds}s');
+
       final client = Aria2Client(
-        endpoint: endpoint,
+        endpoint: endpointUri,
         secret: secret.isEmpty ? null : secret,
         timeout: Duration(seconds: timeoutSeconds),
       );
 
-      // Test connection by getting version
-      await client.tellActive();
+      // Test connection using aria2.getVersion - more reliable than tellActive
+      final result = await client.testConnection();
 
-      setState(() {
-        _connectionStatus = '连接成功';
-        _isTestingConnection = false;
-      });
+      ref.read(downloadSettingsProvider.notifier).setConnectionStatus(result);
+      ref.read(downloadSettingsProvider.notifier).setTestingConnection(false);
+
+      _logger.log(Level.info, '[DownloadSettings] Connection test successful: $result');
+    } on Aria2RpcException catch (e) {
+      _logger.log(Level.error, '[DownloadSettings] Aria2 RPC error: ${e.message}', error: e);
+      String errorDetail = e.message;
+
+      // Provide more specific error messages
+      if (errorDetail.contains('Connection refused') ||
+          errorDetail.contains('无法连接')) {
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus(
+          '连接失败: 无法连接到 aria2\n'
+          '可能原因:\n'
+          '1. aria2 进程未启动（点击下方"重启"按钮）\n'
+          '2. 端点地址不正确（当前: ${_endpointController.text}）\n'
+          '3. 防火墙阻止了连接'
+        );
+      } else if (errorDetail.contains('timeout') || errorDetail.contains('超时')) {
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus(
+          '连接失败: 连接超时\n'
+          '可能原因:\n'
+          '1. aria2 进程响应缓慢\n'
+          '2. 端点地址不正确\n'
+          '3. 网络问题'
+        );
+      } else if (e.code == 1) {
+        // Unauthorized error
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus(
+          '连接失败: 认证失败\n'
+          '密钥(Secret)不正确，请检查设置'
+        );
+      } else if (e.code == -32700) {
+        // Parse error - usually means wrong endpoint
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus(
+          '连接失败: 端点地址错误\n'
+          '当前地址: ${_endpointController.text}\n'
+          '标准地址应为: http://127.0.0.1:6800/jsonrpc'
+        );
+      } else {
+        ref.read(downloadSettingsProvider.notifier).setConnectionStatus('连接失败: $errorDetail');
+      }
+      ref.read(downloadSettingsProvider.notifier).setTestingConnection(false);
     } catch (e) {
-      setState(() {
-        _connectionStatus = '连接失败: $e';
-        _isTestingConnection = false;
-      });
+      _logger.log(Level.error, '[DownloadSettings] Connection test failed: $e');
+      ref.read(downloadSettingsProvider.notifier).setConnectionStatus(
+        '连接失败: ${e.toString()}\n'
+        '请检查:\n'
+        '1. aria2 是否正在运行\n'
+        '2. 端点地址是否正确\n'
+        '3. 密钥是否正确（如果设置了密钥）'
+      );
+      ref.read(downloadSettingsProvider.notifier).setTestingConnection(false);
     }
   }
 
   Future<void> _checkForUpdates() async {
-    if (!Platform.isAndroid) {
-      KazumiDialog.showToast(message: '自动更新仅支持 Android 平台');
+    // Mobile platforms not supported
+    if (Platform.isIOS || Platform.isAndroid) {
+      KazumiDialog.showToast(message: '移动平台使用内置 aria2,无需更新');
       return;
     }
 
-    setState(() {
-      _isCheckingUpdate = true;
-      _updateInfo = null;
-    });
+    ref.read(downloadSettingsProvider.notifier).setIsCheckingUpdate(true);
+    ref.read(downloadSettingsProvider.notifier).setUpdateInfo(null);
 
     try {
       final updateInfo = await Aria2Updater().checkForUpdates();
-      setState(() {
-        _isCheckingUpdate = false;
-        _updateInfo = updateInfo;
-      });
+      ref.read(downloadSettingsProvider.notifier).setIsCheckingUpdate(false);
+      ref.read(downloadSettingsProvider.notifier).setUpdateInfo(updateInfo);
 
       if (updateInfo == null) {
         KazumiDialog.showToast(message: '检查更新失败');
       } else if (!updateInfo.hasUpdate) {
-        KazumiDialog.showToast(message: '已是最新版本 ${updateInfo.currentVersion}');
+        KazumiDialog.showToast(message: '已是最新版本');
       } else {
         _showUpdateDialog(updateInfo);
       }
     } catch (e) {
-      setState(() {
-        _isCheckingUpdate = false;
-      });
+      ref.read(downloadSettingsProvider.notifier).setIsCheckingUpdate(false);
       KazumiDialog.showToast(message: '检查更新失败: $e');
     }
   }
 
   void _showUpdateDialog(Aria2UpdateInfo updateInfo) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('发现新版本'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('当前版本: ${updateInfo.currentVersion}'),
-            Text('最新版本: ${updateInfo.latestVersion}'),
-            if (updateInfo.releaseNotes != null) ...[
+    // For Windows, show WinGet update dialog
+    if (Platform.isWindows) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('发现新版本'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('当前版本: ${updateInfo.currentVersion}'),
+              Text('最新版本: ${updateInfo.latestVersion}'),
               const SizedBox(height: 16),
-              const Text('更新说明:', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('更新方式: ${updateInfo.updateMethod}'),
               const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: SingleChildScrollView(
-                  child: Text(updateInfo.releaseNotes!),
-                ),
+              const Text(
+                '更新将通过 WinGet 自动进行',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('取消'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _installUpdate(updateInfo);
+              },
+              child: const Text('立即更新'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+      );
+    } else {
+      // For macOS/Linux, show manual update instructions
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('更新 aria2'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('当前版本: ${updateInfo.currentVersion}'),
+              const SizedBox(height: 16),
+              const Text('请使用系统包管理器更新:'),
+              const SizedBox(height: 8),
+              if (updateInfo.updateCommand != null)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    updateInfo.updateCommand!,
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+                ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _installUpdate(updateInfo);
-            },
-            child: const Text('立即更新'),
-          ),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('关闭'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _installUpdate(Aria2UpdateInfo updateInfo) async {
-    setState(() {
-      _isDownloadingUpdate = true;
-      _updateDownloadProgress = 0.0;
-    });
+    if (!Platform.isWindows) {
+      KazumiDialog.showToast(message: '请使用系统包管理器手动更新');
+      return;
+    }
+
+    ref.read(downloadSettingsProvider.notifier).setIsDownloadingUpdate(true);
 
     try {
-      final success = await Aria2Updater().downloadAndInstall(
-        updateInfo.downloadUrl,
-        updateInfo.archiveType,
-        onProgress: (progress) {
-          setState(() {
-            _updateDownloadProgress = progress;
-          });
-        },
-      );
+      // For Windows, use WinGet to update
+      final success = await Aria2Updater().updateAria2();
 
-      setState(() {
-        _isDownloadingUpdate = false;
-      });
+      ref.read(downloadSettingsProvider.notifier).setIsDownloadingUpdate(false);
 
       if (success) {
         _showRestartDialog();
       } else {
-        KazumiDialog.showToast(message: '更新下载失败');
+        KazumiDialog.showToast(message: 'WinGet 更新失败,请检查日志');
       }
     } catch (e) {
-      setState(() {
-        _isDownloadingUpdate = false;
-      });
-      KazumiDialog.showToast(message: '更新安装失败: $e');
+      ref.read(downloadSettingsProvider.notifier).setIsDownloadingUpdate(false);
+      KazumiDialog.showToast(message: '更新失败: $e');
     }
   }
 
@@ -271,7 +353,7 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text('更新成功'),
-        content: const Text('aria2 已更新，需要重启应用才能生效。'),
+        content: const Text('aria2 已更新，请重启 aria2 服务以使用新版本。'),
         actions: [
           TextButton(
             onPressed: () {
@@ -281,10 +363,10 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Restart the app
-              exit(0);
+              Navigator.of(context).pop();
+              _restartAria2();
             },
-            child: const Text('立即重启'),
+            child: const Text('重启 aria2'),
           ),
         ],
       ),
@@ -297,33 +379,38 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
       return;
     }
 
-    setState(() {
-      _isRestartingAria2 = true;
-      _aria2Status = '正在重启 aria2...';
-    });
+    ref.read(downloadSettingsProvider.notifier).setIsRestartingAria2(true);
+    ref.read(downloadSettingsProvider.notifier).setAria2Status('正在重启 aria2...');
 
     try {
       final success = await Aria2ProcessManager().restart();
-      setState(() {
-        _isRestartingAria2 = false;
-        _aria2Status = success ? 'aria2 重启成功' : 'aria2 重启失败';
-      });
+
+      // 等待 aria2 完全启动
+      await Future.delayed(const Duration(seconds: 2));
+
+      ref.read(downloadSettingsProvider.notifier).setIsRestartingAria2(false);
       if (success) {
-        KazumiDialog.showToast(message: 'aria2 重启成功');
+        ref.read(downloadSettingsProvider.notifier).setAria2Status('aria2 重启成功');
       } else {
-        KazumiDialog.showToast(message: 'aria2 重启失败，请检查是否已安装 aria2');
+        ref.read(downloadSettingsProvider.notifier).setAria2Status('aria2 重启失败');
+      }
+
+      if (success) {
+        KazumiDialog.showToast(message: 'aria2 重启成功，请稍后重试测试连接');
+      } else {
+        KazumiDialog.showToast(message: 'aria2 重启失败，请检查日志');
       }
     } catch (e) {
-      setState(() {
-        _isRestartingAria2 = false;
-        _aria2Status = 'aria2 重启失败';
-      });
+      ref.read(downloadSettingsProvider.notifier).setIsRestartingAria2(false);
+      ref.read(downloadSettingsProvider.notifier).setAria2Status('aria2 重启失败');
       KazumiDialog.showToast(message: 'aria2 重启失败: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final downloadSettings = ref.watch(downloadSettingsProvider);
+
     return Scaffold(
       appBar: SysAppBar(
         title: const Text('下载设置'),
@@ -408,18 +495,34 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
               ),
               SettingsTile(
                 title: const Text('测试连接'),
-                description: _connectionStatus != null
-                    ? Text(
-                        _connectionStatus!,
-                        style: TextStyle(
-                          color: _connectionStatus!.contains('成功')
-                              ? Colors.green
-                              : Colors.red,
-                        ),
+                description: downloadSettings.connectionStatus.isNotEmpty
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            downloadSettings.connectionStatus,
+                            style: TextStyle(
+                              color: downloadSettings.connectionStatus.contains('成功')
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (downloadSettings.connectionStatus.contains('失败')) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '提示: 内置 aria2 服务未响应。请点击下方"重启"按钮。',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                            ),
+                          ],
+                        ],
                       )
                     : const Text('测试 aria2 连接是否正常'),
                 leading: const Icon(Icons.network_check),
-                trailing: _isTestingConnection
+                trailing: downloadSettings.isTestingConnection
                     ? const SizedBox(
                         width: 24,
                         height: 24,
@@ -438,16 +541,27 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
               tiles: [
                 SettingsTile(
                   title: const Text('aria2 状态'),
-                  description: _aria2Status != null
-                      ? Text(
-                          _aria2Status!,
-                          style: TextStyle(
-                            color: _aria2Status!.contains('运行中') || _aria2Status!.contains('成功')
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
-                        )
-                      : const Text('检查 aria2 运行状态'),
+                  description: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        downloadSettings.aria2Status,
+                        style: TextStyle(
+                          color: downloadSettings.aria2Status.contains('运行中') || downloadSettings.aria2Status.contains('成功')
+                              ? Colors.green
+                              : Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Kazumi 内置 aria2 下载引擎\n应用启动时会自动运行',
+                        style: TextStyle(
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                   leading: const Icon(Icons.info_outline),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -459,8 +573,8 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
-                        onPressed: _isRestartingAria2 ? null : _restartAria2,
-                        icon: _isRestartingAria2
+                        onPressed: downloadSettings.isRestartingAria2 ? null : _restartAria2,
+                        icon: downloadSettings.isRestartingAria2
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
@@ -475,26 +589,27 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
                 SettingsTile(
                   title: const Text('自动启动'),
                   description: const Text(
-                    'Kazumi 会在启动时自动运行 aria2 进程\n'
+                    'Kazumi 内置 aria2 二进制文件\n'
+                    '启动应用时会自动运行 aria2 进程\n'
                     '退出应用时会自动停止 aria2 进程',
                   ),
                   leading: const Icon(Icons.play_circle_outline),
                 ),
               ],
             ),
-          if (Platform.isAndroid)
+          if (Platform.isWindows)
             SettingsSection(
               title: const Text('aria2 更新'),
               tiles: [
                 SettingsTile(
                   title: const Text('检查更新'),
-                  description: _updateInfo != null
-                      ? Text(_updateInfo!.hasUpdate
-                          ? '发现新版本: ${_updateInfo!.latestVersion}'
-                          : '当前版本: ${_updateInfo!.currentVersion} (最新)')
+                  description: downloadSettings.updateInfo != null
+                      ? Text(downloadSettings.updateInfo!.hasUpdate
+                          ? '发现新版本: ${downloadSettings.updateInfo!.latestVersion}'
+                          : '当前已是最新版本')
                       : const Text('检查 aria2 是否有新版本可用'),
                   leading: const Icon(Icons.system_update),
-                  trailing: _isCheckingUpdate
+                  trailing: downloadSettings.isCheckingUpdate
                       ? const SizedBox(
                           width: 24,
                           height: 24,
@@ -506,53 +621,44 @@ class _DownloadSettingsPageState extends State<DownloadSettingsPage> {
                           label: const Text('检查更新'),
                         ),
                 ),
-                if (_isDownloadingUpdate)
+                if (downloadSettings.isDownloadingUpdate)
                   SettingsTile(
-                    title: const Text('下载更新'),
-                    description: Text(
-                      '下载进度: ${(_updateDownloadProgress * 100).toStringAsFixed(1)}%',
-                    ),
+                    title: const Text('正在更新'),
+                    description: const Text('通过 WinGet 更新 aria2...'),
                     leading: const Icon(Icons.download),
-                    trailing: SizedBox(
-                      width: 200,
-                      child: LinearProgressIndicator(
-                        value: _updateDownloadProgress,
-                      ),
+                    trailing: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   ),
                 SettingsTile(
                   title: const Text('自动更新说明'),
                   description: const Text(
-                    'Android 版本支持自动更新内置的 aria2 二进制文件\n'
-                    '更新会从 GitHub releases 下载最新版本\n'
-                    '支持使用 GitHub 镜像加速下载',
+                    'Windows 版本使用 WinGet 管理 aria2\n'
+                    '如果系统未安装 aria2,会自动安装\n'
+                    '更新会通过 WinGet 自动进行\n'
+                    'WinGet 是 Windows 官方包管理器',
                   ),
                   leading: const Icon(Icons.info_outline),
                 ),
               ],
             ),
-          SettingsSection(
-            title: const Text('使用说明'),
-            tiles: [
-              SettingsTile(
-                title: const Text('如何安装 aria2'),
-                description: Text(
-                  Platform.isIOS
-                      ? 'iOS 平台说明：\n\n'
-                        '• App Store 版本：不支持 aria2 功能\n'
-                        '• 自签名 IPA 版本：支持 aria2 功能（需要内置二进制文件）\n\n'
-                        '开发者注意：iOS 版本需要编译 aria2 并添加到应用包中。\n'
-                        '详见 docs/aria2_ios_setup.md'
-                      : 'aria2 是一个轻量级的多协议下载工具。\n\n'
-                        'Windows: 从 https://github.com/aria2/aria2/releases 下载并解压到系统 PATH\n'
-                        'macOS: brew install aria2\n'
-                        'Linux: sudo apt install aria2 或 sudo yum install aria2\n'
-                        'Android: 已内置二进制文件，无需安装\n\n'
-                        '注意：Kazumi 会自动启动和停止 aria2，无需手动运行',
+          if (Platform.isMacOS || Platform.isLinux)
+            SettingsSection(
+              title: const Text('aria2 更新'),
+              tiles: [
+                SettingsTile(
+                  title: const Text('手动更新'),
+                  description: Text(
+                    Platform.isMacOS
+                        ? '请使用 Homebrew 更新: brew upgrade aria2'
+                        : '请使用系统包管理器更新:\nsudo apt update && sudo apt upgrade aria2c',
+                  ),
+                  leading: const Icon(Icons.info_outline),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

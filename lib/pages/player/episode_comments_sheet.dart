@@ -31,11 +31,6 @@ class _EpisodeCommentsSheetState extends ConsumerState<EpisodeCommentsSheet> {
   @override
   void initState() {
     super.initState();
-    // ✅ Reset selected episode via Riverpod provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(selectedEpisodeProvider.notifier).state = null;
-      _refreshIndicatorKey.currentState?.show();
-    });
   }
 
   Widget _buildEpisodeCommentsBody(List<dynamic> comments) {

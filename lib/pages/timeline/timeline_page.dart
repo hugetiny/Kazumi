@@ -8,10 +8,10 @@ import 'package:kazumi/pages/timeline/providers.dart';
 import 'package:kazumi/bean/card/bangumi_timeline_card.dart';
 import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/utils/constants.dart';
-import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/bean/widget/error_widget.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
+import 'package:kazumi/pages/layout/app_bar_config.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 
 const int _weekdayCount = 7;
@@ -65,13 +65,33 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     super.dispose();
   }
 
-  void onBackPressed(BuildContext context) {
+  void _onBackPressed(BuildContext context) {
     if (KazumiDialog.observer.hasKazumiDialog) {
       KazumiDialog.dismiss();
       return;
     }
     ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go(Routes.popular);
+  }
+
+  void _updateAppBarConfig() {
+    if (!mounted) return;
+    final t = context.t;
+    final state = ref.read(timelineProvider);
+
+    ref.read(appBarConfigProvider.notifier).state = AppBarConfig(
+      title: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        child: Text(state.seasonString),
+        onTap: () => showSeasonBottomSheet(context),
+      ),
+      needTopOffset: false,
+      toolbarHeight: 104,
+      bottom: TabBar(
+        controller: tabController,
+        tabs: buildWeekTabs(t),
+      ),
+    );
   }
 
   DateTime generateDateTime(int year, _TimelineSeason season) {
@@ -407,63 +427,71 @@ class _TimelinePageState extends ConsumerState<TimelinePage>
     final translations = context.t;
     final timelineTexts = translations.library.timeline;
     final commonTexts = translations.library.common;
+
+    // 初始化时设置 AppBar
+    Future.microtask(() {
+      if (mounted) {
+        _updateAppBarConfig();
+      }
+    });
+
+    // 监听状态变化更新 AppBar
+    ref.listen<TimelineState>(timelineProvider, (previous, next) {
+      if (previous?.seasonString != next.seasonString) {
+        _updateAppBarConfig();
+      }
+    });
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
         if (didPop) {
           return;
         }
-        onBackPressed(context);
+        _onBackPressed(context);
       },
-      child: Scaffold(
-        appBar: SysAppBar(
-          needTopOffset: false,
-          toolbarHeight: 104,
-          bottom: TabBar(
-            controller: tabController,
-            tabs: buildWeekTabs(translations),
-            indicatorColor: Theme.of(context).colorScheme.primary,
+      child: Stack(
+        children: [
+          Builder(builder: (context) {
+            if (state.isLoading && state.bangumiCalendar.isEmpty) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            if (state.isTimeOut) {
+              return Center(
+                child: SizedBox(
+                  height: 400,
+                  child: GeneralErrorWidget(
+                      errMsg: commonTexts.emptyState,
+                      actions: [
+                        GeneralErrorButton(
+                          onPressed: () {
+                            onSeasonSelected(state.selectedDate);
+                          },
+                          text: commonTexts.retry,
+                        ),
+                      ]),
+                ),
+              );
+            }
+            return TabBarView(
+              controller: tabController,
+              children: contentGrid(state.bangumiCalendar),
+            );
+          }),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                showSortSwitcher();
+              },
+              icon: const Icon(Icons.sort),
+              label: Text(timelineTexts.sort.title),
+            ),
           ),
-          title: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              child: Text(state.seasonString),
-              onTap: () => showSeasonBottomSheet(context)),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            showSortSwitcher();
-          },
-          icon: const Icon(Icons.sort),
-          label: Text(timelineTexts.sort.title),
-        ),
-        body: Builder(builder: (context) {
-          if (state.isLoading && state.bangumiCalendar.isEmpty) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (state.isTimeOut) {
-            return Center(
-              child: SizedBox(
-                height: 400,
-                child: GeneralErrorWidget(
-                    errMsg: commonTexts.emptyState,
-                    actions: [
-                      GeneralErrorButton(
-                        onPressed: () {
-                          onSeasonSelected(state.selectedDate);
-                        },
-                        text: commonTexts.retry,
-                      ),
-                    ]),
-              ),
-            );
-          }
-          return TabBarView(
-            controller: tabController,
-            children: contentGrid(state.bangumiCalendar),
-          );
-        }),
+        ],
       ),
     );
   }

@@ -1,14 +1,14 @@
-/// Manual test script for DM84 video parsing
-/// 
-/// This script helps you manually test the two DM84 video parsing scenarios.
-/// Run this with: flutter run -d windows -t test/manual_test_dm84.dart
-/// 
-/// Test URLs:
-/// 1. Direct HTTP: https://dm84.net/p/1371-1-1.html
-/// 2. Blob + Iframe: https://dm84.net/p/71-1-1147.html
+// Manual test script for DM84 video parsing
+//
+// This script helps you manually test the two DM84 video parsing scenarios.
+// Run this with: flutter run -d windows -t test/manual_test_dm84.dart
+//
+// Test URLs:
+// 1. Direct HTTP: https://dm84.net/p/1371-1-1.html
+// 2. Blob + Iframe: https://dm84.net/p/71-1-1147.html
 
 import 'package:flutter/material.dart';
-import 'package:kazumi/pages/webview/webview_controller_impel/webview_inappwebview_windows_controller_impel.dart';
+import 'package:kazumi/pages/webview/webview_controller_impel/webview_windows_controller_impel.dart';
 
 void main() {
   runApp(const DM84TestApp());
@@ -38,10 +38,10 @@ class DM84TestPage extends StatefulWidget {
 }
 
 class _DM84TestPageState extends State<DM84TestPage> {
-  final controller = WebviewInAppWebViewWindowsItemControllerImpel();
-  final List<String> logs = [];
-  String? detectedVideoUrl;
-  bool isLoading = false;
+  final controller = WebviewWindowsItemControllerImpel();
+  final ValueNotifier<List<String>> logsNotifier = ValueNotifier<List<String>>([]);
+  final ValueNotifier<String?> detectedVideoUrlNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<bool> isLoadingNotifier = ValueNotifier<bool>(false);
 
   @override
   void initState() {
@@ -52,28 +52,24 @@ class _DM84TestPageState extends State<DM84TestPage> {
   void _setupController() {
     // Listen to log events
     controller.logEventController.stream.listen((log) {
-      setState(() {
-        logs.add(log);
-        // Auto-scroll to bottom
-        if (logs.length > 100) {
-          logs.removeAt(0);
-        }
-      });
+      final currentLogs = List<String>.from(logsNotifier.value);
+      currentLogs.add(log);
+      // Auto-scroll to bottom
+      if (currentLogs.length > 100) {
+        currentLogs.removeAt(0);
+      }
+      logsNotifier.value = currentLogs;
     });
 
     // Listen to video parser events
     controller.videoParserEventController.stream.listen((event) {
-      setState(() {
-        detectedVideoUrl = event.$1;
-        isLoading = false;
-      });
+      detectedVideoUrlNotifier.value = event.$1;
+      isLoadingNotifier.value = false;
     });
 
     // Listen to video loading events
     controller.videoLoadingEventController.stream.listen((loading) {
-      setState(() {
-        isLoading = loading;
-      });
+      isLoadingNotifier.value = loading;
     });
 
     // Initialize controller
@@ -81,15 +77,12 @@ class _DM84TestPageState extends State<DM84TestPage> {
   }
 
   Future<void> _testUrl(String url, String testName) async {
-    setState(() {
-      logs.clear();
-      detectedVideoUrl = null;
-      isLoading = true;
-    });
+    logsNotifier.value = [];
+    detectedVideoUrlNotifier.value = null;
+    isLoadingNotifier.value = true;
 
-    logs.add('=== Starting Test: $testName ===');
-    logs.add('URL: $url');
-    logs.add('');
+    final initialLogs = ['=== Starting Test: $testName ===', 'URL: $url', ''];
+    logsNotifier.value = initialLogs;
 
     await controller.loadUrl(
       url,
@@ -114,7 +107,7 @@ class _DM84TestPageState extends State<DM84TestPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton.icon(
-                  onPressed: isLoading
+                  onPressed: isLoadingNotifier.value
                       ? null
                       : () => _testUrl(
                             'https://dm84.net/p/1371-1-1.html',
@@ -128,7 +121,7 @@ class _DM84TestPageState extends State<DM84TestPage> {
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton.icon(
-                  onPressed: isLoading
+                  onPressed: isLoadingNotifier.value
                       ? null
                       : () => _testUrl(
                             'https://dm84.net/p/71-1-1147.html',
@@ -141,43 +134,55 @@ class _DM84TestPageState extends State<DM84TestPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (isLoading)
-                  const LinearProgressIndicator()
-                else if (detectedVideoUrl != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      border: Border.all(color: Colors.green),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.check_circle, color: Colors.green),
-                            SizedBox(width: 8),
-                            Text(
-                              'Video Source Detected!',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: isLoadingNotifier,
+                  builder: (context, isLoading, child) {
+                    return ValueListenableBuilder<String?>(
+                      valueListenable: detectedVideoUrlNotifier,
+                      builder: (context, detectedVideoUrl, child) {
+                        if (isLoading) {
+                          return const LinearProgressIndicator();
+                        } else if (detectedVideoUrl != null) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              border: Border.all(color: Colors.green),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        SelectableText(
-                          detectedVideoUrl!,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(Icons.check_circle, color: Colors.green),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Video Source Detected!',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                SelectableText(
+                                  detectedVideoUrl,
+                                  style: const TextStyle(
+                                    fontFamily: 'monospace',
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    );
+                  },
+                )
               ],
             ),
           ),
@@ -212,9 +217,7 @@ class _DM84TestPageState extends State<DM84TestPage> {
                         const Spacer(),
                         TextButton.icon(
                           onPressed: () {
-                            setState(() {
-                              logs.clear();
-                            });
+                            logsNotifier.value = [];
                           },
                           icon: const Icon(Icons.clear, size: 16),
                           label: const Text('Clear'),
@@ -223,11 +226,14 @@ class _DM84TestPageState extends State<DM84TestPage> {
                     ),
                   ),
                   Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: logs.length,
-                      itemBuilder: (context, index) {
-                        final log = logs[index];
+                    child: ValueListenableBuilder<List<String>>(
+                      valueListenable: logsNotifier,
+                      builder: (context, logs, child) {
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(8),
+                          itemCount: logs.length,
+                          itemBuilder: (context, index) {
+                            final log = logs[index];
                         Color? textColor;
                         FontWeight? fontWeight;
 
@@ -253,10 +259,12 @@ class _DM84TestPageState extends State<DM84TestPage> {
                               fontWeight: fontWeight,
                             ),
                           ),
+                            );
+                          },
                         );
                       },
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -268,8 +276,10 @@ class _DM84TestPageState extends State<DM84TestPage> {
 
   @override
   void dispose() {
+    logsNotifier.dispose();
+    detectedVideoUrlNotifier.dispose();
+    isLoadingNotifier.dispose();
     controller.dispose();
     super.dispose();
   }
 }
-

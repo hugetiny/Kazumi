@@ -15,6 +15,7 @@ class SourceSearchState {
   const SourceSearchState({
     required this.statuses,
     required this.results,
+    required this.responseTimes,
   });
 
   factory SourceSearchState.initial(Iterable<String> pluginNames) {
@@ -24,22 +25,48 @@ class SourceSearchState {
     final resultMap = <String, List<SearchItem>>{
       for (final name in pluginNames) name: const [],
     };
-    return SourceSearchState(statuses: statusMap, results: resultMap);
+    final responseTimeMap = <String, int>{
+      for (final name in pluginNames) name: 0,
+    };
+    return SourceSearchState(
+      statuses: statusMap,
+      results: resultMap,
+      responseTimes: responseTimeMap,
+    );
   }
 
   final Map<String, PluginSearchStatus> statuses;
   final Map<String, List<SearchItem>> results;
+  final Map<String, int> responseTimes;
 
   SourceSearchState setStatus(String pluginName, PluginSearchStatus status) {
     final updatedStatuses = Map<String, PluginSearchStatus>.from(statuses)
       ..[pluginName] = status;
-    return SourceSearchState(statuses: updatedStatuses, results: results);
+    return SourceSearchState(
+      statuses: updatedStatuses,
+      results: results,
+      responseTimes: responseTimes,
+    );
   }
 
   SourceSearchState setResults(String pluginName, List<SearchItem> data) {
     final updatedResults = Map<String, List<SearchItem>>.from(results)
       ..[pluginName] = List<SearchItem>.unmodifiable(data);
-    return SourceSearchState(statuses: statuses, results: updatedResults);
+    return SourceSearchState(
+      statuses: statuses,
+      results: updatedResults,
+      responseTimes: responseTimes,
+    );
+  }
+
+  SourceSearchState setResponseTime(String pluginName, int time) {
+    final updatedTimes = Map<String, int>.from(responseTimes)
+      ..[pluginName] = time;
+    return SourceSearchState(
+      statuses: statuses,
+      results: results,
+      responseTimes: updatedTimes,
+    );
   }
 
   SourceSearchState removePlugins(Iterable<String> pluginNames) {
@@ -48,9 +75,12 @@ class SourceSearchState {
       ..removeWhere((key, _) => names.contains(key));
     final updatedResults = Map<String, List<SearchItem>>.from(results)
       ..removeWhere((key, _) => names.contains(key));
+    final updatedTimes = Map<String, int>.from(responseTimes)
+      ..removeWhere((key, _) => names.contains(key));
     return SourceSearchState(
       statuses: updatedStatuses,
       results: updatedResults,
+      responseTimes: updatedTimes,
     );
   }
 
@@ -60,13 +90,16 @@ class SourceSearchState {
     }
     final updatedStatuses = Map<String, PluginSearchStatus>.from(statuses);
     final updatedResults = Map<String, List<SearchItem>>.from(results);
+    final updatedTimes = Map<String, int>.from(responseTimes);
     for (final name in pluginNames) {
       updatedStatuses[name] = PluginSearchStatus.pending;
       updatedResults[name] = const <SearchItem>[];
+      updatedTimes[name] = 0;
     }
     return SourceSearchState(
       statuses: updatedStatuses,
       results: updatedResults,
+      responseTimes: updatedTimes,
     );
   }
 }
@@ -216,15 +249,19 @@ class SourceSearchController
 
     _markPending(plugin.name, clearExisting: clearExisting);
 
+    final stopwatch = Stopwatch()..start();
+
     try {
       final response = await plugin.queryBangumi(keyword, shouldRethrow: true);
+      stopwatch.stop();
+
       if (_isDisposed) {
         return;
       }
       if (response.data.isNotEmpty) {
         _pluginsController.validityTracker.markSearchValid(plugin.name);
       }
-      _markSuccess(plugin.name, response.data);
+      _markSuccess(plugin.name, response.data, stopwatch.elapsedMilliseconds);
     } catch (error) {
       if (_isDisposed) {
         return;
@@ -245,10 +282,11 @@ class SourceSearchController
     state = updatedState;
   }
 
-  void _markSuccess(String pluginName, List<SearchItem> data) {
+  void _markSuccess(String pluginName, List<SearchItem> data, int responseTime) {
     state = state
         .setStatus(pluginName, PluginSearchStatus.success)
-        .setResults(pluginName, data);
+        .setResults(pluginName, data)
+        .setResponseTime(pluginName, responseTime);
   }
 
   void _markError(String pluginName) {

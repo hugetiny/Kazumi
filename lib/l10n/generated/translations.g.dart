@@ -4,9 +4,9 @@
 /// To regenerate, run: `dart run slang`
 ///
 /// Locales: 4
-/// Strings: 2564 (641 per locale)
+/// Strings: 2742 (685 per locale)
 ///
-/// Built on 2025-11-04 at 14:57 UTC
+/// Built on 2025-11-17 at 19:01 UTC
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
@@ -205,6 +205,9 @@ class _TranslationsDownloadsEnUs {
 	String get queued => 'Queued';
 	String get running => 'Downloading';
 	String get completed => 'Completed';
+	late final _TranslationsDownloadsPageEnUs page = _TranslationsDownloadsPageEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogEnUs addDialog = _TranslationsDownloadsAddDialogEnUs._(_root);
+	late final _TranslationsDownloadsDetailDialogEnUs detailDialog = _TranslationsDownloadsDetailDialogEnUs._(_root);
 }
 
 // Path: torrent
@@ -359,6 +362,60 @@ class _TranslationsMetadataSourceEnUs {
 	// Translations
 	String get bangumi => 'Bangumi';
 	String get tmdb => 'TMDb';
+}
+
+// Path: downloads.page
+class _TranslationsDownloadsPageEnUs {
+	_TranslationsDownloadsPageEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Download Manager';
+	String selectedItems({required Object count}) => '${count} items selected';
+	String get newDownload => 'New Download';
+	String get batchManage => 'Batch Manage';
+	String get downloadSettings => 'Download Settings';
+	String get refresh => 'Refresh';
+	late final _TranslationsDownloadsPageTabsEnUs tabs = _TranslationsDownloadsPageTabsEnUs._(_root);
+	late final _TranslationsDownloadsPageActionsEnUs actions = _TranslationsDownloadsPageActionsEnUs._(_root);
+	late final _TranslationsDownloadsPageStatisticsEnUs statistics = _TranslationsDownloadsPageStatisticsEnUs._(_root);
+	late final _TranslationsDownloadsPageSearchEnUs search = _TranslationsDownloadsPageSearchEnUs._(_root);
+	late final _TranslationsDownloadsPageSortEnUs sort = _TranslationsDownloadsPageSortEnUs._(_root);
+	late final _TranslationsDownloadsPageEmptyEnUs empty = _TranslationsDownloadsPageEmptyEnUs._(_root);
+	late final _TranslationsDownloadsPageStatusEnUs status = _TranslationsDownloadsPageStatusEnUs._(_root);
+	late final _TranslationsDownloadsPageDialogEnUs dialog = _TranslationsDownloadsPageDialogEnUs._(_root);
+	late final _TranslationsDownloadsPageToastEnUs toast = _TranslationsDownloadsPageToastEnUs._(_root);
+}
+
+// Path: downloads.addDialog
+class _TranslationsDownloadsAddDialogEnUs {
+	_TranslationsDownloadsAddDialogEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'New Download Task';
+	late final _TranslationsDownloadsAddDialogTabsEnUs tabs = _TranslationsDownloadsAddDialogTabsEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogUrlEnUs url = _TranslationsDownloadsAddDialogUrlEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogTorrentEnUs torrent = _TranslationsDownloadsAddDialogTorrentEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogAdvancedEnUs advanced = _TranslationsDownloadsAddDialogAdvancedEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogActionsEnUs actions = _TranslationsDownloadsAddDialogActionsEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogErrorsEnUs errors = _TranslationsDownloadsAddDialogErrorsEnUs._(_root);
+	late final _TranslationsDownloadsAddDialogToastEnUs toast = _TranslationsDownloadsAddDialogToastEnUs._(_root);
+}
+
+// Path: downloads.detailDialog
+class _TranslationsDownloadsDetailDialogEnUs {
+	_TranslationsDownloadsDetailDialogEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Task Details';
+	late final _TranslationsDownloadsDetailDialogSectionsEnUs sections = _TranslationsDownloadsDetailDialogSectionsEnUs._(_root);
+	late final _TranslationsDownloadsDetailDialogActionsEnUs actions = _TranslationsDownloadsDetailDialogActionsEnUs._(_root);
+	late final _TranslationsDownloadsDetailDialogToastEnUs toast = _TranslationsDownloadsDetailDialogToastEnUs._(_root);
 }
 
 // Path: torrent.consent
@@ -614,9 +671,10 @@ class _TranslationsNavigationTabsEnUs {
 	final AppTranslations _root; // ignore: unused_field
 
 	// Translations
-	String get popular => 'Popular';
+	String get popular => 'Home';
 	String get timeline => 'Timeline';
 	String get my => 'My';
+	String get download => 'Download';
 	String get settings => 'Settings';
 }
 
@@ -718,8 +776,8 @@ class _TranslationsLibraryPopularEnUs {
 	final AppTranslations _root; // ignore: unused_field
 
 	// Translations
-	String get title => 'Trending Anime';
-	String get allTag => 'Trending';
+	String get title => 'Home';
+	String get allTag => 'Home';
 	late final _TranslationsLibraryPopularToastEnUs toast = _TranslationsLibraryPopularToastEnUs._(_root);
 }
 
@@ -1017,6 +1075,256 @@ class _TranslationsNetworkStatusEnUs {
 	String get vpn => 'Using VPN connection';
 	String get other => 'Using another network';
 	String get none => 'No network connection';
+}
+
+// Path: downloads.page.tabs
+class _TranslationsDownloadsPageTabsEnUs {
+	_TranslationsDownloadsPageTabsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String downloading({required Object count}) => 'Downloading (${count})';
+	String completed({required Object count}) => 'Completed (${count})';
+	String get all => 'All';
+}
+
+// Path: downloads.page.actions
+class _TranslationsDownloadsPageActionsEnUs {
+	_TranslationsDownloadsPageActionsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get selectAll => 'Select All';
+	String get resume => 'Resume';
+	String get pause => 'Pause';
+	String get pauseAll => 'Pause All';
+	String get resumeAll => 'Resume All';
+	String get clearCompleted => 'Clear Completed';
+	String get deleteAll => 'Delete All';
+	String get retry => 'Retry';
+	String get delete => 'Delete';
+	String get open => 'Open';
+}
+
+// Path: downloads.page.statistics
+class _TranslationsDownloadsPageStatisticsEnUs {
+	_TranslationsDownloadsPageStatisticsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String tasks({required Object count}) => '${count} tasks';
+	String eta({required Object time}) => 'ETA ${time}';
+}
+
+// Path: downloads.page.search
+class _TranslationsDownloadsPageSearchEnUs {
+	_TranslationsDownloadsPageSearchEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get placeholder => 'Search downloads...';
+	String get clear => 'Clear';
+}
+
+// Path: downloads.page.sort
+class _TranslationsDownloadsPageSortEnUs {
+	_TranslationsDownloadsPageSortEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get label => 'Sort';
+	String get created => 'Created Time';
+	String get name => 'File Name';
+	String get size => 'File Size';
+	String get speed => 'Download Speed';
+	String get progress => 'Progress';
+}
+
+// Path: downloads.page.empty
+class _TranslationsDownloadsPageEmptyEnUs {
+	_TranslationsDownloadsPageEmptyEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get downloading => 'No active downloads';
+	String get completed => 'No completed downloads yet';
+	String get all => 'Download list is empty';
+	String get hint => 'Click the new button above to add downloads';
+}
+
+// Path: downloads.page.status
+class _TranslationsDownloadsPageStatusEnUs {
+	_TranslationsDownloadsPageStatusEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get active => 'Downloading';
+	String get waiting => 'Waiting';
+	String get paused => 'Paused';
+	String get error => 'Error';
+	String get complete => 'Completed';
+	String get removed => 'Removed';
+}
+
+// Path: downloads.page.dialog
+class _TranslationsDownloadsPageDialogEnUs {
+	_TranslationsDownloadsPageDialogEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get deleteConfirm => 'Are you sure you want to delete the selected downloads?';
+	String get deleteAllConfirm => 'Are you sure you want to delete all downloads? This action cannot be undone.';
+}
+
+// Path: downloads.page.toast
+class _TranslationsDownloadsPageToastEnUs {
+	_TranslationsDownloadsPageToastEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get addedToQueue => 'Added to download queue';
+	String get resumed => 'Download resumed';
+	String get paused => 'Download paused';
+	String get deleted => 'Deleted';
+	String get retrying => 'Re-added to download queue';
+	String fileLocation({required Object path}) => 'File location: ${path}';
+}
+
+// Path: downloads.addDialog.tabs
+class _TranslationsDownloadsAddDialogTabsEnUs {
+	_TranslationsDownloadsAddDialogTabsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get url => 'URL Download';
+	String get torrent => 'Torrent Download';
+}
+
+// Path: downloads.addDialog.url
+class _TranslationsDownloadsAddDialogUrlEnUs {
+	_TranslationsDownloadsAddDialogUrlEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get hint => 'Enter download links, one per line\nSupported:\n- HTTP/HTTPS links\n- FTP links\n- Magnet links (magnet:?xt=...)';
+}
+
+// Path: downloads.addDialog.torrent
+class _TranslationsDownloadsAddDialogTorrentEnUs {
+	_TranslationsDownloadsAddDialogTorrentEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get dropZone => 'Drop torrent file here';
+	String get dropZoneWindows => 'Click the button below to select torrent file';
+	String get supported => 'Supports .torrent files';
+	String get selectFile => 'Select Torrent File';
+}
+
+// Path: downloads.addDialog.advanced
+class _TranslationsDownloadsAddDialogAdvancedEnUs {
+	_TranslationsDownloadsAddDialogAdvancedEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get title => 'Advanced Options';
+	String get savePath => 'Save Path (Optional)';
+	String get savePathHint => 'Leave empty to use default download path';
+	String connections({required Object count}) => 'Connections per file: ${count}';
+	String split({required Object count}) => 'Split per task: ${count}';
+}
+
+// Path: downloads.addDialog.actions
+class _TranslationsDownloadsAddDialogActionsEnUs {
+	_TranslationsDownloadsAddDialogActionsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get cancel => 'Cancel';
+	String get start => 'Start Download';
+}
+
+// Path: downloads.addDialog.errors
+class _TranslationsDownloadsAddDialogErrorsEnUs {
+	_TranslationsDownloadsAddDialogErrorsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get noUrl => 'Please enter at least one download link';
+	String get noTorrent => 'Please select or drop a torrent file';
+	String selectFileFailed({required Object error}) => 'Failed to select file: ${error}';
+	String selectPathFailed({required Object error}) => 'Failed to select path: ${error}';
+	String submitFailed({required Object error}) => 'Failed to add download: ${error}';
+}
+
+// Path: downloads.addDialog.toast
+class _TranslationsDownloadsAddDialogToastEnUs {
+	_TranslationsDownloadsAddDialogToastEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String added({required Object count}) => 'Added ${count} download tasks';
+	String get addedTorrent => 'Added torrent download task';
+}
+
+// Path: downloads.detailDialog.sections
+class _TranslationsDownloadsDetailDialogSectionsEnUs {
+	_TranslationsDownloadsDetailDialogSectionsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get taskName => 'Task Name';
+	String get fileName => 'File Name';
+	String get fileSize => 'File Size';
+	String get progress => 'Download Progress';
+	String get speed => 'Download Speed';
+	String get uploadSpeed => 'Upload Speed';
+	String get connections => 'Connections';
+	String get eta => 'Estimated Time';
+	String get filePath => 'File Path';
+	String get gid => 'Task ID';
+	String get createdAt => 'Created At';
+}
+
+// Path: downloads.detailDialog.actions
+class _TranslationsDownloadsDetailDialogActionsEnUs {
+	_TranslationsDownloadsDetailDialogActionsEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get copyPath => 'Copy Path';
+	String get openFile => 'Open File';
+	String get openFolder => 'Open Folder';
+	String get retry => 'Retry Download';
+	String get close => 'Close';
+}
+
+// Path: downloads.detailDialog.toast
+class _TranslationsDownloadsDetailDialogToastEnUs {
+	_TranslationsDownloadsDetailDialogToastEnUs._(this._root);
+
+	final AppTranslations _root; // ignore: unused_field
+
+	// Translations
+	String get pathCopied => 'Path copied';
 }
 
 // Path: settings.appearancePage.mode
@@ -2976,6 +3284,7 @@ class _TranslationsNavigationTabsJaJp extends _TranslationsNavigationTabsEnUs {
 	@override String get popular => '人気';
 	@override String get timeline => 'タイムライン';
 	@override String get my => 'マイ';
+	@override String get download => 'ダウンロード';
 	@override String get settings => '設定';
 }
 
@@ -4923,6 +5232,9 @@ class _TranslationsDownloadsZhCn extends _TranslationsDownloadsEnUs {
 	@override String get queued => '排队';
 	@override String get running => '下载中';
 	@override String get completed => '已完成';
+	@override late final _TranslationsDownloadsPageZhCn page = _TranslationsDownloadsPageZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogZhCn addDialog = _TranslationsDownloadsAddDialogZhCn._(_root);
+	@override late final _TranslationsDownloadsDetailDialogZhCn detailDialog = _TranslationsDownloadsDetailDialogZhCn._(_root);
 }
 
 // Path: torrent
@@ -5077,6 +5389,60 @@ class _TranslationsMetadataSourceZhCn extends _TranslationsMetadataSourceEnUs {
 	// Translations
 	@override String get bangumi => 'Bangumi';
 	@override String get tmdb => 'TMDb';
+}
+
+// Path: downloads.page
+class _TranslationsDownloadsPageZhCn extends _TranslationsDownloadsPageEnUs {
+	_TranslationsDownloadsPageZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '下载管理';
+	@override String selectedItems({required Object count}) => '已选择 ${count} 项';
+	@override String get newDownload => '新建下载';
+	@override String get batchManage => '批量管理';
+	@override String get downloadSettings => '下载设置';
+	@override String get refresh => '刷新';
+	@override late final _TranslationsDownloadsPageTabsZhCn tabs = _TranslationsDownloadsPageTabsZhCn._(_root);
+	@override late final _TranslationsDownloadsPageActionsZhCn actions = _TranslationsDownloadsPageActionsZhCn._(_root);
+	@override late final _TranslationsDownloadsPageStatisticsZhCn statistics = _TranslationsDownloadsPageStatisticsZhCn._(_root);
+	@override late final _TranslationsDownloadsPageSearchZhCn search = _TranslationsDownloadsPageSearchZhCn._(_root);
+	@override late final _TranslationsDownloadsPageSortZhCn sort = _TranslationsDownloadsPageSortZhCn._(_root);
+	@override late final _TranslationsDownloadsPageEmptyZhCn empty = _TranslationsDownloadsPageEmptyZhCn._(_root);
+	@override late final _TranslationsDownloadsPageStatusZhCn status = _TranslationsDownloadsPageStatusZhCn._(_root);
+	@override late final _TranslationsDownloadsPageDialogZhCn dialog = _TranslationsDownloadsPageDialogZhCn._(_root);
+	@override late final _TranslationsDownloadsPageToastZhCn toast = _TranslationsDownloadsPageToastZhCn._(_root);
+}
+
+// Path: downloads.addDialog
+class _TranslationsDownloadsAddDialogZhCn extends _TranslationsDownloadsAddDialogEnUs {
+	_TranslationsDownloadsAddDialogZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '新建下载任务';
+	@override late final _TranslationsDownloadsAddDialogTabsZhCn tabs = _TranslationsDownloadsAddDialogTabsZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogUrlZhCn url = _TranslationsDownloadsAddDialogUrlZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogTorrentZhCn torrent = _TranslationsDownloadsAddDialogTorrentZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogAdvancedZhCn advanced = _TranslationsDownloadsAddDialogAdvancedZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogActionsZhCn actions = _TranslationsDownloadsAddDialogActionsZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogErrorsZhCn errors = _TranslationsDownloadsAddDialogErrorsZhCn._(_root);
+	@override late final _TranslationsDownloadsAddDialogToastZhCn toast = _TranslationsDownloadsAddDialogToastZhCn._(_root);
+}
+
+// Path: downloads.detailDialog
+class _TranslationsDownloadsDetailDialogZhCn extends _TranslationsDownloadsDetailDialogEnUs {
+	_TranslationsDownloadsDetailDialogZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '任务详情';
+	@override late final _TranslationsDownloadsDetailDialogSectionsZhCn sections = _TranslationsDownloadsDetailDialogSectionsZhCn._(_root);
+	@override late final _TranslationsDownloadsDetailDialogActionsZhCn actions = _TranslationsDownloadsDetailDialogActionsZhCn._(_root);
+	@override late final _TranslationsDownloadsDetailDialogToastZhCn toast = _TranslationsDownloadsDetailDialogToastZhCn._(_root);
 }
 
 // Path: torrent.consent
@@ -5332,9 +5698,10 @@ class _TranslationsNavigationTabsZhCn extends _TranslationsNavigationTabsEnUs {
 	@override final _TranslationsZhCn _root; // ignore: unused_field
 
 	// Translations
-	@override String get popular => '热门番组';
+	@override String get popular => '首页';
 	@override String get timeline => '时间表';
 	@override String get my => '我的';
+	@override String get download => '下载';
 	@override String get settings => '设置';
 }
 
@@ -5436,8 +5803,8 @@ class _TranslationsLibraryPopularZhCn extends _TranslationsLibraryPopularEnUs {
 	@override final _TranslationsZhCn _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => '热门番组';
-	@override String get allTag => '热门番组';
+	@override String get title => '首页';
+	@override String get allTag => '首页';
 	@override late final _TranslationsLibraryPopularToastZhCn toast = _TranslationsLibraryPopularToastZhCn._(_root);
 }
 
@@ -5735,6 +6102,256 @@ class _TranslationsNetworkStatusZhCn extends _TranslationsNetworkStatusEnUs {
 	@override String get vpn => '正在使用代理网络';
 	@override String get other => '正在使用其他网络';
 	@override String get none => '未连接到任何网络';
+}
+
+// Path: downloads.page.tabs
+class _TranslationsDownloadsPageTabsZhCn extends _TranslationsDownloadsPageTabsEnUs {
+	_TranslationsDownloadsPageTabsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String downloading({required Object count}) => '下载中 (${count})';
+	@override String completed({required Object count}) => '已完成 (${count})';
+	@override String get all => '全部';
+}
+
+// Path: downloads.page.actions
+class _TranslationsDownloadsPageActionsZhCn extends _TranslationsDownloadsPageActionsEnUs {
+	_TranslationsDownloadsPageActionsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get selectAll => '全选';
+	@override String get resume => '继续';
+	@override String get pause => '暂停';
+	@override String get pauseAll => '暂停全部';
+	@override String get resumeAll => '继续全部';
+	@override String get clearCompleted => '清除已完成';
+	@override String get deleteAll => '删除全部';
+	@override String get retry => '重试';
+	@override String get delete => '删除';
+	@override String get open => '打开';
+}
+
+// Path: downloads.page.statistics
+class _TranslationsDownloadsPageStatisticsZhCn extends _TranslationsDownloadsPageStatisticsEnUs {
+	_TranslationsDownloadsPageStatisticsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String tasks({required Object count}) => '${count} 个任务';
+	@override String eta({required Object time}) => '预计剩余 ${time}';
+}
+
+// Path: downloads.page.search
+class _TranslationsDownloadsPageSearchZhCn extends _TranslationsDownloadsPageSearchEnUs {
+	_TranslationsDownloadsPageSearchZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get placeholder => '搜索下载任务...';
+	@override String get clear => '清除';
+}
+
+// Path: downloads.page.sort
+class _TranslationsDownloadsPageSortZhCn extends _TranslationsDownloadsPageSortEnUs {
+	_TranslationsDownloadsPageSortZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get label => '排序';
+	@override String get created => '创建时间';
+	@override String get name => '文件名';
+	@override String get size => '文件大小';
+	@override String get speed => '下载速度';
+	@override String get progress => '进度';
+}
+
+// Path: downloads.page.empty
+class _TranslationsDownloadsPageEmptyZhCn extends _TranslationsDownloadsPageEmptyEnUs {
+	_TranslationsDownloadsPageEmptyZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get downloading => '当前没有下载任务';
+	@override String get completed => '还没有已完成的下载';
+	@override String get all => '下载列表为空';
+	@override String get hint => '点击上方的新建按钮添加下载任务';
+}
+
+// Path: downloads.page.status
+class _TranslationsDownloadsPageStatusZhCn extends _TranslationsDownloadsPageStatusEnUs {
+	_TranslationsDownloadsPageStatusZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get active => '下载中';
+	@override String get waiting => '等待中';
+	@override String get paused => '已暂停';
+	@override String get error => '出错';
+	@override String get complete => '已完成';
+	@override String get removed => '已删除';
+}
+
+// Path: downloads.page.dialog
+class _TranslationsDownloadsPageDialogZhCn extends _TranslationsDownloadsPageDialogEnUs {
+	_TranslationsDownloadsPageDialogZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get deleteConfirm => '确定要删除选中的下载任务吗？';
+	@override String get deleteAllConfirm => '确定要删除全部下载任务吗？此操作不可撤销。';
+}
+
+// Path: downloads.page.toast
+class _TranslationsDownloadsPageToastZhCn extends _TranslationsDownloadsPageToastEnUs {
+	_TranslationsDownloadsPageToastZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get addedToQueue => '已添加到下载队列';
+	@override String get resumed => '已继续下载';
+	@override String get paused => '已暂停下载';
+	@override String get deleted => '已删除';
+	@override String get retrying => '已重新添加到下载队列';
+	@override String fileLocation({required Object path}) => '文件位置: ${path}';
+}
+
+// Path: downloads.addDialog.tabs
+class _TranslationsDownloadsAddDialogTabsZhCn extends _TranslationsDownloadsAddDialogTabsEnUs {
+	_TranslationsDownloadsAddDialogTabsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get url => 'URL 下载';
+	@override String get torrent => '种子下载';
+}
+
+// Path: downloads.addDialog.url
+class _TranslationsDownloadsAddDialogUrlZhCn extends _TranslationsDownloadsAddDialogUrlEnUs {
+	_TranslationsDownloadsAddDialogUrlZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get hint => '输入下载链接，每行一个\n支持：\n- HTTP/HTTPS 链接\n- FTP 链接\n- 磁力链接（magnet:?xt=...)';
+}
+
+// Path: downloads.addDialog.torrent
+class _TranslationsDownloadsAddDialogTorrentZhCn extends _TranslationsDownloadsAddDialogTorrentEnUs {
+	_TranslationsDownloadsAddDialogTorrentZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get dropZone => '拖入种子文件到此处';
+	@override String get dropZoneWindows => '点击下方按钮选择种子文件';
+	@override String get supported => '支持 .torrent 文件';
+	@override String get selectFile => '选择种子文件';
+}
+
+// Path: downloads.addDialog.advanced
+class _TranslationsDownloadsAddDialogAdvancedZhCn extends _TranslationsDownloadsAddDialogAdvancedEnUs {
+	_TranslationsDownloadsAddDialogAdvancedZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => '高级选项';
+	@override String get savePath => '保存路径（可选）';
+	@override String get savePathHint => '留空使用默认下载路径';
+	@override String connections({required Object count}) => '单文件连接数: ${count}';
+	@override String split({required Object count}) => '单任务分段数: ${count}';
+}
+
+// Path: downloads.addDialog.actions
+class _TranslationsDownloadsAddDialogActionsZhCn extends _TranslationsDownloadsAddDialogActionsEnUs {
+	_TranslationsDownloadsAddDialogActionsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get cancel => '取消';
+	@override String get start => '开始下载';
+}
+
+// Path: downloads.addDialog.errors
+class _TranslationsDownloadsAddDialogErrorsZhCn extends _TranslationsDownloadsAddDialogErrorsEnUs {
+	_TranslationsDownloadsAddDialogErrorsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get noUrl => '请输入至少一个下载链接';
+	@override String get noTorrent => '请选择或拖入种子文件';
+	@override String selectFileFailed({required Object error}) => '选择文件失败: ${error}';
+	@override String selectPathFailed({required Object error}) => '选择路径失败: ${error}';
+	@override String submitFailed({required Object error}) => '添加下载失败: ${error}';
+}
+
+// Path: downloads.addDialog.toast
+class _TranslationsDownloadsAddDialogToastZhCn extends _TranslationsDownloadsAddDialogToastEnUs {
+	_TranslationsDownloadsAddDialogToastZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String added({required Object count}) => '已添加 ${count} 个下载任务';
+	@override String get addedTorrent => '已添加种子下载任务';
+}
+
+// Path: downloads.detailDialog.sections
+class _TranslationsDownloadsDetailDialogSectionsZhCn extends _TranslationsDownloadsDetailDialogSectionsEnUs {
+	_TranslationsDownloadsDetailDialogSectionsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get taskName => '任务名称';
+	@override String get fileName => '文件名';
+	@override String get fileSize => '文件大小';
+	@override String get progress => '下载进度';
+	@override String get speed => '下载速度';
+	@override String get uploadSpeed => '上传速度';
+	@override String get connections => '连接数';
+	@override String get eta => '预计剩余时间';
+	@override String get filePath => '文件路径';
+	@override String get gid => '任务 ID';
+	@override String get createdAt => '创建时间';
+}
+
+// Path: downloads.detailDialog.actions
+class _TranslationsDownloadsDetailDialogActionsZhCn extends _TranslationsDownloadsDetailDialogActionsEnUs {
+	_TranslationsDownloadsDetailDialogActionsZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get copyPath => '复制路径';
+	@override String get openFile => '打开文件';
+	@override String get openFolder => '打开文件夹';
+	@override String get retry => '重新下载';
+	@override String get close => '关闭';
+}
+
+// Path: downloads.detailDialog.toast
+class _TranslationsDownloadsDetailDialogToastZhCn extends _TranslationsDownloadsDetailDialogToastEnUs {
+	_TranslationsDownloadsDetailDialogToastZhCn._(_TranslationsZhCn root) : this._root = root, super._(root);
+
+	@override final _TranslationsZhCn _root; // ignore: unused_field
+
+	// Translations
+	@override String get pathCopied => '已复制路径';
 }
 
 // Path: settings.appearancePage.mode
@@ -7691,9 +8308,10 @@ class _TranslationsNavigationTabsZhTw extends _TranslationsNavigationTabsEnUs {
 	@override final _TranslationsZhTw _root; // ignore: unused_field
 
 	// Translations
-	@override String get popular => '熱門番組';
+	@override String get popular => '熱門番劇';
 	@override String get timeline => '時間表';
 	@override String get my => '我的';
+	@override String get download => '下載';
 	@override String get settings => '設定';
 }
 
@@ -9582,6 +10200,93 @@ extension on AppTranslations {
 			case 'downloads.queued': return 'Queued';
 			case 'downloads.running': return 'Downloading';
 			case 'downloads.completed': return 'Completed';
+			case 'downloads.page.title': return 'Download Manager';
+			case 'downloads.page.selectedItems': return ({required Object count}) => '${count} items selected';
+			case 'downloads.page.newDownload': return 'New Download';
+			case 'downloads.page.batchManage': return 'Batch Manage';
+			case 'downloads.page.downloadSettings': return 'Download Settings';
+			case 'downloads.page.refresh': return 'Refresh';
+			case 'downloads.page.tabs.downloading': return ({required Object count}) => 'Downloading (${count})';
+			case 'downloads.page.tabs.completed': return ({required Object count}) => 'Completed (${count})';
+			case 'downloads.page.tabs.all': return 'All';
+			case 'downloads.page.actions.selectAll': return 'Select All';
+			case 'downloads.page.actions.resume': return 'Resume';
+			case 'downloads.page.actions.pause': return 'Pause';
+			case 'downloads.page.actions.pauseAll': return 'Pause All';
+			case 'downloads.page.actions.resumeAll': return 'Resume All';
+			case 'downloads.page.actions.clearCompleted': return 'Clear Completed';
+			case 'downloads.page.actions.deleteAll': return 'Delete All';
+			case 'downloads.page.actions.retry': return 'Retry';
+			case 'downloads.page.actions.delete': return 'Delete';
+			case 'downloads.page.actions.open': return 'Open';
+			case 'downloads.page.statistics.tasks': return ({required Object count}) => '${count} tasks';
+			case 'downloads.page.statistics.eta': return ({required Object time}) => 'ETA ${time}';
+			case 'downloads.page.search.placeholder': return 'Search downloads...';
+			case 'downloads.page.search.clear': return 'Clear';
+			case 'downloads.page.sort.label': return 'Sort';
+			case 'downloads.page.sort.created': return 'Created Time';
+			case 'downloads.page.sort.name': return 'File Name';
+			case 'downloads.page.sort.size': return 'File Size';
+			case 'downloads.page.sort.speed': return 'Download Speed';
+			case 'downloads.page.sort.progress': return 'Progress';
+			case 'downloads.page.empty.downloading': return 'No active downloads';
+			case 'downloads.page.empty.completed': return 'No completed downloads yet';
+			case 'downloads.page.empty.all': return 'Download list is empty';
+			case 'downloads.page.empty.hint': return 'Click the new button above to add downloads';
+			case 'downloads.page.status.active': return 'Downloading';
+			case 'downloads.page.status.waiting': return 'Waiting';
+			case 'downloads.page.status.paused': return 'Paused';
+			case 'downloads.page.status.error': return 'Error';
+			case 'downloads.page.status.complete': return 'Completed';
+			case 'downloads.page.status.removed': return 'Removed';
+			case 'downloads.page.dialog.deleteConfirm': return 'Are you sure you want to delete the selected downloads?';
+			case 'downloads.page.dialog.deleteAllConfirm': return 'Are you sure you want to delete all downloads? This action cannot be undone.';
+			case 'downloads.page.toast.addedToQueue': return 'Added to download queue';
+			case 'downloads.page.toast.resumed': return 'Download resumed';
+			case 'downloads.page.toast.paused': return 'Download paused';
+			case 'downloads.page.toast.deleted': return 'Deleted';
+			case 'downloads.page.toast.retrying': return 'Re-added to download queue';
+			case 'downloads.page.toast.fileLocation': return ({required Object path}) => 'File location: ${path}';
+			case 'downloads.addDialog.title': return 'New Download Task';
+			case 'downloads.addDialog.tabs.url': return 'URL Download';
+			case 'downloads.addDialog.tabs.torrent': return 'Torrent Download';
+			case 'downloads.addDialog.url.hint': return 'Enter download links, one per line\nSupported:\n- HTTP/HTTPS links\n- FTP links\n- Magnet links (magnet:?xt=...)';
+			case 'downloads.addDialog.torrent.dropZone': return 'Drop torrent file here';
+			case 'downloads.addDialog.torrent.dropZoneWindows': return 'Click the button below to select torrent file';
+			case 'downloads.addDialog.torrent.supported': return 'Supports .torrent files';
+			case 'downloads.addDialog.torrent.selectFile': return 'Select Torrent File';
+			case 'downloads.addDialog.advanced.title': return 'Advanced Options';
+			case 'downloads.addDialog.advanced.savePath': return 'Save Path (Optional)';
+			case 'downloads.addDialog.advanced.savePathHint': return 'Leave empty to use default download path';
+			case 'downloads.addDialog.advanced.connections': return ({required Object count}) => 'Connections per file: ${count}';
+			case 'downloads.addDialog.advanced.split': return ({required Object count}) => 'Split per task: ${count}';
+			case 'downloads.addDialog.actions.cancel': return 'Cancel';
+			case 'downloads.addDialog.actions.start': return 'Start Download';
+			case 'downloads.addDialog.errors.noUrl': return 'Please enter at least one download link';
+			case 'downloads.addDialog.errors.noTorrent': return 'Please select or drop a torrent file';
+			case 'downloads.addDialog.errors.selectFileFailed': return ({required Object error}) => 'Failed to select file: ${error}';
+			case 'downloads.addDialog.errors.selectPathFailed': return ({required Object error}) => 'Failed to select path: ${error}';
+			case 'downloads.addDialog.errors.submitFailed': return ({required Object error}) => 'Failed to add download: ${error}';
+			case 'downloads.addDialog.toast.added': return ({required Object count}) => 'Added ${count} download tasks';
+			case 'downloads.addDialog.toast.addedTorrent': return 'Added torrent download task';
+			case 'downloads.detailDialog.title': return 'Task Details';
+			case 'downloads.detailDialog.sections.taskName': return 'Task Name';
+			case 'downloads.detailDialog.sections.fileName': return 'File Name';
+			case 'downloads.detailDialog.sections.fileSize': return 'File Size';
+			case 'downloads.detailDialog.sections.progress': return 'Download Progress';
+			case 'downloads.detailDialog.sections.speed': return 'Download Speed';
+			case 'downloads.detailDialog.sections.uploadSpeed': return 'Upload Speed';
+			case 'downloads.detailDialog.sections.connections': return 'Connections';
+			case 'downloads.detailDialog.sections.eta': return 'Estimated Time';
+			case 'downloads.detailDialog.sections.filePath': return 'File Path';
+			case 'downloads.detailDialog.sections.gid': return 'Task ID';
+			case 'downloads.detailDialog.sections.createdAt': return 'Created At';
+			case 'downloads.detailDialog.actions.copyPath': return 'Copy Path';
+			case 'downloads.detailDialog.actions.openFile': return 'Open File';
+			case 'downloads.detailDialog.actions.openFolder': return 'Open Folder';
+			case 'downloads.detailDialog.actions.retry': return 'Retry Download';
+			case 'downloads.detailDialog.actions.close': return 'Close';
+			case 'downloads.detailDialog.toast.pathCopied': return 'Path copied';
 			case 'torrent.consent.title': return 'BitTorrent Usage Notice';
 			case 'torrent.consent.description': return 'Before enabling BT downloads, please confirm compliance with local laws and understand the risks involved.';
 			case 'torrent.consent.agree': return 'I understand, continue';
@@ -9907,9 +10612,10 @@ extension on AppTranslations {
 			case 'exitDialog.cancel': return 'Cancel';
 			case 'tray.showWindow': return 'Show Window';
 			case 'tray.exit': return 'Exit Kazumi';
-			case 'navigation.tabs.popular': return 'Popular';
+			case 'navigation.tabs.popular': return 'Home';
 			case 'navigation.tabs.timeline': return 'Timeline';
 			case 'navigation.tabs.my': return 'My';
+			case 'navigation.tabs.download': return 'Download';
 			case 'navigation.tabs.settings': return 'Settings';
 			case 'navigation.actions.search': return 'Search';
 			case 'navigation.actions.history': return 'History';
@@ -9931,8 +10637,8 @@ extension on AppTranslations {
 			case 'library.common.retry': return 'Tap to retry';
 			case 'library.common.backHint': return 'Press again to exit Kazumi';
 			case 'library.common.toast.editMode': return 'Edit mode is active.';
-			case 'library.popular.title': return 'Trending Anime';
-			case 'library.popular.allTag': return 'Trending';
+			case 'library.popular.title': return 'Home';
+			case 'library.popular.allTag': return 'Home';
 			case 'library.popular.toast.backPress': return 'Press again to exit Kazumi';
 			case 'library.timeline.weekdays.mon': return 'Mon';
 			case 'library.timeline.weekdays.tue': return 'Tue';
@@ -10559,6 +11265,7 @@ extension on _TranslationsJaJp {
 			case 'navigation.tabs.popular': return '人気';
 			case 'navigation.tabs.timeline': return 'タイムライン';
 			case 'navigation.tabs.my': return 'マイ';
+			case 'navigation.tabs.download': return 'ダウンロード';
 			case 'navigation.tabs.settings': return '設定';
 			case 'navigation.actions.search': return '検索';
 			case 'navigation.actions.history': return '履歴';
@@ -10880,6 +11587,93 @@ extension on _TranslationsZhCn {
 			case 'downloads.queued': return '排队';
 			case 'downloads.running': return '下载中';
 			case 'downloads.completed': return '已完成';
+			case 'downloads.page.title': return '下载管理';
+			case 'downloads.page.selectedItems': return ({required Object count}) => '已选择 ${count} 项';
+			case 'downloads.page.newDownload': return '新建下载';
+			case 'downloads.page.batchManage': return '批量管理';
+			case 'downloads.page.downloadSettings': return '下载设置';
+			case 'downloads.page.refresh': return '刷新';
+			case 'downloads.page.tabs.downloading': return ({required Object count}) => '下载中 (${count})';
+			case 'downloads.page.tabs.completed': return ({required Object count}) => '已完成 (${count})';
+			case 'downloads.page.tabs.all': return '全部';
+			case 'downloads.page.actions.selectAll': return '全选';
+			case 'downloads.page.actions.resume': return '继续';
+			case 'downloads.page.actions.pause': return '暂停';
+			case 'downloads.page.actions.pauseAll': return '暂停全部';
+			case 'downloads.page.actions.resumeAll': return '继续全部';
+			case 'downloads.page.actions.clearCompleted': return '清除已完成';
+			case 'downloads.page.actions.deleteAll': return '删除全部';
+			case 'downloads.page.actions.retry': return '重试';
+			case 'downloads.page.actions.delete': return '删除';
+			case 'downloads.page.actions.open': return '打开';
+			case 'downloads.page.statistics.tasks': return ({required Object count}) => '${count} 个任务';
+			case 'downloads.page.statistics.eta': return ({required Object time}) => '预计剩余 ${time}';
+			case 'downloads.page.search.placeholder': return '搜索下载任务...';
+			case 'downloads.page.search.clear': return '清除';
+			case 'downloads.page.sort.label': return '排序';
+			case 'downloads.page.sort.created': return '创建时间';
+			case 'downloads.page.sort.name': return '文件名';
+			case 'downloads.page.sort.size': return '文件大小';
+			case 'downloads.page.sort.speed': return '下载速度';
+			case 'downloads.page.sort.progress': return '进度';
+			case 'downloads.page.empty.downloading': return '当前没有下载任务';
+			case 'downloads.page.empty.completed': return '还没有已完成的下载';
+			case 'downloads.page.empty.all': return '下载列表为空';
+			case 'downloads.page.empty.hint': return '点击上方的新建按钮添加下载任务';
+			case 'downloads.page.status.active': return '下载中';
+			case 'downloads.page.status.waiting': return '等待中';
+			case 'downloads.page.status.paused': return '已暂停';
+			case 'downloads.page.status.error': return '出错';
+			case 'downloads.page.status.complete': return '已完成';
+			case 'downloads.page.status.removed': return '已删除';
+			case 'downloads.page.dialog.deleteConfirm': return '确定要删除选中的下载任务吗？';
+			case 'downloads.page.dialog.deleteAllConfirm': return '确定要删除全部下载任务吗？此操作不可撤销。';
+			case 'downloads.page.toast.addedToQueue': return '已添加到下载队列';
+			case 'downloads.page.toast.resumed': return '已继续下载';
+			case 'downloads.page.toast.paused': return '已暂停下载';
+			case 'downloads.page.toast.deleted': return '已删除';
+			case 'downloads.page.toast.retrying': return '已重新添加到下载队列';
+			case 'downloads.page.toast.fileLocation': return ({required Object path}) => '文件位置: ${path}';
+			case 'downloads.addDialog.title': return '新建下载任务';
+			case 'downloads.addDialog.tabs.url': return 'URL 下载';
+			case 'downloads.addDialog.tabs.torrent': return '种子下载';
+			case 'downloads.addDialog.url.hint': return '输入下载链接，每行一个\n支持：\n- HTTP/HTTPS 链接\n- FTP 链接\n- 磁力链接（magnet:?xt=...)';
+			case 'downloads.addDialog.torrent.dropZone': return '拖入种子文件到此处';
+			case 'downloads.addDialog.torrent.dropZoneWindows': return '点击下方按钮选择种子文件';
+			case 'downloads.addDialog.torrent.supported': return '支持 .torrent 文件';
+			case 'downloads.addDialog.torrent.selectFile': return '选择种子文件';
+			case 'downloads.addDialog.advanced.title': return '高级选项';
+			case 'downloads.addDialog.advanced.savePath': return '保存路径（可选）';
+			case 'downloads.addDialog.advanced.savePathHint': return '留空使用默认下载路径';
+			case 'downloads.addDialog.advanced.connections': return ({required Object count}) => '单文件连接数: ${count}';
+			case 'downloads.addDialog.advanced.split': return ({required Object count}) => '单任务分段数: ${count}';
+			case 'downloads.addDialog.actions.cancel': return '取消';
+			case 'downloads.addDialog.actions.start': return '开始下载';
+			case 'downloads.addDialog.errors.noUrl': return '请输入至少一个下载链接';
+			case 'downloads.addDialog.errors.noTorrent': return '请选择或拖入种子文件';
+			case 'downloads.addDialog.errors.selectFileFailed': return ({required Object error}) => '选择文件失败: ${error}';
+			case 'downloads.addDialog.errors.selectPathFailed': return ({required Object error}) => '选择路径失败: ${error}';
+			case 'downloads.addDialog.errors.submitFailed': return ({required Object error}) => '添加下载失败: ${error}';
+			case 'downloads.addDialog.toast.added': return ({required Object count}) => '已添加 ${count} 个下载任务';
+			case 'downloads.addDialog.toast.addedTorrent': return '已添加种子下载任务';
+			case 'downloads.detailDialog.title': return '任务详情';
+			case 'downloads.detailDialog.sections.taskName': return '任务名称';
+			case 'downloads.detailDialog.sections.fileName': return '文件名';
+			case 'downloads.detailDialog.sections.fileSize': return '文件大小';
+			case 'downloads.detailDialog.sections.progress': return '下载进度';
+			case 'downloads.detailDialog.sections.speed': return '下载速度';
+			case 'downloads.detailDialog.sections.uploadSpeed': return '上传速度';
+			case 'downloads.detailDialog.sections.connections': return '连接数';
+			case 'downloads.detailDialog.sections.eta': return '预计剩余时间';
+			case 'downloads.detailDialog.sections.filePath': return '文件路径';
+			case 'downloads.detailDialog.sections.gid': return '任务 ID';
+			case 'downloads.detailDialog.sections.createdAt': return '创建时间';
+			case 'downloads.detailDialog.actions.copyPath': return '复制路径';
+			case 'downloads.detailDialog.actions.openFile': return '打开文件';
+			case 'downloads.detailDialog.actions.openFolder': return '打开文件夹';
+			case 'downloads.detailDialog.actions.retry': return '重新下载';
+			case 'downloads.detailDialog.actions.close': return '关闭';
+			case 'downloads.detailDialog.toast.pathCopied': return '已复制路径';
 			case 'torrent.consent.title': return 'BitTorrent 使用提示';
 			case 'torrent.consent.description': return '启用 BT 下载前，请确认遵守所在地法律并了解使用风险。';
 			case 'torrent.consent.agree': return '我已知悉，继续';
@@ -11205,9 +11999,10 @@ extension on _TranslationsZhCn {
 			case 'exitDialog.cancel': return '取消';
 			case 'tray.showWindow': return '显示窗口';
 			case 'tray.exit': return '退出 Kazumi';
-			case 'navigation.tabs.popular': return '热门番组';
+			case 'navigation.tabs.popular': return '首页';
 			case 'navigation.tabs.timeline': return '时间表';
 			case 'navigation.tabs.my': return '我的';
+			case 'navigation.tabs.download': return '下载';
 			case 'navigation.tabs.settings': return '设置';
 			case 'navigation.actions.search': return '搜索';
 			case 'navigation.actions.history': return '历史记录';
@@ -11229,8 +12024,8 @@ extension on _TranslationsZhCn {
 			case 'library.common.retry': return '点击重试';
 			case 'library.common.backHint': return '再按一次退出应用';
 			case 'library.common.toast.editMode': return '当前为编辑模式';
-			case 'library.popular.title': return '热门番组';
-			case 'library.popular.allTag': return '热门番组';
+			case 'library.popular.title': return '首页';
+			case 'library.popular.allTag': return '首页';
 			case 'library.popular.toast.backPress': return '再按一次退出应用';
 			case 'library.timeline.weekdays.mon': return '一';
 			case 'library.timeline.weekdays.tue': return '二';
@@ -11854,9 +12649,10 @@ extension on _TranslationsZhTw {
 			case 'exitDialog.cancel': return '取消';
 			case 'tray.showWindow': return '顯示視窗';
 			case 'tray.exit': return '結束 Kazumi';
-			case 'navigation.tabs.popular': return '熱門番組';
+			case 'navigation.tabs.popular': return '熱門番劇';
 			case 'navigation.tabs.timeline': return '時間表';
 			case 'navigation.tabs.my': return '我的';
+			case 'navigation.tabs.download': return '下載';
 			case 'navigation.tabs.settings': return '設定';
 			case 'navigation.actions.search': return '搜尋';
 			case 'navigation.actions.history': return '歷史紀錄';

@@ -15,6 +15,9 @@ class Routes {
   /// 我的收藏页
   static const String my = '/tab/my';
 
+  /// 下载管理页
+  static const String download = '/tab/download';
+
   /// 设置页
   static const String settings = '/tab/setting';
 

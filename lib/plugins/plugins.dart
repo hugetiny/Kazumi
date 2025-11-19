@@ -159,13 +159,25 @@ class Plugin {
 
     htmlElement.queryXPath(searchList).nodes.forEach((element) {
       try {
+        String srcUrl = element.queryXPath(searchResult).node!.attributes['href'] ?? '';
+        // 规范化 URL，避免双斜杠
+        String fullUrl;
+        if (srcUrl.startsWith('http://') || srcUrl.startsWith('https://')) {
+          fullUrl = srcUrl;
+        } else if (srcUrl.startsWith('/')) {
+          // 绝对路径，直接拼接 baseUrl
+          fullUrl = baseUrl.endsWith('/') ? baseUrl + srcUrl.substring(1) : baseUrl + srcUrl;
+        } else {
+          // 相对路径
+          fullUrl = baseUrl.endsWith('/') ? baseUrl + srcUrl : '$baseUrl/$srcUrl';
+        }
         SearchItem searchItem = SearchItem(
           name: element.queryXPath(searchName).node!.text?.trim() ?? '',
-          src: element.queryXPath(searchResult).node!.attributes['href'] ?? '',
+          src: srcUrl,
         );
         searchItems.add(searchItem);
         KazumiLogger().log(Level.info,
-            '$name ${element.queryXPath(searchName).node!.text ?? ''} $baseUrl${element.queryXPath(searchResult).node!.attributes['href'] ?? ''}');
+            '$name ${element.queryXPath(searchName).node!.text ?? ''} $fullUrl');
       } catch (_) {}
     });
     PluginSearchResponse pluginSearchResponse =
@@ -184,8 +196,15 @@ class Plugin {
     if (url.contains(baseUrl)) {
       queryURL = url;
     } else {
-      queryURL = baseUrl + url;
+      // 规范化 URL 拼接，避免双斜杠
+      if (url.startsWith('/')) {
+        queryURL = baseUrl.endsWith('/') ? baseUrl + url.substring(1) : baseUrl + url;
+      } else {
+        queryURL = baseUrl.endsWith('/') ? baseUrl + url : '$baseUrl/$url';
+      }
     }
+    // 清理可能存在的双斜杠（除了协议的 ://）
+    queryURL = queryURL.replaceAllMapped(RegExp(r'([^:])/+'), (match) => '${match.group(1)}/');
     var httpHeaders = {
       'referer': '$baseUrl/',
       'Accept-Language': Utils.getRandomAcceptedLanguage(),

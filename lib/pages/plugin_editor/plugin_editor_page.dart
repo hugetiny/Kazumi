@@ -57,17 +57,16 @@ class _PluginEditorPageState extends ConsumerState<PluginEditorPage> {
     muliSources = plugin.muliSources;
     useWebview = plugin.useWebview;
 
-    // ✅ Initialize providers with plugin values (defer to next frame to avoid modifying providers during build)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref
-          .read(pluginEditorUIProvider.notifier)
-          .setUseNativePlayer(plugin.useNativePlayer);
-      ref.read(pluginEditorUIProvider.notifier).setUsePost(plugin.usePost);
-      ref
-          .read(pluginEditorUIProvider.notifier)
-          .setUseLegacyParser(plugin.useLegacyParser);
-    });
+    // ✅ Initialize providers with plugin values
+    // Since this is initState, we can safely set the initial state of the provider
+    // before the widget is built and starts watching it.
+    ref
+        .read(pluginEditorUIProvider.notifier)
+        .setUseNativePlayer(plugin.useNativePlayer);
+    ref.read(pluginEditorUIProvider.notifier).setUsePost(plugin.usePost);
+    ref
+        .read(pluginEditorUIProvider.notifier)
+        .setUseLegacyParser(plugin.useLegacyParser);
   }
 
   @override

@@ -1,101 +1,105 @@
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive/hive.dart';
 import 'package:kazumi/utils/storage.dart';
 
-/// Provider for display mode refresh trigger
-final displayModeRefreshProvider = StateProvider.autoDispose<int>((ref) => 0);
+class DisplaySettingsState {
+  final List<DisplayMode> modes;
+  final DisplayMode? active;
+  final DisplayMode? preferred;
 
-class SetDisplayMode extends ConsumerStatefulWidget {
-  const SetDisplayMode({super.key});
-
-  @override
-  ConsumerState<SetDisplayMode> createState() => _SetDisplayModeState();
+  DisplaySettingsState({
+    this.modes = const [],
+    this.active,
+    this.preferred,
+  });
 }
 
-class _SetDisplayModeState extends ConsumerState<SetDisplayMode> {
-  List<DisplayMode> modes = <DisplayMode>[];
-  DisplayMode? active;
-  DisplayMode? preferred;
-  final Box setting = GStorage.setting;
-
-  final ValueNotifier<int> page = ValueNotifier<int>(0);
-  late final PageController controller = PageController()
-    ..addListener(() {
-      page.value = controller.page!.round();
-    });
-
+class DisplaySettingsNotifier
+    extends AutoDisposeAsyncNotifier<DisplaySettingsState> {
   @override
-  void initState() {
-    super.initState();
-    init();
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      fetchAll();
-    });
-  }
-
-  Future<void> fetchAll() async {
-    preferred = await FlutterDisplayMode.preferred;
-    active = await FlutterDisplayMode.active;
-    await setting.put(SettingBoxKey.displayMode, preferred.toString());
-    ref.read(displayModeRefreshProvider.notifier).state++;
-  }
-
-  Future<void> init() async {
+  Future<DisplaySettingsState> build() async {
+    List<DisplayMode> modes = [];
     try {
       modes = await FlutterDisplayMode.supported;
     } on PlatformException catch (_) {}
-    final DisplayMode res = await getDisplayModeType(modes);
 
-    preferred = modes.toList().firstWhere((el) => el == res);
-    FlutterDisplayMode.setPreferredMode(preferred!);
+    final active = await FlutterDisplayMode.active;
+    final preferred = await FlutterDisplayMode.preferred;
+
+    // Sync with storage if needed, or just rely on system
+    // The original code synced to storage, let's keep that if it's useful
+    // But FlutterDisplayMode.preferred is the source of truth for the system
+    GStorage.setting.put(SettingBoxKey.displayMode, preferred.toString());
+
+    return DisplaySettingsState(
+      modes: modes,
+      active: active,
+      preferred: preferred,
+    );
   }
 
-  Future<DisplayMode> getDisplayModeType(List<DisplayMode> modes) async {
-    final value = setting.get(SettingBoxKey.displayMode);
-    var target = DisplayMode.auto;
-    if (value != null) {
-      target = modes.firstWhere((e) => e.toString() == value);
-    }
-    return target;
+  Future<void> setPreferred(DisplayMode mode) async {
+    await FlutterDisplayMode.setPreferredMode(mode);
+    // Wait a bit for system to apply
+    await Future.delayed(const Duration(milliseconds: 100));
+    // Refresh state
+    ref.invalidateSelf();
   }
+}
+
+final displaySettingsProvider = AsyncNotifierProvider.autoDispose<
+    DisplaySettingsNotifier, DisplaySettingsState>(
+  DisplaySettingsNotifier.new,
+);
+
+class SetDisplayMode extends ConsumerWidget {
+  const SetDisplayMode({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stateAsync = ref.watch(displaySettingsProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('屏幕帧率设置')),
-      body: (modes.isEmpty)
-          ? const Center(child: CircularProgressIndicator())
-          : SettingsList(
-              maxWidth: 1000,
-              sections: [
-                SettingsSection(
-                  title: const Text('没有生效? 重启应用试试'),
-                  tiles: modes
-                      .map(
-                        (mode) => SettingsTile<DisplayMode>.radioTile(
-                          radioValue: mode,
-                          groupValue: preferred,
-                          onChanged: (DisplayMode? newMode) async {
-                            await FlutterDisplayMode.setPreferredMode(newMode!);
-                            await Future<dynamic>.delayed(
-                              const Duration(milliseconds: 100),
-                            );
-                            await fetchAll();
-                          },
-                          title: mode == DisplayMode.auto
-                              ? const Text('自动')
-                              : Text('${mode == active ? "[系统] " : ""}$mode'),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            ),
+      body: stateAsync.when(
+        data: (state) {
+          if (state.modes.isEmpty) {
+            return const Center(child: Text('不支持的设备'));
+          }
+          return SettingsList(
+            maxWidth: 1000,
+            sections: [
+              SettingsSection(
+                title: const Text('没有生效? 重启应用试试'),
+                tiles: state.modes
+                    .map(
+                      (mode) => SettingsTile<DisplayMode>.radioTile(
+                        radioValue: mode,
+                        groupValue: state.preferred,
+                        onChanged: (DisplayMode? newMode) {
+                          if (newMode != null) {
+                            ref
+                                .read(displaySettingsProvider.notifier)
+                                .setPreferred(newMode);
+                          }
+                        },
+                        title: mode == DisplayMode.auto
+                            ? const Text('自动')
+                            : Text(
+                                '${mode == state.active ? "[系统] " : ""}$mode'),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
     );
   }
 }

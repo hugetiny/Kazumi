@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
 import 'package:kazumi/pages/download/providers.dart';
+import 'package:kazumi/pages/download/download_controller.dart';
 import 'package:kazumi/modules/download/download_task.dart';
 import 'package:kazumi/pages/download/download_task_detail_dialog.dart';
+import 'package:kazumi/pages/download/widgets/add_download_dialog.dart';
+import 'package:kazumi/l10n/generated/translations.g.dart';
+import 'package:kazumi/pages/layout/app_bar_config.dart';
 
 class DownloadPage extends ConsumerStatefulWidget {
   const DownloadPage({super.key});
@@ -18,17 +21,17 @@ class DownloadPage extends ConsumerStatefulWidget {
 class _DownloadPageState extends ConsumerState<DownloadPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isSelectionMode = false;
-  final Set<String> _selectedGids = {};
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  String _sortBy = 'created'; // created, name, size, speed, progress
-  bool _sortAscending = false;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // 监听搜索框输入
+    _searchController.addListener(() {
+      ref.read(downloadPageUIProvider.notifier)
+        .updateSearchQuery(_searchController.text);
+    });
   }
 
   @override
@@ -39,35 +42,15 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
   }
 
   void _toggleSelectionMode() {
-    setState(() {
-      _isSelectionMode = !_isSelectionMode;
-      if (!_isSelectionMode) {
-        _selectedGids.clear();
-      }
-    });
+    ref.read(downloadPageUIProvider.notifier).toggleSelectionMode();
   }
 
   void _toggleSelection(String gid) {
-    setState(() {
-      if (_selectedGids.contains(gid)) {
-        _selectedGids.remove(gid);
-      } else {
-        _selectedGids.add(gid);
-      }
-    });
+    ref.read(downloadPageUIProvider.notifier).toggleSelection(gid);
   }
 
   void _selectAll(List<DownloadTask> tasks) {
-    setState(() {
-      _selectedGids.clear();
-      _selectedGids.addAll(tasks.map((t) => t.gid));
-    });
-  }
-
-  void _clearSelection() {
-    setState(() {
-      _selectedGids.clear();
-    });
+    ref.read(downloadPageUIProvider.notifier).selectAll(tasks);
   }
 
   void _onBackPressed(BuildContext context) {
@@ -75,7 +58,7 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
       KazumiDialog.dismiss();
       return;
     }
-    ref.read(navigationBarControllerProvider.notifier).updateSelectedIndex(0);
+    ref.read(navigationProvider.notifier).updateSelectedIndex(0);
     context.go('/tab/popular');
   }
 
@@ -96,12 +79,12 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: const Text('确定要删除选中的下载任务吗？此操作不可撤销。'),
+        title: Text(t.app.delete),
+        content: Text(t.downloads.page.dialog.deleteConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(t.app.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -111,10 +94,189 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('删除'),
+            child: Text(t.app.delete),
           ),
         ],
       ),
+    );
+  }
+
+  /// 构建 AppBar Actions
+  List<Widget> _buildAppBarActions(DownloadController downloadController) {
+    final uiState = ref.read(downloadPageUIProvider);
+    if (uiState.isSelectionMode) {
+      final downloadState = ref.read(downloadControllerProvider);
+      return [
+        IconButton(
+          icon: const Icon(Icons.select_all),
+          onPressed: () {
+            final allTasks = [
+              ...downloadState.activeTasks,
+              ...downloadState.waitingTasks,
+              ...downloadState.completedTasks,
+            ];
+            _selectAll(allTasks);
+          },
+          tooltip: t.downloads.page.actions.selectAll,
+        ),
+        IconButton(
+          icon: const Icon(Icons.play_arrow),
+          onPressed: uiState.selectedGids.isEmpty
+              ? null
+              : () {
+                  downloadController.resumeSelected(uiState.selectedGids.toList());
+                  _toggleSelectionMode();
+                },
+          tooltip: t.downloads.page.actions.resume,
+        ),
+        IconButton(
+          icon: const Icon(Icons.pause),
+          onPressed: uiState.selectedGids.isEmpty
+              ? null
+              : () {
+                  downloadController.pauseSelected(uiState.selectedGids.toList());
+                  _toggleSelectionMode();
+                },
+          tooltip: t.downloads.page.actions.pause,
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete),
+          onPressed: uiState.selectedGids.isEmpty
+              ? null
+              : () {
+                  _showDeleteConfirmDialog(
+                    context,
+                    () {
+                      downloadController.deleteSelected(uiState.selectedGids.toList());
+                      _toggleSelectionMode();
+                    },
+                  );
+                },
+          tooltip: t.downloads.page.actions.delete,
+        ),
+      ];
+    } else {
+      return [
+        FilledButton.icon(
+          icon: const Icon(Icons.add, size: 18),
+          label: Text(t.downloads.page.newDownload),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const AddDownloadDialog(),
+            );
+          },
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.checklist),
+          onPressed: _toggleSelectionMode,
+          tooltip: t.downloads.page.batchManage,
+        ),
+        IconButton(
+          icon: const Icon(Icons.settings),
+          onPressed: () {
+            context.push('/settings/download');
+          },
+          tooltip: t.downloads.page.downloadSettings,
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          onPressed: () {
+            downloadController.refreshDownloads();
+          },
+          tooltip: t.downloads.page.refresh,
+        ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'pause_all':
+                downloadController.pauseAll();
+                break;
+              case 'resume_all':
+                downloadController.resumeAll();
+                break;
+              case 'clear_completed':
+                downloadController.clearCompleted();
+                break;
+              case 'delete_all':
+                _showDeleteConfirmDialog(
+                  context,
+                  () => downloadController.deleteAll(),
+                );
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(
+              value: 'pause_all',
+              child: Row(
+                children: [
+                  Icon(Icons.pause),
+                  SizedBox(width: 8),
+                  Text(t.downloads.page.actions.pauseAll),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'resume_all',
+              child: Row(
+                children: [
+                  Icon(Icons.play_arrow),
+                  SizedBox(width: 8),
+                  Text(t.downloads.page.actions.resumeAll),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'clear_completed',
+              child: Row(
+                children: [
+                  Icon(Icons.clear_all),
+                  SizedBox(width: 8),
+                  Text(t.downloads.page.actions.clearCompleted),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete_all',
+              child: Row(
+                children: [
+                  Icon(Icons.delete_forever, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(t.downloads.page.actions.deleteAll,
+                      style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ];
+    }
+  }
+
+  void _updateAppBarConfig() {
+    if (!mounted) return;
+    final t = context.t;
+    final uiState = ref.read(downloadPageUIProvider);
+    final downloadController = ref.read(downloadControllerProvider.notifier);
+
+    ref.read(appBarConfigProvider.notifier).state = AppBarConfig(
+      title: uiState.isSelectionMode
+          ? t.downloads.page.selectedItems(count: uiState.selectedGids.length)
+          : t.downloads.page.title,
+      needTopOffset: false,
+      leading: uiState.isSelectionMode
+          ? IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: _toggleSelectionMode,
+            )
+          : null,
+      actions: _buildAppBarActions(downloadController),
     );
   }
 
@@ -122,6 +284,22 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
   Widget build(BuildContext context) {
     final downloadState = ref.watch(downloadControllerProvider);
     final downloadController = ref.read(downloadControllerProvider.notifier);
+    final uiState = ref.watch(downloadPageUIProvider);
+
+    // 初始化时设置 AppBar
+    Future.microtask(() {
+      if (mounted) {
+        _updateAppBarConfig();
+      }
+    });
+
+    // 使用 ref.listen 响应式更新 AppBar
+    ref.listen<DownloadPageUIState>(downloadPageUIProvider, (previous, next) {
+      if (previous?.isSelectionMode != next.isSelectionMode ||
+          previous?.selectedGids.length != next.selectedGids.length) {
+        _updateAppBarConfig();
+      }
+    });
 
     return PopScope(
       canPop: false,
@@ -131,336 +309,308 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
         }
         _onBackPressed(context);
       },
-      child: Scaffold(
-        appBar: SysAppBar(
-          title: _isSelectionMode
-              ? Text('已选择 ${_selectedGids.length} 项')
-              : const Text('下载管理'),
-          needTopOffset: false,
-          leading: _isSelectionMode
-              ? IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: _toggleSelectionMode,
-                )
-              : null,
-          actions: _isSelectionMode
-              ? [
-                  IconButton(
-                    icon: const Icon(Icons.select_all),
-                    onPressed: () {
-                      final allTasks = [
-                        ...downloadState.activeTasks,
-                        ...downloadState.waitingTasks,
-                        ...downloadState.completedTasks,
-                      ];
-                      _selectAll(allTasks);
-                    },
-                    tooltip: '全选',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.play_arrow),
-                    onPressed: _selectedGids.isEmpty
-                        ? null
-                        : () {
-                            downloadController.resumeSelected(_selectedGids.toList());
-                            _toggleSelectionMode();
-                          },
-                    tooltip: '继续',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.pause),
-                    onPressed: _selectedGids.isEmpty
-                        ? null
-                        : () {
-                            downloadController.pauseSelected(_selectedGids.toList());
-                            _toggleSelectionMode();
-                          },
-                    tooltip: '暂停',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: _selectedGids.isEmpty
-                        ? null
-                        : () {
-                            _showDeleteConfirmDialog(
-                              context,
-                              () {
-                                downloadController.deleteSelected(_selectedGids.toList());
-                                _toggleSelectionMode();
-                              },
-                            );
-                          },
-                    tooltip: '删除',
-                  ),
-                ]
-              : [
-                  IconButton(
-                    icon: const Icon(Icons.checklist),
-                    onPressed: _toggleSelectionMode,
-                    tooltip: '批量管理',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.settings),
-                    onPressed: () {
-                      context.push('/settings/download');
-                    },
-                    tooltip: '下载设置',
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () {
-                      downloadController.refreshDownloads();
-                    },
-                    tooltip: '刷新',
-                  ),
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert),
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'pause_all':
-                          downloadController.pauseAll();
-                          break;
-                        case 'resume_all':
-                          downloadController.resumeAll();
-                          break;
-                        case 'clear_completed':
-                          downloadController.clearCompleted();
-                          break;
-                        case 'delete_all':
-                          _showDeleteConfirmDialog(
-                            context,
-                            () => downloadController.deleteAll(),
-                          );
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'pause_all',
-                        child: Row(
-                          children: [
-                            Icon(Icons.pause),
-                            SizedBox(width: 8),
-                            Text('暂停全部'),
-                          ],
-                        ),
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              if (downloadState.errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Theme.of(context).colorScheme.error,
                       ),
-                      const PopupMenuItem(
-                        value: 'resume_all',
-                        child: Row(
-                          children: [
-                            Icon(Icons.play_arrow),
-                            SizedBox(width: 8),
-                            Text('继续全部'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'clear_completed',
-                        child: Row(
-                          children: [
-                            Icon(Icons.clear_all),
-                            SizedBox(width: 8),
-                            Text('清除已完成'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete_all',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_forever, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('删除全部', style: TextStyle(color: Colors.red)),
-                          ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          downloadState.errorMessage!,
+                          style: TextStyle(
+                            color:
+                                Theme.of(context).colorScheme.onErrorContainer,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ],
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(
-                text: '下载中 (${downloadState.totalDownloading})',
-              ),
-              Tab(
-                text: '已完成 (${downloadState.totalCompleted})',
-              ),
-              Tab(
-                text: '全部',
-              ),
-            ],
-          ),
-        ),
-        body: Column(
-          children: [
-            if (downloadState.errorMessage != null)
-              Container(
-                width: double.infinity,
-                color: Theme.of(context).colorScheme.errorContainer,
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: Theme.of(context).colorScheme.error,
+                ),
+              // TabBar
+              Material(
+                color: Theme.of(context).colorScheme.surface,
+                child: TabBar(
+                  controller: _tabController,
+                  tabs: [
+                    Tab(
+                      text: t.downloads.page.tabs
+                          .downloading(count: downloadState.totalDownloading),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        downloadState.errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
-                        ),
-                      ),
+                    Tab(
+                      text: t.downloads.page.tabs
+                          .completed(count: downloadState.totalCompleted),
+                    ),
+                    Tab(
+                      text: t.downloads.page.tabs.all,
                     ),
                   ],
                 ),
               ),
-            // Statistics banner (only show when downloading)
-            if (downloadState.isConnected && downloadState.totalDownloading > 0)
-              _buildStatisticsBanner(context, downloadState),
-            // Search and sort options
-            _buildSearchAndSort(context, downloadController),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  // Downloading tab
-                  _buildDownloadingList(
-                    context,
-                    downloadState,
-                    downloadController,
-                  ),
-                  // Completed tab
-                  _buildCompletedList(
-                    context,
-                    downloadState,
-                    downloadController,
-                  ),
-                  // All tab
-                  _buildAllList(
-                    context,
-                    downloadState,
-                    downloadController,
-                  ),
-                ],
+              // Statistics banner (only show when downloading)
+              if (downloadState.isConnected &&
+                  downloadState.totalDownloading > 0)
+                _buildStatisticsBanner(context, downloadState),
+              // Search and sort options
+              _buildSearchAndSort(context, downloadController),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Downloading tab
+                    _buildDownloadingList(
+                      context,
+                      downloadState,
+                      downloadController,
+                    ),
+                    // Completed tab
+                    _buildCompletedList(
+                      context,
+                      downloadState,
+                      downloadController,
+                    ),
+                    // All tab
+                    _buildAllList(
+                      context,
+                      downloadState,
+                      downloadController,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // FloatingActionButton
+          if (!uiState.isSelectionMode)
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: FloatingActionButton.extended(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => const AddDownloadDialog(),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: Text(t.downloads.page.newDownload),
+                tooltip: t.downloads.page.newDownload,
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildStatisticsBanner(BuildContext context, DownloadState state) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primaryContainer,
+            Theme.of(context).colorScheme.secondaryContainer,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         border: Border(
           bottom: BorderSide(
             color: Theme.of(context).dividerColor,
+            width: 1,
           ),
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.speed,
-            size: 20,
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.download,
+              size: 24,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  '总速度: ${_formatSpeed(state.totalDownloadSpeed)}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.speed,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatSpeed(state.totalDownloadSpeed),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(
+                      Icons.task_alt,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      t.downloads.page.statistics
+                          .tasks(count: state.totalDownloading),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                    ),
+                  ],
                 ),
-                if (state.estimatedRemainingSeconds > 0)
-                  Text(
-                    '预计剩余: ${_formatDuration(state.estimatedRemainingSeconds)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
-                        ),
+                if (state.estimatedRemainingSeconds > 0) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        t.downloads.page.statistics.eta(
+                            time: _formatDuration(
+                                state.estimatedRemainingSeconds)),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer
+                                  .withValues(alpha: 0.8),
+                            ),
+                      ),
+                    ],
                   ),
+                ],
               ],
             ),
-          ),
-          Text(
-            '${state.totalDownloading} 个任务',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchAndSort(BuildContext context, DownloadController controller) {
+  Widget _buildSearchAndSort(
+      BuildContext context, DownloadController controller) {
+    final uiState = ref.watch(downloadPageUIProvider);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 0.5,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: '搜索任务名称...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                            _searchQuery = '';
-                          });
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(24),
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: t.downloads.page.search.placeholder,
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  suffixIcon: uiState.searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(downloadPageUIProvider.notifier).clearSearch();
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  // TextController listener 会自动更新 Provider
+                },
+              ),
             ),
           ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
-            tooltip: '排序',
-            onSelected: (value) {
-              setState(() {
-                if (_sortBy == value) {
-                  _sortAscending = !_sortAscending;
+          const SizedBox(width: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.sort,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+              tooltip: t.downloads.page.sort.label,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                final notifier = ref.read(downloadPageUIProvider.notifier);
+                final currentState = ref.read(downloadPageUIProvider);
+                if (currentState.sortBy == value) {
+                  notifier.updateSort(value, ascending: !currentState.sortAscending);
                 } else {
-                  _sortBy = value;
-                  _sortAscending = false;
+                  notifier.updateSort(value, ascending: false);
                 }
-              });
-            },
-            itemBuilder: (context) => [
-              _buildSortMenuItem(context, 'created', '创建时间'),
-              _buildSortMenuItem(context, 'name', '名称'),
-              _buildSortMenuItem(context, 'size', '文件大小'),
-              _buildSortMenuItem(context, 'speed', '下载速度'),
-              _buildSortMenuItem(context, 'progress', '进度'),
-            ],
+              },
+              itemBuilder: (context) => [
+                _buildSortMenuItem(
+                    context, uiState, 'created', t.downloads.page.sort.created),
+                _buildSortMenuItem(context, uiState, 'name', t.downloads.page.sort.name),
+                _buildSortMenuItem(context, uiState, 'size', t.downloads.page.sort.size),
+                _buildSortMenuItem(
+                    context, uiState, 'speed', t.downloads.page.sort.speed),
+                _buildSortMenuItem(
+                    context, uiState, 'progress', t.downloads.page.sort.progress),
+              ],
+            ),
           ),
         ],
       ),
@@ -469,17 +619,18 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
 
   PopupMenuItem<String> _buildSortMenuItem(
     BuildContext context,
+    DownloadPageUIState uiState,
     String value,
     String label,
   ) {
-    final isSelected = _sortBy == value;
+    final isSelected = uiState.sortBy == value;
     return PopupMenuItem(
       value: value,
       child: Row(
         children: [
           if (isSelected)
             Icon(
-              _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              uiState.sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
               size: 16,
             ),
           if (isSelected) const SizedBox(width: 4),
@@ -506,42 +657,96 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     return '$hours 小时 $mins 分钟';
   }
 
+  IconData _getTaskIcon(DownloadTask task) {
+    if (task.isActive) return Icons.downloading;
+    if (task.isWaiting) return Icons.schedule;
+    if (task.isPaused) return Icons.pause_circle;
+    if (task.isComplete) return Icons.check_circle;
+    if (task.isError) return Icons.error;
+    return Icons.file_download;
+  }
+
+  Color _getStatusColor(BuildContext context, DownloadTask task) {
+    if (task.isActive) return Theme.of(context).colorScheme.primary;
+    if (task.isWaiting) return Theme.of(context).colorScheme.secondary;
+    if (task.isPaused) return Theme.of(context).colorScheme.tertiary;
+    if (task.isComplete) return Colors.green;
+    if (task.isError) return Theme.of(context).colorScheme.error;
+    return Theme.of(context).colorScheme.outline;
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: 64,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildDownloadingList(
     BuildContext context,
     DownloadState state,
     DownloadController controller,
   ) {
+    final uiState = ref.watch(downloadPageUIProvider);
     var tasks = [...state.activeTasks, ...state.waitingTasks];
-    
+
     // Apply search
-    if (_searchQuery.isNotEmpty) {
-      tasks = controller.searchTasks(_searchQuery)
+    if (uiState.searchQuery.isNotEmpty) {
+      tasks = controller
+          .searchTasks(uiState.searchQuery)
           .where((t) => t.isDownloading)
           .toList();
     }
-    
+
     // Apply sort
-    tasks = controller.sortTasks(tasks, _sortBy, ascending: _sortAscending);
+    tasks = controller.sortTasks(tasks, uiState.sortBy, ascending: uiState.sortAscending);
 
     if (tasks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.download_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无下载任务',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        context,
+        icon: Icons.downloading,
+        title: uiState.searchQuery.isNotEmpty
+            ? t.downloads.page.empty.downloading
+            : t.downloads.page.empty.downloading,
+        subtitle: uiState.searchQuery.isNotEmpty ? '' : t.downloads.page.empty.hint,
       );
     }
 
@@ -559,37 +764,28 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadState state,
     DownloadController controller,
   ) {
+    final uiState = ref.watch(downloadPageUIProvider);
     var tasks = List<DownloadTask>.from(state.completedTasks);
-    
+
     // Apply search
-    if (_searchQuery.isNotEmpty) {
-      tasks = controller.searchTasks(_searchQuery)
+    if (uiState.searchQuery.isNotEmpty) {
+      tasks = controller
+          .searchTasks(uiState.searchQuery)
           .where((t) => t.isComplete || t.isError)
           .toList();
     }
-    
+
     // Apply sort
-    tasks = controller.sortTasks(tasks, _sortBy, ascending: _sortAscending);
-    
+    tasks = controller.sortTasks(tasks, uiState.sortBy, ascending: uiState.sortAscending);
+
     if (tasks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无已完成任务',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        context,
+        icon: Icons.check_circle_outline,
+        title: uiState.searchQuery.isNotEmpty
+            ? t.downloads.page.empty.completed
+            : t.downloads.page.empty.completed,
+        subtitle: uiState.searchQuery.isNotEmpty ? '' : t.downloads.page.empty.hint,
       );
     }
 
@@ -629,39 +825,30 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadState state,
     DownloadController controller,
   ) {
+    final uiState = ref.watch(downloadPageUIProvider);
     var allTasks = [
       ...state.activeTasks,
       ...state.waitingTasks,
       ...state.completedTasks,
     ];
-    
+
     // Apply search
-    if (_searchQuery.isNotEmpty) {
-      allTasks = controller.searchTasks(_searchQuery);
+    if (uiState.searchQuery.isNotEmpty) {
+      allTasks = controller.searchTasks(uiState.searchQuery);
     }
-    
+
     // Apply sort
-    allTasks = controller.sortTasks(allTasks, _sortBy, ascending: _sortAscending);
+    allTasks =
+        controller.sortTasks(allTasks, uiState.sortBy, ascending: uiState.sortAscending);
 
     if (allTasks.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.download_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              _searchQuery.isNotEmpty ? '无搜索结果' : '暂无任务',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        context,
+        icon: Icons.inbox_outlined,
+        title: uiState.searchQuery.isNotEmpty
+            ? t.downloads.page.empty.all
+            : t.downloads.page.empty.all,
+        subtitle: uiState.searchQuery.isNotEmpty ? '' : t.downloads.page.empty.hint,
       );
     }
 
@@ -685,15 +872,30 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     DownloadController controller, {
     required bool isActive,
   }) {
-    final isSelected = _selectedGids.contains(task.gid);
-    
+    final uiState = ref.watch(downloadPageUIProvider);
+    final isSelected = uiState.selectedGids.contains(task.gid);
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      color: isSelected 
-          ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: isSelected ? 4 : 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isSelected
+            ? BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              )
+            : BorderSide.none,
+      ),
+      color: isSelected
+          ? Theme.of(context)
+              .colorScheme
+              .primaryContainer
+              .withValues(alpha: 0.3)
           : null,
       child: InkWell(
-        onTap: _isSelectionMode
+        borderRadius: BorderRadius.circular(12),
+        onTap: uiState.isSelectionMode
             ? () => _toggleSelection(task.gid)
             : () {
                 // Show detail dialog when not in selection mode
@@ -701,132 +903,286 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
                   context: context,
                   builder: (context) => DownloadTaskDetailDialog(
                     task: task,
-                    onRetry: task.isError ? () async {
-                      await controller.retryDownload(task);
-                      if (context.mounted) {
-                        KazumiDialog.showToast(message: '已重新添加到下载队列');
-                      }
-                    } : null,
-                    onOpenFile: task.isComplete && task.fileName != null ? () {
-                      KazumiDialog.showToast(message: '文件位置: ${task.fileName}');
-                    } : null,
+                    onRetry: task.isError
+                        ? () async {
+                            await controller.retryDownload(task);
+                            if (context.mounted) {
+                              KazumiDialog.showToast(
+                                  message: t.downloads.page.toast.retrying);
+                            }
+                          }
+                        : null,
+                    onOpenFile: task.isComplete && task.fileName != null
+                        ? () {
+                            KazumiDialog.showToast(
+                                message: t.downloads.page.toast
+                                    .fileLocation(path: task.fileName!));
+                          }
+                        : null,
                   ),
                 );
               },
-        onLongPress: !_isSelectionMode
+        onLongPress: !uiState.isSelectionMode
             ? () {
                 _toggleSelectionMode();
                 _toggleSelection(task.gid);
               }
             : null,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_isSelectionMode) ...[
+                  if (uiState.isSelectionMode) ...[
                     Checkbox(
                       value: isSelected,
                       onChanged: (value) => _toggleSelection(task.gid),
                     ),
                     const SizedBox(width: 8),
                   ],
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  // File icon based on status
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          _getStatusColor(context, task).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      _getTaskIcon(task),
+                      color: _getStatusColor(context, task),
+                      size: 24,
                     ),
                   ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (task.fileName != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.insert_drive_file,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  task.fileName!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .outline,
+                                      ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   _buildStatusChip(context, task),
                 ],
               ),
-            if (task.fileName != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                task.fileName!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              const SizedBox(height: 12),
+              if (isActive) ...[
+                // Progress bar with percentage
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: task.progress,
+                        minHeight: 8,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getStatusColor(context, task),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.data_usage,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${_formatFileSize(task.completedLength)} / ${_formatFileSize(task.totalLength)}',
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          '${(task.progress * 100).toStringAsFixed(1)}%',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.arrow_downward,
+                                size: 12,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatSpeed(task.downloadSpeed),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ] else if (task.isComplete) ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.storage,
+                      size: 14,
                       color: Theme.of(context).colorScheme.outline,
                     ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            const SizedBox(height: 8),
-            if (isActive) ...[
-              LinearProgressIndicator(
-                value: task.progress,
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_formatFileSize(task.completedLength)} / ${_formatFileSize(task.totalLength)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    const SizedBox(width: 4),
+                    Text(
+                      '大小: ${_formatFileSize(task.totalLength)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ] else if (task.isError && task.errorMessage != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surface
+                        .withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  Text(
-                    _formatSpeed(task.downloadSpeed),
-                    style: Theme.of(context).textTheme.bodySmall,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          task.errorMessage!,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ] else if (task.isComplete) ...[
-              Text(
-                '大小: ${_formatFileSize(task.totalLength)}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ] else if (task.isError && task.errorMessage != null) ...[
-              Text(
-                '错误: ${task.errorMessage}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
+                ),
+              ],
+              if (!uiState.isSelectionMode) ...[
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (task.isActive)
+                      TextButton.icon(
+                        onPressed: () => controller.pauseDownload(task.gid),
+                        icon: const Icon(Icons.pause),
+                        label: Text(t.downloads.page.actions.pause),
+                      ),
+                    if (task.isPaused)
+                      TextButton.icon(
+                        onPressed: () => controller.resumeDownload(task.gid),
+                        icon: const Icon(Icons.play_arrow),
+                        label: Text(t.downloads.page.actions.resume),
+                      ),
+                    if (task.isError)
+                      TextButton.icon(
+                        onPressed: () => controller.resumeDownload(task.gid),
+                        icon: const Icon(Icons.refresh),
+                        label: Text(t.downloads.page.actions.retry),
+                      ),
+                    TextButton.icon(
+                      onPressed: () =>
+                          controller.removeDownload(task.gid, force: true),
+                      icon: const Icon(Icons.delete),
+                      label: Text(t.downloads.page.actions.delete),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
                     ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+                  ],
+                ),
+              ],
             ],
-            if (!_isSelectionMode) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (task.isActive)
-                    TextButton.icon(
-                      onPressed: () => controller.pauseDownload(task.gid),
-                      icon: const Icon(Icons.pause),
-                      label: const Text('暂停'),
-                    ),
-                  if (task.isPaused)
-                    TextButton.icon(
-                      onPressed: () => controller.resumeDownload(task.gid),
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('继续'),
-                    ),
-                  if (task.isError)
-                    TextButton.icon(
-                      onPressed: () => controller.resumeDownload(task.gid),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('重试'),
-                    ),
-                  TextButton.icon(
-                    onPressed: () =>
-                        controller.removeDownload(task.gid, force: true),
-                    icon: const Icon(Icons.delete),
-                    label: const Text('删除'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -840,23 +1196,23 @@ class _DownloadPageState extends ConsumerState<DownloadPage>
     if (task.isActive) {
       backgroundColor = Theme.of(context).colorScheme.primaryContainer;
       foregroundColor = Theme.of(context).colorScheme.onPrimaryContainer;
-      label = '下载中';
+      label = t.downloads.page.status.active;
     } else if (task.isWaiting) {
       backgroundColor = Theme.of(context).colorScheme.secondaryContainer;
       foregroundColor = Theme.of(context).colorScheme.onSecondaryContainer;
-      label = '等待中';
+      label = t.downloads.page.status.waiting;
     } else if (task.isPaused) {
       backgroundColor = Theme.of(context).colorScheme.tertiaryContainer;
       foregroundColor = Theme.of(context).colorScheme.onTertiaryContainer;
-      label = '已暂停';
+      label = t.downloads.page.status.paused;
     } else if (task.isComplete) {
       backgroundColor = Theme.of(context).colorScheme.primaryContainer;
       foregroundColor = Theme.of(context).colorScheme.onPrimaryContainer;
-      label = '已完成';
+      label = t.downloads.page.status.complete;
     } else if (task.isError) {
       backgroundColor = Theme.of(context).colorScheme.errorContainer;
       foregroundColor = Theme.of(context).colorScheme.onErrorContainer;
-      label = '错误';
+      label = t.downloads.page.status.error;
     } else {
       backgroundColor = Theme.of(context).colorScheme.surfaceContainerHighest;
       foregroundColor = Theme.of(context).colorScheme.onSurface;

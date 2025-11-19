@@ -16,7 +16,6 @@ import 'package:kazumi/pages/video/providers.dart';
 import 'package:kazumi/pages/video/video_controller.dart';
 import 'package:kazumi/pages/video/video_state.dart';
 import 'package:kazumi/pages/download/providers.dart';
-import 'package:kazumi/pages/download/download_controller.dart';
 import 'package:kazumi/utils/aria2_feature_manager.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/remote.dart';
@@ -122,21 +121,21 @@ class _PlayerItemPanelState extends ConsumerState<PlayerItemPanel> {
 
     try {
       final downloadController = ref.read(downloadControllerProvider.notifier);
-      
+
       // Build download title with episode info
       final title = _buildTitleText(videoState);
-      
+
       // Get bangumi ID and episode number if available
       String? bangumiId = videoState.bangumiItem?.id.toString();
       int? episodeNumber = videoState.currentEpisode;
-      
+
       await downloadController.addDownload(
         videoState.src,
         title: title.trim(),
         bangumiId: bangumiId,
         episodeNumber: episodeNumber,
       );
-      
+
       KazumiDialog.showToast(message: '已添加到下载列表');
     } catch (e) {
       KazumiDialog.showToast(message: '添加下载失败：$e');

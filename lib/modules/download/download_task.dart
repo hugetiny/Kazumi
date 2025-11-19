@@ -76,6 +76,9 @@ class DownloadTask extends HiveObject {
   bool get isRemoved => status == 'removed';
   bool get isDownloading => isActive || isWaiting;
 
+  // filePath getter - returns fileName if available
+  String? get filePath => fileName;
+
   factory DownloadTask.fromAria2Status(
     Map<String, dynamic> aria2Status, {
     String? title,

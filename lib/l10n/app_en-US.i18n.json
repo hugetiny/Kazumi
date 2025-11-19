@@ -22,7 +22,138 @@
     "aria2Offline": "aria2 not connected",
     "queued": "Queued",
     "running": "Downloading",
-    "completed": "Completed"
+    "completed": "Completed",
+    "page": {
+      "title": "Download Manager",
+      "selectedItems": "$count items selected",
+      "newDownload": "New Download",
+      "batchManage": "Batch Manage",
+      "downloadSettings": "Download Settings",
+      "refresh": "Refresh",
+      "tabs": {
+        "downloading": "Downloading ($count)",
+        "completed": "Completed ($count)",
+        "all": "All"
+      },
+      "actions": {
+        "selectAll": "Select All",
+        "resume": "Resume",
+        "pause": "Pause",
+        "pauseAll": "Pause All",
+        "resumeAll": "Resume All",
+        "clearCompleted": "Clear Completed",
+        "deleteAll": "Delete All",
+        "retry": "Retry",
+        "delete": "Delete",
+        "open": "Open"
+      },
+      "statistics": {
+        "tasks": "$count tasks",
+        "eta": "ETA $time"
+      },
+      "search": {
+        "placeholder": "Search downloads...",
+        "clear": "Clear"
+      },
+      "sort": {
+        "label": "Sort",
+        "created": "Created Time",
+        "name": "File Name",
+        "size": "File Size",
+        "speed": "Download Speed",
+        "progress": "Progress"
+      },
+      "empty": {
+        "downloading": "No active downloads",
+        "completed": "No completed downloads yet",
+        "all": "Download list is empty",
+        "hint": "Click the new button above to add downloads"
+      },
+      "status": {
+        "active": "Downloading",
+        "waiting": "Waiting",
+        "paused": "Paused",
+        "error": "Error",
+        "complete": "Completed",
+        "removed": "Removed"
+      },
+      "dialog": {
+        "deleteConfirm": "Are you sure you want to delete the selected downloads?",
+        "deleteAllConfirm": "Are you sure you want to delete all downloads? This action cannot be undone."
+      },
+      "toast": {
+        "addedToQueue": "Added to download queue",
+        "resumed": "Download resumed",
+        "paused": "Download paused",
+        "deleted": "Deleted",
+        "retrying": "Re-added to download queue",
+        "fileLocation": "File location: $path"
+      }
+    },
+    "addDialog": {
+      "title": "New Download Task",
+      "tabs": {
+        "url": "URL Download",
+        "torrent": "Torrent Download"
+      },
+      "url": {
+        "hint": "Enter download links, one per line\nSupported:\n- HTTP/HTTPS links\n- FTP links\n- Magnet links (magnet:?xt=...)"
+      },
+      "torrent": {
+        "dropZone": "Drop torrent file here",
+        "dropZoneWindows": "Click the button below to select torrent file",
+        "supported": "Supports .torrent files",
+        "selectFile": "Select Torrent File"
+      },
+      "advanced": {
+        "title": "Advanced Options",
+        "savePath": "Save Path (Optional)",
+        "savePathHint": "Leave empty to use default download path",
+        "connections": "Connections per file: $count",
+        "split": "Split per task: $count"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "start": "Start Download"
+      },
+      "errors": {
+        "noUrl": "Please enter at least one download link",
+        "noTorrent": "Please select or drop a torrent file",
+        "selectFileFailed": "Failed to select file: $error",
+        "selectPathFailed": "Failed to select path: $error",
+        "submitFailed": "Failed to add download: $error"
+      },
+      "toast": {
+        "added": "Added $count download tasks",
+        "addedTorrent": "Added torrent download task"
+      }
+    },
+    "detailDialog": {
+      "title": "Task Details",
+      "sections": {
+        "taskName": "Task Name",
+        "fileName": "File Name",
+        "fileSize": "File Size",
+        "progress": "Download Progress",
+        "speed": "Download Speed",
+        "uploadSpeed": "Upload Speed",
+        "connections": "Connections",
+        "eta": "Estimated Time",
+        "filePath": "File Path",
+        "gid": "Task ID",
+        "createdAt": "Created At"
+      },
+      "actions": {
+        "copyPath": "Copy Path",
+        "openFile": "Open File",
+        "openFolder": "Open Folder",
+        "retry": "Retry Download",
+        "close": "Close"
+      },
+      "toast": {
+        "pathCopied": "Path copied"
+      }
+    }
   },
   "torrent": {
     "consent": {
@@ -499,9 +630,10 @@
   },
   "navigation": {
     "tabs": {
-      "popular": "Popular",
+      "popular": "Home",
       "timeline": "Timeline",
       "my": "My",
+      "download": "Download",
       "settings": "Settings"
     },
     "actions": {
@@ -549,8 +681,8 @@
       }
     },
     "popular": {
-      "title": "Trending Anime",
-      "allTag": "Trending",
+      "title": "Home",
+      "allTag": "Home",
       "toast": {
         "backPress": "Press again to exit Kazumi"
       }

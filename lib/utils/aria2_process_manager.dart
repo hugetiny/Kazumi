@@ -43,7 +43,7 @@ class Aria2ProcessManager {
         return true;
       }
     }
-    
+
     // Android: Use platform channel
     else if (Platform.isAndroid) {
       final isRunning = await Aria2AndroidChannel.isAria2Running();
@@ -52,12 +52,23 @@ class Aria2ProcessManager {
         _isRunning = true;
         return true;
       }
-    } 
-    
-    // Desktop: Check process
-    else if (_isRunning && _aria2Process != null) {
-      _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running');
-      return true;
+    }
+
+    // Desktop: Check if aria2 process is already running (system-wide check)
+    else {
+      // First check our own tracked process
+      if (_isRunning && _aria2Process != null) {
+        _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running (tracked process)');
+        return true;
+      }
+
+      // Check if any aria2c process is running system-wide
+      final isSystemRunning = await _isAria2RunningSystemWide();
+      if (isSystemRunning) {
+        _logger.log(Level.info, '[Aria2ProcessManager] aria2 is already running system-wide, will reuse existing process');
+        _isRunning = true;
+        return true;
+      }
     }
 
     try {
@@ -67,7 +78,7 @@ class Aria2ProcessManager {
 
       // Get the download directory
       final Directory downloadsDir = await _getDownloadsDirectory();
-      
+
       // Build aria2 command arguments
       final List<String> args = [
         '--enable-rpc',
@@ -93,7 +104,7 @@ class Aria2ProcessManager {
       if (Platform.isIOS) {
         _logger.log(Level.info, '[Aria2ProcessManager] Starting aria2 on iOS via platform channel');
         _logger.log(Level.info, '[Aria2ProcessManager] Download directory: ${downloadsDir.path}');
-        
+
         final success = await Aria2IOSChannel.startAria2(args);
         if (success) {
           _isRunning = true;
@@ -109,10 +120,10 @@ class Aria2ProcessManager {
         // Add Android-specific DNS configuration
         args.add('--async-dns');
         // Note: DNS servers will be configured dynamically by the native code if needed
-        
+
         _logger.log(Level.info, '[Aria2ProcessManager] Starting aria2 on Android via platform channel');
         _logger.log(Level.info, '[Aria2ProcessManager] Download directory: ${downloadsDir.path}');
-        
+
         final success = await Aria2AndroidChannel.startAria2(args);
         if (success) {
           _isRunning = true;
@@ -126,7 +137,7 @@ class Aria2ProcessManager {
       // Desktop: Use system aria2c binary
       // Try to find aria2c in PATH or common locations
       String? aria2Path = await _findAria2Binary();
-      
+
       if (aria2Path == null) {
         _logger.log(Level.error, '[Aria2ProcessManager] aria2c binary not found in PATH or common locations');
         return false;
@@ -134,9 +145,19 @@ class Aria2ProcessManager {
 
       _logger.log(Level.info, '[Aria2ProcessManager] Starting aria2c from: $aria2Path');
       _logger.log(Level.info, '[Aria2ProcessManager] Download directory: ${downloadsDir.path}');
+      _logger.log(Level.info, '[Aria2ProcessManager] RPC port: 6800');
 
-      _aria2Process = await Process.start(aria2Path, args);
-      _isRunning = true;
+      try {
+        _aria2Process = await Process.start(aria2Path, args);
+        _isRunning = true;
+      } on ProcessException catch (e) {
+        _logger.log(Level.error, '[Aria2ProcessManager] Failed to start process: $e');
+        // Check if port might be in use
+        if (e.message.contains('bind') || e.message.contains('address')) {
+          _logger.log(Level.warning, '[Aria2ProcessManager] Port 6800 might be in use');
+        }
+        rethrow;
+      }
 
       // Listen to stdout and stderr for logging
       _aria2Process!.stdout.listen((data) {
@@ -185,7 +206,45 @@ class Aria2ProcessManager {
       _aria2Process!.kill();
       _aria2Process = null;
       _isRunning = false;
+    } else {
+      // If we don't have a tracked process, just mark as not running
+      _logger.log(Level.info, '[Aria2ProcessManager] No tracked aria2 process to stop');
+      _isRunning = false;
     }
+  }
+
+  /// Checks if aria2c is running system-wide (for desktop platforms).
+  Future<bool> _isAria2RunningSystemWide() async {
+    try {
+      if (Platform.isWindows) {
+        // Use tasklist to check for aria2c.exe
+        final result = await Process.run(
+          'tasklist',
+          ['/FI', 'IMAGENAME eq aria2c.exe', '/FO', 'CSV', '/NH'],
+        );
+        if (result.exitCode == 0) {
+          final output = result.stdout.toString().trim();
+          // If output contains aria2c.exe, it's running
+          if (output.isNotEmpty && output.contains('aria2c.exe')) {
+            _logger.log(Level.info, '[Aria2ProcessManager] Found running aria2c.exe process');
+            return true;
+          }
+        }
+      } else {
+        // Use pgrep or ps for Unix-like systems
+        final result = await Process.run('pgrep', ['aria2c']);
+        if (result.exitCode == 0) {
+          final output = result.stdout.toString().trim();
+          if (output.isNotEmpty) {
+            _logger.log(Level.info, '[Aria2ProcessManager] Found running aria2c process');
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      _logger.log(Level.debug, '[Aria2ProcessManager] Could not check for running aria2 process: $e');
+    }
+    return false;
   }
 
   /// Restarts the aria2 process.
@@ -197,6 +256,7 @@ class Aria2ProcessManager {
 
   /// Finds the aria2c binary in PATH or common locations.
   /// First checks for updated binary, then falls back to system binary.
+  /// On Windows: Automatically installs via WinGet if not found.
   Future<String?> _findAria2Binary() async {
     // First check if there's an updated binary available
     try {
@@ -217,6 +277,7 @@ class Aria2ProcessManager {
         if (result.exitCode == 0) {
           final path = result.stdout.toString().trim().split('\n').first;
           if (path.isNotEmpty) {
+            _logger.log(Level.info, '[Aria2ProcessManager] Found aria2c in PATH: $path');
             return path;
           }
         }
@@ -226,6 +287,7 @@ class Aria2ProcessManager {
         if (result.exitCode == 0) {
           final path = result.stdout.toString().trim();
           if (path.isNotEmpty) {
+            _logger.log(Level.info, '[Aria2ProcessManager] Found aria2c in PATH: $path');
             return path;
           }
         }
@@ -244,7 +306,65 @@ class Aria2ProcessManager {
       }
     }
 
+    // Windows: Try to install via WinGet if not found
+    if (Platform.isWindows) {
+      _logger.log(Level.info, '[Aria2ProcessManager] aria2c not found, attempting to install via WinGet...');
+      final installed = await _installAria2ViaWinGet();
+      if (installed) {
+        // Try to find it again after installation
+        try {
+          final result = await Process.run('where', ['aria2c.exe']);
+          if (result.exitCode == 0) {
+            final path = result.stdout.toString().trim().split('\n').first;
+            if (path.isNotEmpty) {
+              _logger.log(Level.info, '[Aria2ProcessManager] aria2c installed successfully: $path');
+              return path;
+            }
+          }
+        } catch (e) {
+          _logger.log(Level.error, '[Aria2ProcessManager] Failed to find aria2c after installation: $e');
+        }
+      }
+    }
+
     return null;
+  }
+
+  /// Installs aria2 via WinGet on Windows (async installation).
+  /// Returns true if installation command was executed successfully.
+  Future<bool> _installAria2ViaWinGet() async {
+    try {
+      _logger.log(Level.info, '[Aria2ProcessManager] Checking if WinGet is available...');
+
+      // Check if WinGet is available
+      final wingetCheck = await Process.run('winget', ['--version']);
+      if (wingetCheck.exitCode != 0) {
+        _logger.log(Level.error, '[Aria2ProcessManager] WinGet is not available on this system');
+        return false;
+      }
+
+      _logger.log(Level.info, '[Aria2ProcessManager] WinGet version: ${wingetCheck.stdout.toString().trim()}');
+      _logger.log(Level.info, '[Aria2ProcessManager] Installing aria2 via WinGet (this may take a few minutes)...');
+
+      // Install aria2 using WinGet (accept all prompts)
+      final installResult = await Process.run(
+        'winget',
+        ['install', 'aria2.aria2', '--accept-source-agreements', '--accept-package-agreements', '--silent'],
+        runInShell: true,
+      );
+
+      if (installResult.exitCode == 0) {
+        _logger.log(Level.info, '[Aria2ProcessManager] aria2 installed successfully via WinGet');
+        return true;
+      } else {
+        _logger.log(Level.error, '[Aria2ProcessManager] WinGet installation failed: ${installResult.stderr}');
+        return false;
+      }
+    } catch (e, stackTrace) {
+      _logger.log(Level.error, '[Aria2ProcessManager] Failed to install aria2 via WinGet: $e',
+          error: e, stackTrace: stackTrace);
+      return false;
+    }
   }
 
   /// Gets the updated binary path if available (from Aria2Updater).
@@ -258,20 +378,20 @@ class Aria2ProcessManager {
         final appDir = await getApplicationSupportDirectory();
         updateDirPath = '${appDir.path}/aria2_update';
       }
-      
+
       final binaryName = Platform.isWindows ? 'aria2c.exe' : 'aria2c';
       final binaryPath = Platform.isWindows
           ? '$updateDirPath\\$binaryName'
           : '$updateDirPath/$binaryName';
       final binaryFile = File(binaryPath);
-      
+
       if (await binaryFile.exists()) {
         return binaryPath;
       }
     } catch (e) {
       _logger.log(Level.debug, '[Aria2ProcessManager] No updated binary found: $e');
     }
-    
+
     return null;
   }
 
@@ -318,19 +438,25 @@ class Aria2ProcessManager {
         return downloadsDir;
       }
     }
-    
+
     // For desktop platforms, use the system downloads directory
     try {
-      final Directory downloadsDir = await getDownloadsDirectory();
-      return downloadsDir;
-    } catch (e) {
-      _logger.log(Level.warning, '[Aria2ProcessManager] Could not get downloads directory, using app directory');
-      final Directory appDir = await getApplicationDocumentsDirectory();
-      final downloadsDir = Directory('${appDir.path}/Downloads');
-      if (!await downloadsDir.exists()) {
-        await downloadsDir.create(recursive: true);
+      final Directory? downloadsDir = await getDownloadsDirectory();
+      if (downloadsDir != null) {
+        return downloadsDir;
       }
-      return downloadsDir;
+      // If null, fall through to fallback
+    } catch (e) {
+      _logger.log(Level.warning, '[Aria2ProcessManager] Could not get downloads directory: $e');
     }
+
+    // Fallback: use app directory
+    _logger.log(Level.info, '[Aria2ProcessManager] Using app directory for downloads');
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final downloadsDir = Directory('${appDir.path}/Downloads');
+    if (!await downloadsDir.exists()) {
+      await downloadsDir.create(recursive: true);
+    }
+    return downloadsDir;
   }
 }

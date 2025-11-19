@@ -20,12 +20,13 @@ import 'package:kazumi/utils/utils.dart';
 import 'package:kazumi/l10n/generated/translations.g.dart';
 import 'package:logger/logger.dart';
 
-enum SourceSortOption {
+  enum SourceSortOption {
   original,
   nameAsc,
   nameDesc,
   failureAsc,  // 失败次数升序 (可靠的在前)
   failureDesc, // 失败次数降序 (不可靠的在前)
+  fastestResponse, // 响应速度最快
 }
 
 /// Provider for source sort option
@@ -169,11 +170,16 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
         return options.failureAsc;
       case SourceSortOption.failureDesc:
         return options.failureDesc;
+      case SourceSortOption.fastestResponse:
+        return '响应速度最快';
     }
   }
 
   List<_SourceEntry> _sortedEntries(
-      List<_SourceEntry> entries, SourceSortOption sortOption) {
+    List<_SourceEntry> entries,
+    SourceSortOption sortOption,
+    Map<String, int> responseTimes,
+  ) {
     final bangumiItem = widget.infoController.bangumiItem;
 
     switch (sortOption) {
@@ -212,6 +218,14 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
             src: b.item.src,
           );
           return bCount.compareTo(aCount);
+        });
+      case SourceSortOption.fastestResponse:
+        return [...entries]..sort((a, b) {
+          final timeA = responseTimes[a.plugin.name] ?? 0;
+          final timeB = responseTimes[b.plugin.name] ?? 0;
+          if (timeA == 0) return 1;
+          if (timeB == 0) return -1;
+          return timeA.compareTo(timeB);
         });
     }
   }
@@ -404,6 +418,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     BuildContext context,
     Plugin plugin,
     SearchItem item,
+    int responseTime,
   ) {
     final sheetTexts = context.t.library.info.sourceSheet;
     final theme = Theme.of(context);
@@ -437,6 +452,33 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                       style: theme.textTheme.labelLarge,
                     ),
                   ),
+                  if (responseTime > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${responseTime}ms',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   if (failureCount > 0) ...[
                     const SizedBox(width: 8),
                     InkWell(
@@ -756,7 +798,11 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
     final sortOption = ref.watch(sourceSortOptionProvider);
 
     final aggregation = _aggregateResults(plugins, searchState);
-    final sortedEntries = _sortedEntries(aggregation.entries, sortOption);
+    final sortedEntries = _sortedEntries(
+      aggregation.entries,
+      sortOption,
+      searchState.responseTimes,
+    );
     final statusCards = _buildStatusCards(
       pending: aggregation.pending,
       errors: aggregation.errors,
@@ -837,6 +883,7 @@ class _SourceSheetState extends ConsumerState<SourceSheet> {
                             context,
                             entry.plugin,
                             entry.item,
+                            searchState.responseTimes[entry.plugin.name] ?? 0,
                           ),
                         ),
                     ],

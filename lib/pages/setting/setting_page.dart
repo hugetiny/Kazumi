@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:kazumi/router_constants.dart';
-import 'package:kazumi/bean/appbar/sys_app_bar.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/pages/menu/navigation_provider.dart';
+import 'package:kazumi/pages/layout/app_bar_config.dart';
 import 'package:kazumi/pages/setting/providers.dart';
 import 'package:kazumi/pages/webdav_editor/providers.dart';
 import 'package:kazumi/utils/storage.dart';
@@ -42,6 +42,16 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     context.go(Routes.popular);
   }
 
+  void _updateAppBarConfig() {
+    if (!mounted) return;
+    final t = context.t;
+
+    ref.read(appBarConfigProvider.notifier).state = AppBarConfig(
+      title: t.settings.title, // 修正翻译键
+      needTopOffset: false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.t; // Get translations
@@ -50,6 +60,13 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     final metadataState = ref.watch(metadataSettingsProvider);
     final metadataController = ref.read(metadataSettingsProvider.notifier);
     final localeState = ref.watch(localeSettingsProvider);
+
+    // 初始化时设置 AppBar
+    Future.microtask(() {
+      if (mounted) {
+        _updateAppBarConfig();
+      }
+    });
 
     // Exit behavior options
     final List<String> exitBehaviorTitles = [
@@ -106,14 +123,9 @@ class _SettingPageState extends ConsumerState<SettingPage> {
         }
         onBackPressed(context);
       },
-      child: Scaffold(
-        appBar: SysAppBar(
-          title: Text(t.settings.title),
-          needTopOffset: false,
-        ),
-        body: SettingsList(
-          maxWidth: 1000,
-          sections: [
+      child: SettingsList(
+        maxWidth: 1000,
+        sections: [
             SettingsSection(
               title: Text(t.settings.general.title),
               tiles: [
@@ -260,7 +272,6 @@ class _SettingPageState extends ConsumerState<SettingPage> {
               ),
           ],
         ),
-      ),
     );
   }
 }

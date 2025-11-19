@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:kazumi/utils/logger.dart';
@@ -99,6 +100,7 @@ class Aria2Client {
                 headers: const <String, String>{
                   'Content-Type': 'application/json',
                 },
+                responseType: ResponseType.json, // 强制 Dio 解析 JSON
               ),
             );
 
@@ -183,6 +185,49 @@ class Aria2Client {
     return result as String?;
   }
 
+  /// Add torrent file (base64 encoded) to download queue
+  Future<String?> addTorrent(
+    String torrentBase64, {
+    List<String>? uris,
+    Map<String, dynamic>? options,
+    int? position,
+  }) async {
+    final List<dynamic> params = <dynamic>[torrentBase64];
+    if (uris != null && uris.isNotEmpty) {
+      params.add(uris);
+    } else {
+      params.add(<String>[]);
+    }
+    if (options != null) {
+      params.add(options);
+    }
+    if (position != null) {
+      params.add(position);
+    }
+    final dynamic result = await _call('aria2.addTorrent', params: params);
+    return result as String?;
+  }
+
+  /// Add metalink file (base64 encoded) to download queue
+  Future<List<String>?> addMetalink(
+    String metalinkBase64, {
+    Map<String, dynamic>? options,
+    int? position,
+  }) async {
+    final List<dynamic> params = <dynamic>[metalinkBase64];
+    if (options != null) {
+      params.add(options);
+    }
+    if (position != null) {
+      params.add(position);
+    }
+    final dynamic result = await _call('aria2.addMetalink', params: params);
+    if (result is List) {
+      return result.cast<String>();
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>?> tellStatus(
     String gid, {
     List<String>? keys,
@@ -254,6 +299,67 @@ class Aria2Client {
   Future<bool> purgeCompleted() async {
     final dynamic result = await _call('aria2.purgeDownloadResult');
     return result == 'OK';
+  }
+
+  /// Test if the aria2 RPC endpoint is accessible and responding correctly.
+  /// This is more robust than tellActive() as it uses aria2.getVersion which
+  /// always returns a response even when no downloads are active.
+  Future<Map<String, dynamic>> getVersion() async {
+    _logger.log(Level.info, '[Aria2Client] Calling aria2.getVersion');
+    final dynamic result = await _call('aria2.getVersion');
+    _logger.log(Level.info,
+        '[Aria2Client] getVersion result type: ${result.runtimeType}');
+    _logger.log(Level.info, '[Aria2Client] getVersion result: $result');
+
+    if (result is Map) {
+      return Map<String, dynamic>.from(result);
+    }
+    _logger.log(Level.error,
+        '[Aria2Client] Unexpected response format from aria2.getVersion: $result');
+    throw Aria2RpcException('Unexpected response format from aria2.getVersion');
+  }
+
+  /// Test the connection to aria2 RPC server.
+  /// Returns a detailed status message.
+  Future<String> testConnection() async {
+    try {
+      _logger.log(Level.info, '[Aria2Client] testConnection starting...');
+      _logger.log(Level.info, '[Aria2Client] Endpoint: $_endpoint');
+      _logger.log(Level.info, '[Aria2Client] Has secret: $hasSecret');
+
+      final version = await getVersion();
+
+      _logger.log(Level.info, '[Aria2Client] Version data received: $version');
+      _logger.log(
+          Level.info, '[Aria2Client] Version type: ${version.runtimeType}');
+      _logger.log(
+          Level.info, '[Aria2Client] Version keys: ${version.keys.toList()}');
+
+      final versionStr = version['version'] as String? ?? 'unknown';
+      _logger.log(Level.info, '[Aria2Client] Version string: $versionStr');
+
+      final featuresRaw = version['enabledFeatures'];
+      _logger.log(Level.info,
+          '[Aria2Client] Features raw: $featuresRaw (type: ${featuresRaw.runtimeType})');
+
+      final List<String> features =
+          (featuresRaw as List?)?.cast<String>() ?? [];
+      _logger.log(Level.info, '[Aria2Client] Features casted: $features');
+
+      final result = '连接成功\n'
+          'aria2 版本: $versionStr\n'
+          '已启用特性: ${features.join(", ")}';
+
+      _logger.log(Level.info, '[Aria2Client] testConnection successful');
+      return result;
+    } catch (e, stackTrace) {
+      _logger.log(Level.error, '[Aria2Client] testConnection failed: $e',
+          error: e, stackTrace: stackTrace);
+      if (e is Aria2RpcException) {
+        rethrow;
+      }
+      throw Aria2RpcException('测试连接失败: ${e.toString()}');
+    }
   }
 
   Future<Aria2ConcurrencyConfig> getConcurrencyConfig() async {
@@ -333,6 +439,9 @@ class Aria2Client {
       'params': _buildParams(params),
     };
 
+    // 降低日志级别，避免刷屏
+    // _logger.log(Level.info, '[Aria2Client] Calling $method');
+
     try {
       final Response<dynamic> response = await _dio.postUri(
         _endpoint,
@@ -344,29 +453,124 @@ class Aria2Client {
         ),
       );
 
-      if (response.data is Map<String, dynamic>) {
-        final Map<String, dynamic> body =
-            Map<String, dynamic>.from(response.data as Map<String, dynamic>);
-        if (body.containsKey('error') && body['error'] != null) {
-          final Map<String, dynamic> error =
-              Map<String, dynamic>.from(body['error'] as Map<String, dynamic>);
-          final String message =
-              error['message']?.toString() ?? 'aria2 RPC error';
-          final dynamic code = error['code'];
-          _logger.log(
-            Level.error,
-            '[Aria2Client] $method failed: $message (code: $code)',
-          );
-          throw Aria2RpcException(message, code: code);
-        }
-        return body['result'];
+      // 只在调试时记录详细信息
+      // _logger.log(Level.info, '[Aria2Client] Response status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        _logger.log(
+          Level.error,
+          '[Aria2Client] $method HTTP error: ${response.statusCode}',
+        );
+        throw Aria2RpcException(
+          'HTTP ${response.statusCode}: ${response.statusMessage ?? "Unknown error"}',
+        );
       }
 
-      throw Aria2RpcException('Unexpected aria2 RPC response format');
+      if (response.data == null) {
+        _logger.log(
+          Level.error,
+          '[Aria2Client] $method returned null response',
+        );
+        throw Aria2RpcException('aria2 服务未运行或端点地址错误');
+      }
+
+      // Handle both String (needs parsing) and Map (already parsed) responses
+      Map<String, dynamic> body;
+
+      if (response.data is String) {
+        // Response is JSON string, need to parse it
+        try {
+          final parsed = jsonDecode(response.data as String);
+          if (parsed is Map) {
+            body = Map<String, dynamic>.from(parsed);
+          } else {
+            _logger.log(Level.error,
+                '[Aria2Client] Parsed JSON is not a Map: ${parsed.runtimeType}');
+            throw Aria2RpcException('aria2 响应格式错误');
+          }
+        } catch (e) {
+          _logger.log(Level.error, '[Aria2Client] Failed to parse JSON: $e');
+          throw Aria2RpcException('aria2 响应解析失败: $e');
+        }
+      } else if (response.data is Map<String, dynamic>) {
+        body = Map<String, dynamic>.from(response.data as Map<String, dynamic>);
+      } else if (response.data is Map) {
+        // Handle generic Map
+        body = Map<String, dynamic>.from(response.data as Map);
+      } else {
+        _logger.log(
+          Level.error,
+          '[Aria2Client] $method unexpected response type: ${response.data.runtimeType}',
+        );
+        throw Aria2RpcException(
+          'aria2 服务未运行或端点地址错误（响应格式不正确）',
+        );
+      }
+
+      _logger.log(Level.info,
+          '[Aria2Client] Response body keys: ${body.keys.toList()}');
+
+      if (body.containsKey('error') && body['error'] != null) {
+        final Map<String, dynamic> error =
+            Map<String, dynamic>.from(body['error'] as Map<String, dynamic>);
+        final String message =
+            error['message']?.toString() ?? 'aria2 RPC error';
+        final dynamic code = error['code'];
+        _logger.log(
+          Level.error,
+          '[Aria2Client] $method failed: $message (code: $code)',
+        );
+        throw Aria2RpcException(message, code: code);
+      }
+
+      _logger.log(
+          Level.info, '[Aria2Client] Returning result: ${body['result']}');
+      return body['result'];
     } catch (error, stackTrace) {
       if (error is Aria2RpcException) {
         rethrow;
       }
+
+      // Handle DioException specifically
+      if (error is DioException) {
+        String message = 'aria2 连接失败';
+
+        switch (error.type) {
+          case DioExceptionType.connectionTimeout:
+          case DioExceptionType.sendTimeout:
+          case DioExceptionType.receiveTimeout:
+            message = 'aria2 连接超时，请检查端点地址和网络';
+            break;
+          case DioExceptionType.badResponse:
+            message = 'aria2 响应错误: ${error.response?.statusCode ?? "未知"}';
+            break;
+          case DioExceptionType.connectionError:
+            message = '无法连接到 aria2 服务，请确保 aria2 已启动';
+            break;
+          case DioExceptionType.cancel:
+            message = 'aria2 请求已取消';
+            break;
+          case DioExceptionType.unknown:
+          default:
+            if (error.message?.contains('Connection refused') ?? false) {
+              message = '无法连接到 aria2 服务，请确保 aria2 已启动';
+            } else if (error.message?.contains('SocketException') ?? false) {
+              message = 'aria2 网络错误，请检查端点地址';
+            } else {
+              message = 'aria2 连接失败: ${error.message ?? "未知错误"}';
+            }
+            break;
+        }
+
+        _logger.log(
+          Level.error,
+          '[Aria2Client] $method request failed: $message',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        throw Aria2RpcException(message);
+      }
+
       _logger.log(
         Level.error,
         '[Aria2Client] $method RPC request failed: $error',

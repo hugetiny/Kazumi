@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kazumi/router_constants.dart';
 
 class NavigationBarStateData {
   final int selectedIndex;
@@ -22,6 +23,19 @@ class NavigationBarStateData {
       isBottom: isBottom ?? this.isBottom,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NavigationBarStateData &&
+          runtimeType == other.runtimeType &&
+          selectedIndex == other.selectedIndex &&
+          isHidden == other.isHidden &&
+          isBottom == other.isBottom;
+
+  @override
+  int get hashCode =>
+      selectedIndex.hashCode ^ isHidden.hashCode ^ isBottom.hashCode;
 }
 
 class NavigationBarController extends Notifier<NavigationBarStateData> {
@@ -47,12 +61,56 @@ class NavigationBarController extends Notifier<NavigationBarStateData> {
     if (state.isBottom == isBottom) return;
     state = state.copyWith(isBottom: isBottom);
   }
+
+  /// 根据路由路径同步导航索引
+  void syncWithRoute(String path) {
+    final newIndex = _getIndexFromRoute(path);
+    if (newIndex != null && newIndex != state.selectedIndex) {
+      state = state.copyWith(selectedIndex: newIndex);
+    }
+  }
+
+  /// 根据路由路径获取对应的导航索引
+  int? _getIndexFromRoute(String path) {
+    switch (path) {
+      case Routes.popular:
+        return 0;
+      case Routes.timeline:
+        return 1;
+      case Routes.my:
+        return 2;
+      case Routes.download:
+        return 3;
+      case Routes.settings:
+        return 4;
+      default:
+        return null; // 非主导航路由，不更新索引
+    }
+  }
+
+  /// 根据索引获取对应的路由
+  String getRouteFromIndex(int index) {
+    switch (index) {
+      case 0:
+        return Routes.popular;
+      case 1:
+        return Routes.timeline;
+      case 2:
+        return Routes.my;
+      case 3:
+        return Routes.download;
+      case 4:
+        return Routes.settings;
+      default:
+        return Routes.popular;
+    }
+  }
 }
 
 /// 底部导航栏 Provider
 ///
 /// 管理底部导航栏的选中状态、显示/隐藏和位置。
-/// 用于控制应用的主要导航逻辑。
+/// 使用 Riverpod 的响应式机制自动同步路由状态。
 ///
 /// 示例:
 /// ```dart
@@ -62,4 +120,40 @@ class NavigationBarController extends Notifier<NavigationBarStateData> {
 final navigationProvider =
     NotifierProvider<NavigationBarController, NavigationBarStateData>(
   NavigationBarController.new,
+);
+
+/// 当前路由路径 Provider
+///
+/// 用于监听路由变化，自动同步导航状态
+class CurrentRouteNotifier extends Notifier<String> {
+  @override
+  String build() => Routes.popular;
+
+  void updateRoute(String path) {
+    if (state != path) {
+      state = path;
+    }
+  }
+}
+
+final currentRouteProvider = NotifierProvider<CurrentRouteNotifier, String>(
+  CurrentRouteNotifier.new,
+);
+
+/// 屏幕方向 Provider
+///
+/// 用于响应式更新导航栏位置（底部/侧边）
+class OrientationStateNotifier extends Notifier<bool> {
+  @override
+  bool build() => true; // 默认竖屏
+
+  void updateOrientation(bool isPortrait) {
+    if (state != isPortrait) {
+      state = isPortrait;
+    }
+  }
+}
+
+final orientationProvider = NotifierProvider<OrientationStateNotifier, bool>(
+  OrientationStateNotifier.new,
 );

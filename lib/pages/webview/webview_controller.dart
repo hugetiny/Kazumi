@@ -3,10 +3,10 @@ import 'dart:async';
 
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_android_controller_impel.dart';
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_controller_impel.dart';
-// Old webview_windows implementation (deprecated)
-// import 'package:kazumi/pages/webview/webview_controller_impel/webview_windows_controller_impel.dart';
-// New flutter_inappwebview_windows implementation
-import 'package:kazumi/pages/webview/webview_controller_impel/webview_inappwebview_windows_controller_impel.dart';
+// Old webview_windows implementation (restored as speed mode)
+import 'package:kazumi/pages/webview/webview_controller_impel/webview_windows_controller_impel.dart';
+// New flutter_inappwebview_windows implementation (deprecated due to performance issues)
+// import 'package:kazumi/pages/webview/webview_controller_impel/webview_inappwebview_windows_controller_impel.dart';
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_linux_controller_impel.dart';
 import 'package:kazumi/pages/webview/webview_controller_impel/webview_apple_controller_impel.dart';
 import 'package:kazumi/utils/utils.dart';
@@ -65,8 +65,8 @@ abstract class WebviewItemController<T> {
 class WebviewItemControllerFactory {
   static WebviewItemController getController() {
     if (Platform.isWindows) {
-      // Use new flutter_inappwebview_windows implementation
-      return WebviewInAppWebViewWindowsItemControllerImpel();
+      // Use old webview_windows implementation for speed mode
+      return WebviewWindowsItemControllerImpel();
     }
     if (Platform.isLinux) {
       return WebviewLinuxItemControllerImpel();

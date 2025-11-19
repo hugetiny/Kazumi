@@ -499,9 +499,10 @@
     },
     "navigation": {
         "tabs": {
-            "popular": "熱門番組",
+            "popular": "熱門番劇",
             "timeline": "時間表",
             "my": "我的",
+            "download": "下載",
             "settings": "設定"
         },
         "actions": {

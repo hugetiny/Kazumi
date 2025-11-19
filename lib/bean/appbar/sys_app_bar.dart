@@ -114,16 +114,19 @@ class SysAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize {
-    // macOS needs to add 22(macOS title bar height)
-    // to default toolbar height to build appbar like normal
+    // Calculate base toolbar height
+    double height;
     if (Platform.isMacOS && needTopOffset && showWindowButton()) {
-      if (toolbarHeight != null) {
-        return Size.fromHeight(toolbarHeight! + 22);
-      } else {
-        return const Size.fromHeight(kToolbarHeight + 22);
-      }
+      height = (toolbarHeight ?? kToolbarHeight) + 22;
     } else {
-      return Size.fromHeight(toolbarHeight ?? kToolbarHeight);
+      height = toolbarHeight ?? kToolbarHeight;
     }
+
+    // Add bottom widget height if present
+    if (bottom != null) {
+      height += bottom!.preferredSize.height;
+    }
+
+    return Size.fromHeight(height);
   }
 }

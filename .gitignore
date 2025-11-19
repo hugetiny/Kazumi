@@ -144,3 +144,4 @@ packages/
 
 # Windows build dependencies cache
 build_resources/
+pubspec.lock

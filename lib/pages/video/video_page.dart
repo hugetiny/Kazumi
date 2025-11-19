@@ -113,6 +113,9 @@ class _VideoPageState extends ConsumerState<VideoPage>
         setting.get(SettingBoxKey.playerDisableAnimations, defaultValue: false);
     // currentRoadProvider has a default of 0; no need to set it here to avoid lifecycle writes
 
+    // Initialize webview controller
+    webviewItemController.init();
+
     // Initialize video page state after initState completes
     Future.microtask(() {
       if (mounted) {
